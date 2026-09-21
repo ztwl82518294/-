@@ -1,12 +1,12 @@
 // cloudfunctions/statLog/index.js
 // 用户行为埋点写入（服务端版，防刷量）。
 // 背景：此前 stat_events 由小程序端直连写入，任何人可用脚本高频写入 search/view
-//      事件冲月度活跃榜领取兑奖码。现改为经本云函数写入，服务端做频控：
+//      事件冲高活跃数据，使统计榜单失真。现改为经本云函数写入，服务端做频控：
 //      同一用户（openid）同一自然日最多写入 DAILY_CAP 条事件，超出部分静默丢弃。
 // 口径保持不变：
 //   - stat_events 集合，PV 口径；month(yyyy-MM)/day(yyyy-MM-DD) 均按东八区；
 //   - _openid 由服务端取 getWXContext().OPENID 显式注入（云函数写入不会自动注入，
-//     adminStats / prize 按字段 _openid 聚合，口径必须一致）；
+//     adminStats 按字段 _openid 聚合，口径必须一致）；
 //   - 前端 fire-and-forget，任何失败不影响用户操作。
 // action:
 //   log —— 写一条事件 {type, key}（默认）
@@ -89,7 +89,7 @@ exports.main = async (event) => {
       data: {
         type: type,       // 'search'=搜索路线 | 'view'=浏览专线详情
         key: key,         // search: 出发→到达；view: 专线 id
-        month: month,     // yyyy-MM，与 adminStats / prize 聚合口径一致
+        month: month,     // yyyy-MM，与 adminStats 聚合口径一致
         day: day,         // yyyy-MM-DD，用于频控
         ts: Date.now(),
         _openid: OPENID   // 服务端显式注入（云函数写入不自动带）

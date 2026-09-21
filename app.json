@@ -6,8 +6,7 @@
     "pages/line-list/index",
     "pages/line-detail/index",
     "pages/agreement/index",
-    "pages/contact/index",
-    "pages/prize/index"
+    "pages/contact/index"
   ],
   "subPackages": [
     {
@@ -20,8 +19,7 @@
         "ads/index",
         "ad-edit/index",
         "notice/index",
-        "stats/index",
-        "prize/index"
+        "stats/index"
       ]
     }
   ],

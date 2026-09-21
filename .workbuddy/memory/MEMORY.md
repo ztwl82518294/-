@@ -36,6 +36,14 @@
 - 导入文件放 `E:\微信小程序公司信息\`；项目自带的 JSON 处理脚本在 `.workbuddy/scripts/`（fix-shandong-json.js 可作为其他公司数据修复的模板）。
 - 一键回归：`node .workbuddy/scripts/run-tests.js`；静态体检：`node .workbuddy/scripts/scan-project-health.js`（绑定/dataset/路由/wx:key）。改前端绑定时先跑体检。
 
+## 主体与合规（重要）
+- **小程序注册主体：「个人」**（2026-09-21 用户确认）。
+- 推论：**不能选需要资质的服务类目**（如「交通服务→物流服务」需企业资质）。必须走「工具」大类下的信息查询类目，个人主体可申请。
+- **【已决定】删除「月度兑奖」活动**（2026-09-21）：个人主体 + 抽奖发奖是审核敏感项，用户决定不做、可删除。相关：`pages/prize`、`pages/admin/prize`、`cloudfunctions/prize`、`app.json` 注册、user/admin 入口、stats 快捷发奖、隐私政策相关表述、createIndexes 里 prize 索引。
+- 客服联系方式为真实有效：`utils/contact.js` → 电话 `15165018553`、微信 `A15165018553`（用户本人）。
+- 协议页（`pages/agreement/index.js`）全文以"本平台运营方"代称，**未写主体名称与联系方式**，个人主体下应补真实姓名/联系方式。
+
 ## 用户偏好
 - 简洁中文输出；文件级变更摘要 + 按优先级行动清单；UI 问题用截图沟通。
 - 批次推进（P0/P1/P2），完成一项自动衔接下一项。
+- 上线前检查类任务：一次只问一个问题，用普通人语言复述需求（用户明确要求）。

@@ -20,16 +20,12 @@ wx-server-sdk 不提供代码建索引的 API，索引需在**云开发控制台
 | lines | toCityName | 旧数据兼容查询 | 升序 |
 | lines | fromCityName + toCityName + status | 复合查询（status=1 常量过滤） | 均升序 |
 | lines | companyName | batchVip 按公司批量开通 | 升序 |
-| stat_events | month + _openid | adminStats / prize 月度活跃聚合 | 均升序 |
+| stat_events | month + _openid | adminStats 月度活跃聚合 | 均升序 |
 | stat_events | day + _openid | statLog 频控计数（同用户当日条数） | 均升序 |
 | stat_events | month + type | adminStats 搜索/浏览分别计数（`where({month,type}).count()`） | 均升序 |
 | favorites | lineId | 收藏查重 / isFavorite | 升序 |
 | favorites | **_openid + lineId** | **唯一索引**，根治重复收藏（见下方注意事项） | 均升序 |
 | favorites | createTime | getFavorites 按时间倒序分页 | **降序** |
-| prize_codes | code | 兑奖码核销查询 | 升序 |
-| prize_codes | month + openid | 名单/幂等生成 | 均升序 |
-| prize_logs | month + ts | 管理员日志按月份查最近 50 条（`where({month}).orderBy('ts','desc')`） | month 升序 / ts **降序** |
-| prize_logs | ts | 不传月份时查全量日志最近 50 条 | **降序** |
 
 ## ⚠️ favorites 唯一索引：建之前必须先清理重复数据
 
@@ -62,6 +58,5 @@ wx-server-sdk 不提供代码建索引的 API，索引需在**云开发控制台
 ## 本目录文件说明
 
 - `lines.indexes.json` / `stat_events.indexes.json` / `favorites.indexes.json`
-  / `prize_codes.indexes.json` / `prize_logs.indexes.json`
   —— 各集合的索引定义（字段名 + 顺序），可对照手动录入。
 - 索引名与字段顺序需与 JSON 保持一致；`direction` 中 `"1"`=升序、`"-1"`=降序。

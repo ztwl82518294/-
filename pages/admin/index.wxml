@@ -29,9 +29,4 @@
     <view class="admin-item-title">📊 月度统计</view>
     <view class="admin-item-desc">搜索 / 浏览专线月度排名</view>
   </view>
-
-  <view class="card admin-item" bindtap="goToPrize">
-    <view class="admin-item-title">🎟️ 奖品发放</view>
-    <view class="admin-item-desc">生成兑奖码、名单与核销</view>
-  </view>
 </view>

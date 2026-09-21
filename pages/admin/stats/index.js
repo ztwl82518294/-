@@ -1,8 +1,6 @@
 // pages/admin/stats/index.js
 // 月度访问用户统计排名（仅管理员，数据由 adminStats 云函数校验后返回）
 
-const ui = require('../../../utils/ui.js');
-
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
 // 当前自然月 yyyy-MM（统一按东八区，与埋点/云函数口径一致）
@@ -103,35 +101,6 @@ Page({
         showCancel: false,
         confirmText: '我知道了'
       });
-    });
-  },
-
-  // 快捷发奖：给该用户（按当前统计月份）手动发放兑奖码
-  assignPrize(e) {
-    const openid = e.currentTarget.dataset.openid;
-    if (!openid) return;
-    wx.showModal({
-      title: '指定该用户中奖？',
-      content: `将为该用户发放${this.data.label}的兑奖码（与排名无关，标记为特批）`,
-      confirmText: '发码',
-      success: (res) => {
-        if (!res.confirm) return;
-        wx.showLoading({ title: '发放中...' });
-        wx.cloud.callFunction({
-          name: 'prize',
-          data: { action: 'assign', openid, month: this.data.month }
-        }).then(r => {
-          wx.hideLoading();
-          const result = r.result || {};
-          if (result.error) return wx.showModal({ title: '发放失败', content: result.error, showCancel: false });
-          wx.showModal({ title: '发放成功', content: '兑奖码：' + result.code, showCancel: false });
-        }).catch(err => {
-          wx.hideLoading();
-          console.error('指定中奖失败：', err);
-          // 原文案 17 字，toast 会被截断；ui.error 自动降级为 modal
-          ui.error('发放失败，请确认 prize 云函数已部署');
-        });
-      }
     });
   }
 });

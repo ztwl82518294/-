@@ -71,10 +71,6 @@ Page({
     wx.switchTab({ url: '/pages/favorite/index' });
   },
 
-  goToPrize() {
-    wx.navigateTo({ url: '/pages/prize/index' });
-  },
-
   goContact() {
     wx.navigateTo({ url: '/pages/contact/index' });
   },

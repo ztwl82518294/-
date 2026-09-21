@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 
 // 与 .indexes.json 一一对应的集合名
-const COLLECTIONS = ['lines', 'stat_events', 'favorites', 'prize_codes', 'prize_logs'];
+const COLLECTIONS = ['lines', 'stat_events', 'favorites'];
 
 function readIndexes(collection) {
   if (!/^[\w-]+$/.test(collection)) return null;

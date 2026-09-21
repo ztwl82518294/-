@@ -1,4 +1,0 @@
-[
-  { "name": "code_1", "unique": true, "keys": [ { "field": "code", "direction": "1" } ] },
-  { "name": "month_openid", "unique": false, "keys": [ { "field": "month", "direction": "1" }, { "field": "openid", "direction": "1" } ] }
-]

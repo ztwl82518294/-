@@ -48,7 +48,6 @@
             <view class="rank-total">{{item.total}} 次</view>
             <view class="rank-detail">搜{{item.search}} · 览{{item.view}}</view>
           </view>
-          <view class="award-btn" catchtap="assignPrize" data-openid="{{item.openid}}">发奖</view>
         </view>
       </block>
       <view class="empty" wx:else>本月暂无访问记录</view>

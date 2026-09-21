@@ -21,6 +21,5 @@ Page({
   goToLines() { wx.navigateTo({ url: '/pages/admin/lines/index' }); },
   goToAds() { wx.navigateTo({ url: '/pages/admin/ads/index' }); },
   goToNotice() { wx.navigateTo({ url: '/pages/admin/notice/index' }); },
-  goToStats() { wx.navigateTo({ url: '/pages/admin/stats/index' }); },
-  goToPrize() { wx.navigateTo({ url: '/pages/admin/prize/index' }); }
+  goToStats() { wx.navigateTo({ url: '/pages/admin/stats/index' }); }
 });

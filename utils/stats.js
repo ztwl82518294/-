@@ -1,10 +1,10 @@
 // utils/stats.js
 // 用户行为统计埋点（搜索 / 浏览专线）。
 // 口径：每次触发经 statLog 云函数写入 stat_events（PV 口径，不去重）；
-//       云函数内做频控（同用户单日上限），adminStats / prize 按自然月聚合排名。
+//       云函数内做频控（同用户单日上限），adminStats 按自然月聚合排名。
 // 所有写入均为 fire-and-forget：失败只打日志，绝不阻塞用户操作。
 // 【部署提醒】需在开发者工具上传部署 statLog 云函数后本模块才生效；
-// 　改为服务端写入是为了防止脚本直刷 stat_events 冲活跃榜。
+// 　改为服务端写入是为了防止脚本直刷 stat_events 污染统计数据。
 
 function logEvent(type, key) {
   if (!type || !key) return;
