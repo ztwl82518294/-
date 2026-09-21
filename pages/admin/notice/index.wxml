@@ -1,0 +1,10 @@
+<view class="container">
+  <view class="page-title">编辑首页公告</view>
+
+  <view class="card">
+    <textarea class="notice-input" placeholder="输入公告内容，如：春节期间正常发车，欢迎询价！" value="{{text}}" bindinput="onInput" maxlength="200"/>
+    <view class="text-muted" style="margin-top:12rpx;">{{text.length}} / 200</view>
+  </view>
+
+  <view class="btn-primary" bindtap="save">保存公告</view>
+</view>

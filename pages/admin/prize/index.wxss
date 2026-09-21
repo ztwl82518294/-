@@ -1,0 +1,145 @@
+/* pages/admin/prize/index.wxss */
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  padding-bottom: 40rpx;
+}
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+  margin: 24rpx 32rpx 0;
+}
+
+/* 核销区 */
+.verify-card { padding: 28rpx 24rpx; }
+.verify-title { font-size: 30rpx; font-weight: 700; color: var(--ink-title); margin-bottom: 20rpx; }
+.verify-row { display: flex; align-items: center; gap: 16rpx; }
+.verify-input {
+  flex: 1;
+  background: #f1f5f9;
+  border-radius: 12rpx;
+  padding: 18rpx 20rpx;
+  font-size: 28rpx;
+  letter-spacing: 2rpx;
+}
+.verify-btn {
+  background: var(--brand);
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+  padding: 0 36rpx;
+  line-height: 72rpx;
+  height: 72rpx;
+  margin: 0;
+}
+.verify-btn::after { border: none; }
+
+/* 月份切换 */
+.month-bar { display: flex; align-items: center; justify-content: center; padding: 28rpx 0 8rpx; }
+.month-arrow {
+  width: 64rpx; height: 64rpx; line-height: 60rpx; text-align: center;
+  font-size: 44rpx; color: var(--brand); background: #fff; border-radius: 50%;
+  margin: 0 40rpx; box-shadow: 0 4rpx 12rpx rgba(37, 99, 235, .1);
+}
+.month-arrow.disabled { color: var(--ink-disabled); pointer-events: none; }
+.month-label { font-size: 34rpx; font-weight: 700; color: var(--ink-title); min-width: 180rpx; text-align: center; }
+
+/* 生成按钮 */
+.gen-wrap { padding: 16rpx 32rpx; }
+.gen-btn {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 44rpx;
+  padding: 18rpx 0;
+}
+.gen-btn::after { border: none; }
+.assign-btn {
+  margin-top: 16rpx;
+  background: #fff;
+  color: var(--brand);
+  font-size: 28rpx;
+  border: 2rpx solid var(--brand);
+  border-radius: 44rpx;
+  padding: 14rpx 0;
+}
+.assign-btn::after { border: none; }
+.rank-manual { background: #ede9fe; color: #7c3aed; }
+
+/* 名单 */
+.list-card { padding: 12rpx 24rpx; }
+.code-item {
+  padding: 22rpx 8rpx;
+  border-bottom: 1rpx solid #f1f5f9;
+}
+.code-item:last-child { border-bottom: none; }
+.code-line {
+  display: flex;
+  align-items: center;
+}
+.rank-no {
+  width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center;
+  border-radius: 10rpx; font-size: 24rpx; font-weight: 700;
+  color: var(--ink-muted); background: #f1f5f9; margin-right: 20rpx; flex-shrink: 0;
+}
+.rank-1 { background: #fef3c7; color: #d97706; }
+.rank-2 { background: #e2e8f0; color: #475569; }
+.rank-3 { background: #fed7aa; color: #ea580c; }
+.code-main { flex: 1; min-width: 0; }
+.code-text { font-size: 32rpx; font-weight: 700; color: var(--brand); letter-spacing: 3rpx; font-family: monospace; }
+.code-sub { font-size: 22rpx; color: var(--ink-muted); margin-top: 4rpx; }
+.code-status { font-size: 24rpx; font-weight: 600; margin-left: 16rpx; flex-shrink: 0; }
+.st-wait { color: #d97706; }
+.st-claim { color: var(--brand); }
+.st-ship { color: #16a34a; }
+
+/* 操作按钮行 */
+.code-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+.act {
+  font-size: 24rpx;
+  padding: 10rpx 24rpx;
+  border-radius: 30rpx;
+  line-height: 1.4;
+}
+.act-primary { background: var(--brand); color: #fff; }
+.act-plain { background: #f1f5f9; color: #475569; }
+.act-danger { background: #fef2f2; color: #dc2626; }
+.empty { text-align: center; color: var(--ink-muted); font-size: 26rpx; padding: 48rpx 0; }
+
+/* 操作日志 */
+.log-card { margin-top: 24rpx; padding: 0 24rpx; }
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 26rpx 8rpx;
+}
+.log-title { font-size: 28rpx; font-weight: 700; color: var(--ink-title); }
+.log-arrow { font-size: 24rpx; color: #64748b; }
+.log-item {
+  padding: 20rpx 8rpx;
+  border-top: 1rpx solid #f1f5f9;
+}
+.log-time { font-size: 22rpx; color: var(--ink-muted); }
+.log-tag {
+  display: inline-block;
+  font-size: 20rpx;
+  border-radius: 6rpx;
+  padding: 2rpx 12rpx;
+  margin: 8rpx 0;
+}
+.log-assign { background: #ede9fe; color: #7c3aed; }
+.log-gen    { background: var(--brand-wash); color: var(--brand); }
+.log-verify { background: #fef3c7; color: #b45309; }
+.log-ship   { background: #dcfce7; color: #15803d; }
+.log-plain  { background: #f1f5f9; color: #475569; }
+.log-remove { background: #fee2e2; color: #dc2626; }
+.log-desc { font-size: 26rpx; color: #334155; line-height: 1.5; }
+.log-actor { font-size: 22rpx; color: var(--ink-muted); margin-top: 6rpx; }

@@ -1,0 +1,53 @@
+/* pages/admin/index.wxss */
+
+/* 数据统计行 */
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 统计卡片 */
+.stat-card {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.stat-card.warn {
+  background-color: #fff7ed;
+}
+
+.stat-num {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--ink-title);
+  margin-bottom: 8rpx;
+}
+
+.stat-card.warn .stat-num {
+  color: #ea580c;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--ink-muted);
+}
+
+/* 功能入口项 */
+.admin-item {
+  padding: 30rpx 24rpx;
+}
+.admin-item-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--ink-title);
+  margin-bottom: 8rpx;
+}
+.admin-item-desc {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+}

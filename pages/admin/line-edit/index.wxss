@@ -1,0 +1,69 @@
+/* pages/admin/line-edit/index.wxss */
+.form-card { padding: 0; margin-bottom: 140rpx; }
+.form-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+.form-item:last-child { border-bottom: none; }
+.form-label {
+  width: 170rpx;
+  font-size: 28rpx;
+  color: #374151;
+  flex-shrink: 0;
+}
+.form-input { flex: 1; font-size: 28rpx; }
+/* 辐射到达县区：多行输入，内容不限、自动换行增高 */
+.form-item-area { align-items: flex-start; }
+.form-textarea {
+  width: 100%;
+  min-height: 72rpx;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+/* ===== VIP 到期时间管理 ===== */
+.vip-mgr { flex: 1; }
+.vip-status {
+  font-size: 26rpx;
+  color: var(--ink-muted);
+  margin-bottom: 12rpx;
+}
+.vip-status.on { color: #d97706; font-weight: 600; }
+.vip-actions { display: flex; gap: 16rpx; }
+.vip-btn {
+  padding: 10rpx 28rpx;
+  font-size: 26rpx;
+  border-radius: 10rpx;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1rpx solid #fcd34d;
+}
+.vip-btn.warn {
+  background: #f3f4f6;
+  color: var(--ink-muted);
+  border-color: #e5e7eb;
+}
+
+/* ===== 固定底栏保存 + 选择器显示 ===== */
+.save-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+.input-placeholder { color: var(--ink-muted); }
+
+/* ===== 城市手输 + 级联选择 ===== */
+.pick-btn {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 8rpx 24rpx;
+  font-size: 26rpx;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1rpx solid #bfdbfe;
+  border-radius: 10rpx;
+}

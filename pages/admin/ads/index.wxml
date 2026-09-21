@@ -1,0 +1,10 @@
+<view class="container">
+  <view class="page-title">广告管理</view>
+  <view class="text-muted" style="margin-bottom:16rpx;">点击广告位进行编辑</view>
+
+  <view class="card ad-row" wx:for="{{ads}}" wx:key="id" bindtap="edit" data-id="{{item.id}}">
+    <view class="ad-num">广告位 {{item.id}}</view>
+    <view class="ad-cur {{item.name ? '' : 'muted'}}">{{item.name || '招租中'}}</view>
+    <text class="arrow">›</text>
+  </view>
+</view>

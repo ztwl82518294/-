@@ -1,0 +1,99 @@
+<view class="page">
+  <view class="route-banner">
+    <view class="route-text">{{fromCityName}} → {{toCityName}}</view>
+    <view class="route-count" wx:if="{{!loading && lineList.length > 0}}">共找到 {{lineList.length}} 条直达专线</view>
+    <view class="route-count" wx:elif="{{!loading && transferList.length > 0}}">未找到直达，为您推荐 {{transferList.length}} 条中转方案</view>
+    <view class="route-count" wx:elif="{{!loading && loadError}}">查询失败</view>
+    <view class="route-count" wx:elif="{{!loading}}">暂未找到相关专线</view>
+    <view class="route-count" wx:else>正在为你查询...</view>
+  </view>
+
+  <view class="list-main">
+    <block wx:if="{{loading}}">
+      <view class="skeleton-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-line skeleton-title"></view>
+        <view class="skeleton-line skeleton-text"></view>
+        <view class="skeleton-line skeleton-text short"></view>
+      </view>
+      <view class="loading-tip">加载中...</view>
+    </block>
+
+    <!-- 直达专线 -->
+    <block wx:elif="{{lineList.length > 0}}">
+      <view wx:for="{{lineList}}" wx:key="_id" class="line-card" bindtap="goToDetail" data-line-id="{{item._id || item.id}}">
+        <view class="line-header">
+          <view class="line-title">{{item.title}}</view>
+          <view class="line-badges">
+            <view class="direct-badge" wx:if="{{!item.transfer}}">直达</view>
+            <view class="transfer-badge" wx:if="{{item.transfer}}">🔄 中转</view>
+            <view class="vip-badge-shine" wx:if="{{item.isVip}}"><text class="vip-icon-shine">👑</text><text>会员</text></view>
+            <view class="cert-badge" wx:if="{{item.certified}}">已认证</view>
+          </view>
+        </view>
+        <view class="line-company {{item.isVip ? 'vip-company-shine' : ''}}">{{item.companyName}}</view>
+        <view class="line-route">{{item.displayRoute}}</view>
+        <view class="line-info">
+          <text class="line-aging">时效：{{item.aging}}</text>
+          <text class="line-price">{{item.priceDesc}}</text>
+        </view>
+        <view class="line-tags">
+          <view wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="tag-item">{{tag}}</view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 中转方案 -->
+    <block wx:elif="{{transferList.length > 0}}">
+      <view class="transfer-tip">🔄 暂无直达专线，为您推荐中转方案（点击各段查看详情）</view>
+      <view wx:for="{{transferList}}" wx:key="key" class="transfer-card">
+        <!-- 第一段 -->
+        <view class="transfer-leg" bindtap="goFirstDetail" data-line-id="{{item.firstLine._id || item.firstLine.id}}">
+          <view class="leg-header">
+            <text class="leg-label">第一段</text>
+            <text class="leg-company {{item.firstLine.isVip ? 'vip-company-shine' : ''}}">{{item.firstLine.companyName}}</text>
+          </view>
+          <view class="leg-route">{{item.firstLine.fromCityName}} → {{item.transferCity}}</view>
+          <view class="leg-info">
+            <text>时效：{{item.firstLine.aging}}</text>
+            <text>{{item.firstLine.priceDesc}}</text>
+          </view>
+        </view>
+        <!-- 中转箭头 -->
+        <view class="transfer-arrow">
+          <view class="arrow-line"></view>
+          <view class="arrow-circle">在 {{item.transferCity}} 中转</view>
+          <view class="arrow-line"></view>
+        </view>
+        <!-- 第二段 -->
+        <view class="transfer-leg" bindtap="goSecondDetail" data-line-id="{{item.secondLine._id || item.secondLine.id}}">
+          <view class="leg-header">
+            <text class="leg-label">第二段</text>
+            <text class="leg-company {{item.secondLine.isVip ? 'vip-company-shine' : ''}}">{{item.secondLine.companyName}}</text>
+          </view>
+          <view class="leg-route">{{item.transferCity}} → {{item.secondLine.toCityName}}</view>
+          <view class="leg-info">
+            <text>时效：{{item.secondLine.aging}}</text>
+            <text>{{item.secondLine.priceDesc}}</text>
+          </view>
+        </view>
+        <view class="transfer-summary">全程：{{item.fullRoute}}</view>
+      </view>
+    </block>
+
+    <!-- 加载失败：与"没查到"严格区分，避免用户误以为平台真的没有这条线路 -->
+    <block wx:elif="{{loadError}}">
+      <view class="empty-card">
+        <view class="empty-title error">⚠️ 查询失败</view>
+        <view class="empty-desc">{{errorMsg}}</view>
+        <view class="retry-btn" bindtap="onRetry">重新查询</view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="empty-card">
+        <view class="empty-title">暂未找到相关专线</view>
+        <view class="empty-desc">可尝试更换出发/到达城市，或稍后再来，平台会持续补充线路</view>
+      </view>
+    </block>
+  </view>
+</view>

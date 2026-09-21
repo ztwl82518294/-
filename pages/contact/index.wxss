@@ -1,0 +1,94 @@
+/* pages/contact/index.wxss */
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+.header {
+  padding: 32rpx 16rpx 24rpx;
+}
+.header-title {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: var(--ink-title);
+}
+.header-sub {
+  font-size: 26rpx;
+  color: var(--ink-muted);
+  margin-top: 12rpx;
+}
+
+/* 联系方式条目 */
+.contact-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+  text-align: left;
+  line-height: normal;
+}
+.contact-item::after { border: none; }
+.online {
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+}
+.online .ci-name { color: #fff; }
+.online .ci-desc { color: rgba(255, 255, 255, .85); }
+.online .ci-arrow { color: #fff; }
+.ci-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 18rpx;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+.online .ci-icon { background: rgba(255, 255, 255, .2); }
+.ci-main { flex: 1; min-width: 0; }
+.ci-name { font-size: 30rpx; font-weight: 700; color: var(--ink-title); }
+.ci-desc { font-size: 24rpx; color: var(--ink-muted); margin-top: 8rpx; }
+.ci-arrow { font-size: 40rpx; color: #cbd5e1; }
+.ci-action {
+  font-size: 24rpx;
+  color: var(--brand);
+  background: #eff6ff;
+  border-radius: 24rpx;
+  padding: 8rpx 24rpx;
+  flex-shrink: 0;
+}
+
+/* 二维码卡片 */
+.qr-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx 28rpx;
+  margin-top: 8rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+}
+.qr-img {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 12rpx;
+}
+.qr-tip {
+  font-size: 26rpx;
+  color: #64748b;
+  margin-top: 24rpx;
+}
+.footer-tip {
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--ink-muted);
+  margin-top: 48rpx;
+  padding: 0 40rpx;
+}

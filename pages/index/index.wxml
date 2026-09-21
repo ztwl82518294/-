@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">物流专线查询</view>
+    <view class="hero-sub">全国物流专线 · 一键直达</view>
+  </view>
+
+  <view class="main">
+    <view class="notice-bar" wx:if="{{notice}}" bindtap="onNoticeTap">
+      <text class="notice-icon">📢</text>
+      <view class="notice-scroll">
+        <text class="notice-text">{{notice}}</text>
+      </view>
+    </view>
+
+    <view class="card query-card">
+        <view class="qc-row">
+
+          <!-- 出发地：可输入 + 可选择 -->
+          <view class="qc-city">
+            <view class="qc-label">出发地</view>
+            <view class="qc-input-wrap">
+              <input class="qc-input" placeholder="输入或选择" value="{{fromText}}" bindinput="onFromInput"/>
+              <picker mode="region" bindchange="onFromChange">
+                <view class="pick-btn">选择</view>
+              </picker>
+            </view>
+          </view>
+
+          <view class="qc-swap" bindtap="swapCity">⇄</view>
+
+          <!-- 目的地：可输入 + 可选择 -->
+          <view class="qc-city">
+            <view class="qc-label">目的地</view>
+            <view class="qc-input-wrap">
+              <input class="qc-input" placeholder="输入或选择" value="{{toText}}" bindinput="onToInput"/>
+              <picker mode="region" bindchange="onToChange">
+                <view class="pick-btn">选择</view>
+              </picker>
+            </view>
+          </view>
+
+        </view>
+      </view>
+
+      <view class="query-btn" bindtap="onQuery">查询专线</view>
+
+      <view class="ad-section" wx:if="{{ads.length > 0}}">
+        <view class="ad-header">
+          <text class="ad-header-title">优质推荐</text>
+          <text class="ad-header-sub">合作物流 · 广告</text>
+        </view>
+        <view class="ad-grid">
+          <view class="ad-card" wx:for="{{ads}}" wx:key="id" bindtap="onAdTap" data-ad="{{item}}">
+            <view class="ad-logo c{{item.colorIdx}}">{{item.initial}}</view>
+            <view class="ad-body">
+              <text class="ad-company">{{item.companyName}}</text>
+              <view class="ad-bottom">
+                <text class="ad-region">{{item.region}}</text>
+                <text class="ad-number">{{item.number}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+  </view>
+</view>

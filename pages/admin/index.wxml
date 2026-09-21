@@ -1,0 +1,37 @@
+<!-- 管理后台首页 -->
+<view class="container">
+  <view class="page-title">管理后台</view>
+
+  <!-- 数据看板 -->
+  <view class="stats-row">
+    <view class="stat-card">
+      <view class="stat-num">{{lineCount}}</view>
+      <view class="stat-label">专线总数</view>
+    </view>
+  </view>
+
+  <view class="card admin-item" bindtap="goToLines">
+    <view class="admin-item-title">📦 专线管理</view>
+    <view class="admin-item-desc">新增 / 编辑 / 上下架专线</view>
+  </view>
+
+  <view class="card admin-item" bindtap="goToAds">
+    <view class="admin-item-title">🎁 广告管理</view>
+    <view class="admin-item-desc">编辑首页 10 个广告位</view>
+  </view>
+
+  <view class="card admin-item" bindtap="goToNotice">
+    <view class="admin-item-title">📢 公告管理</view>
+    <view class="admin-item-desc">编辑首页顶部公告</view>
+  </view>
+
+  <view class="card admin-item" bindtap="goToStats">
+    <view class="admin-item-title">📊 月度统计</view>
+    <view class="admin-item-desc">搜索 / 浏览专线月度排名</view>
+  </view>
+
+  <view class="card admin-item" bindtap="goToPrize">
+    <view class="admin-item-title">🎟️ 奖品发放</view>
+    <view class="admin-item-desc">生成兑奖码、名单与核销</view>
+  </view>
+</view>

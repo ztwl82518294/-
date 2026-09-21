@@ -1,0 +1,57 @@
+[
+  {
+    "title": "示例物流 济南-广州 专线（网点版，推荐）",
+    "companyName": "示例物流有限公司",
+    "fromCityName": "济南市",
+    "toCityName": "广州市",
+    "fromOutlets": [
+      { "addr": "济南盖家沟物流园A区12号", "phone": "13800000000" },
+      { "addr": "济南历城区华山街道某某仓库", "phone": "0531-82518294,13900000001" },
+      { "addr": "济南天桥区北环路某某货场", "phone": "0531-82735656" }
+    ],
+    "toOutlets": [
+      { "addr": "广州白云区某某物流园B区", "phone": "020-12345678" },
+      { "addr": "广州番禺区某某货场", "phone": "13900000002" }
+    ],
+    "toAreas": "广州全境,佛山,东莞",
+    "latitude": 36.71,
+    "longitude": 117.12,
+    "toLatitude": 23.18,
+    "toLongitude": 113.25,
+    "aging": "2-3天",
+    "priceDesc": "重货0.45元/公斤，泡货120元/方",
+    "lineType": "整车/零担",
+    "tags": "直达,天天发车",
+    "isVip": 1,
+    "certified": 1,
+    "status": 1
+  },
+  {
+    "title": "示例物流 济南-广州 专线（字符串写法，等价）",
+    "companyName": "示例物流有限公司",
+    "fromCityName": "济南市",
+    "toCityName": "广州市",
+    "fromOutlets": "济南盖家沟物流园A区12号 | 13800000000\n济南历城区华山街道某某仓库 | 0531-82518294",
+    "toOutlets": "广州白云区某某物流园B区 | 020-12345678",
+    "toAreas": "广州全境,佛山,东莞",
+    "aging": "2-3天",
+    "isVip": 0,
+    "certified": 0,
+    "status": 1
+  },
+  {
+    "title": "示例物流 济南-临沂 专线（简版：只填地址和电话）",
+    "companyName": "示例物流有限公司",
+    "fromCityName": "济南市",
+    "toCityName": "临沂市",
+    "fromPhone": "13900000000",
+    "toPhone": "13900000000",
+    "fromAddress": "济南某某物流园",
+    "toAddress": "临沂某某物流园",
+    "toAreas": "临沂全境",
+    "aging": "1天",
+    "isVip": 0,
+    "certified": 0,
+    "status": 1
+  }
+]

@@ -1,0 +1,45 @@
+<!--pages/contact/index.wxml-->
+<view class="page">
+  <view class="header">
+    <view class="header-title">联系客服</view>
+    <view class="header-sub">兑奖、专线查询、合作入驻，欢迎随时联系</view>
+  </view>
+
+  <!-- 微信在线客服 -->
+  <button wx:if="{{info.onlineEnabled}}" class="contact-item online" open-type="contact">
+    <view class="ci-icon">💬</view>
+    <view class="ci-main">
+      <view class="ci-name">微信在线客服</view>
+      <view class="ci-desc">点击直接发起会话，工作时间内快速回复</view>
+    </view>
+    <view class="ci-arrow">›</view>
+  </button>
+
+  <!-- 电话 -->
+  <view wx:if="{{info.phone}}" class="contact-item" bindtap="callPhone">
+    <view class="ci-icon">📞</view>
+    <view class="ci-main">
+      <view class="ci-name">客服电话</view>
+      <view class="ci-desc">{{info.phone}}</view>
+    </view>
+    <view class="ci-action">拨打</view>
+  </view>
+
+  <!-- 微信号 -->
+  <view wx:if="{{info.wechat}}" class="contact-item" bindtap="copyWechat">
+    <view class="ci-icon">🟢</view>
+    <view class="ci-main">
+      <view class="ci-name">客服微信</view>
+      <view class="ci-desc">{{info.wechat}}（点击复制）</view>
+    </view>
+    <view class="ci-action">复制</view>
+  </view>
+
+  <!-- 二维码 -->
+  <view wx:if="{{info.qrcodeFileID}}" class="qr-card" bindtap="previewQR">
+    <image class="qr-img" src="{{info.qrcodeFileID}}" mode="aspectFit" show-menu-by-longpress="{{true}}"></image>
+    <view class="qr-tip">长按二维码识别，添加客服微信</view>
+  </view>
+
+  <view class="footer-tip">如以上方式暂时无法接通，可稍后再试或留言客服会话</view>
+</view>

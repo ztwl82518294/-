@@ -1,0 +1,38 @@
+<view class="container">
+  <view class="page-title">编辑广告位 {{adId}}</view>
+
+  <view class="card form-card">
+    <view class="form-item"><text class="form-label">公司名称</text><input class="form-input" placeholder="如：江苏中超物流有限公司" value="{{form.companyName}}" bindinput="onInput" data-field="companyName"/></view>
+    <view class="form-item"><text class="form-label">覆盖区域</text><input class="form-input" placeholder="如：苏锡常镇江" value="{{form.region}}" bindinput="onInput" data-field="region"/></view>
+    <view class="form-item"><text class="form-label">展示数字</text><input class="form-input" placeholder="如：32967" value="{{form.number}}" bindinput="onInput" data-field="number"/></view>
+    <view class="form-item">
+      <text class="form-label">跳转专线</text>
+      <view class="form-input line-pick" bindtap="openLinePicker">
+        <text class="{{selectedTitle ? '' : 'placeholder-text'}}">{{selectedTitle || '不跳转（可选，点击搜索选择）'}}</text>
+        <text class="pick-clear" wx:if="{{form.lineId}}" catchtap="clearLine">✕</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="btn-primary" bindtap="save">保存</view>
+
+  <!-- 跳转专线搜索弹层 -->
+  <view class="picker-mask" wx:if="{{showLinePicker}}" bindtap="closeLinePicker">
+    <view class="picker-panel" catchtap="">
+      <view class="picker-header">
+        <text class="picker-title">选择跳转专线</text>
+        <text class="picker-close" bindtap="closeLinePicker">✕</text>
+      </view>
+      <input class="picker-search" placeholder="输入公司名 / 专线名 / 城市搜索" value="{{searchKeyword}}" bindinput="onSearchInput" focus="{{true}}" confirm-type="search"/>
+      <view class="picker-list">
+        <view wx:if="{{searching}}" class="picker-tip">搜索中...</view>
+        <view wx:elif="{{searchKeyword && searchResults.length === 0}}" class="picker-tip">没有匹配的专线</view>
+        <view wx:elif="{{!searchKeyword}}" class="picker-tip">输入关键词后展示匹配结果（最多 20 条）</view>
+        <view wx:for="{{searchResults}}" wx:key="id" class="picker-item" bindtap="selectLine" data-idx="{{index}}">
+          <view class="picker-item-title">{{item.title}}</view>
+          <view class="picker-item-sub">{{item.companyName}} · {{item.fromCityName}} → {{item.toCityName}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,97 @@
+/* pages/prize/index.wxss */
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+  padding: 40rpx 32rpx;
+  box-sizing: border-box;
+}
+.loading-tip {
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 28rpx;
+  padding: 120rpx 0;
+}
+.trophy {
+  font-size: 110rpx;
+  text-align: center;
+  margin: 30rpx 0 10rpx;
+}
+.prize-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 36rpx;
+  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+  text-align: center;
+}
+.prize-month {
+  font-size: 30rpx;
+  color: #64748b;
+  font-weight: 600;
+}
+.prize-label {
+  font-size: 26rpx;
+  color: var(--ink-muted);
+  margin: 36rpx 0 16rpx;
+}
+.code-box {
+  font-size: 64rpx;
+  font-weight: 800;
+  letter-spacing: 8rpx;
+  color: var(--brand);
+  background: #eff6ff;
+  border: 2rpx dashed #93c5fd;
+  border-radius: 16rpx;
+  padding: 30rpx 0;
+  font-family: monospace;
+}
+.prize-tip {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+  margin-top: 20rpx;
+  line-height: 1.6;
+}
+.copy-btn {
+  margin-top: 36rpx;
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 44rpx;
+  padding: 16rpx 0;
+}
+.copy-btn::after { border: none; }
+.done-tip {
+  font-size: 30rpx;
+  color: #16a34a;
+  font-weight: 600;
+  margin-top: 36rpx;
+}
+.claim-tip {
+  color: var(--brand);
+}
+.rank-line {
+  font-size: 32rpx;
+  color: var(--ink-title);
+  margin-top: 28rpx;
+}
+.rank-num {
+  color: #d97706;
+  font-weight: 800;
+}
+.rule-box {
+  margin-top: 40rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  text-align: left;
+}
+.rule-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 10rpx;
+}
+.rule-text {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}

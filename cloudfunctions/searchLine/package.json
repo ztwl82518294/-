@@ -1,0 +1,14 @@
+{
+  "name": "searchLine",
+  "version": "1.0.0",
+  "description": "专线搜索（直达+中转）服务端聚合",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

@@ -1,0 +1,77 @@
+<!-- 专线管理列表页 -->
+<view class="container">
+  <view class="page-title">专线管理</view>
+
+  <!-- 搜索栏：按名称/公司/城市搜索（服务端正则搜索） -->
+  <view class="search-bar">
+    <input
+      class="search-input"
+      type="text"
+      value="{{keyword}}"
+      placeholder="搜索名称 / 公司 / 城市"
+      confirm-type="search"
+      bindinput="onSearchInput"
+    />
+    <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
+  </view>
+
+  <!-- 新增按钮 -->
+  <view class="btn-primary" bindtap="addLine" style="margin-bottom:24rpx;">
+    ＋ 新增专线
+  </view>
+
+  <!-- 导入 / 导出 -->
+  <view class="tool-row">
+    <view class="tool-btn" bindtap="importLines">⬆ 导入</view>
+    <view class="tool-btn" bindtap="exportLines">⬇ 导出</view>
+  </view>
+
+  <!-- 空状态提示 -->
+  <view wx:if="{{lines.length === 0}}" class="empty-tip">
+    <text class="text-muted">{{keyword ? '没有匹配的专线' : '暂无专线'}}</text>
+  </view>
+
+  <!-- 加载进度/总数指示 -->
+  <view wx:if="{{lines.length > 0}}" class="load-stat">
+    <text class="text-muted">已加载 {{loadedCount}}/{{total}} 条{{searched ? '（搜索结果）' : ''}}</text>
+  </view>
+
+  <!-- 加载更多提示 -->
+  <view wx:if="{{loading && lines.length > 0}}" class="empty-tip"><text class="text-muted">加载中...</text></view>
+  <view wx:elif="{{hasMore}}" class="empty-tip"><text class="text-muted">上拉加载更多</text></view>
+  <view wx:elif="{{lines.length > 0}}" class="empty-tip"><text class="text-muted">— 已全部加载 —</text></view>
+
+  <!-- 循环显示每条专线 -->
+  <view class="card" wx:for="{{lines}}" wx:key="_id">
+
+    <!-- 第一行：公司名称（管理员最关注的维度） -->
+    <view class="line-company" wx:if="{{item.companyName}}">🏢 {{item.companyName}}</view>
+
+    <!-- 第二行：专线名称 + 状态 -->
+    <view class="line-top">
+      <text class="line-name {{item.isVip ? 'vip-name-shine' : ''}}">{{item.title}}</text>
+      <view class="line-badges">
+        <view class="vip-badge-shine" wx:if="{{item.isVip}}"><text class="vip-icon-shine">👑</text><text>会员</text></view>
+        <text class="status {{item.status===1?'on':'off'}}">
+          {{item.status===1?'上架':'下架'}}
+        </text>
+      </view>
+    </view>
+
+    <!-- 第三行：路线 + VIP 到期时间 -->
+    <view class="line-sub">
+      {{item.fromCityName}} → {{item.toCityName}}<text wx:if="{{item.vipText && item.vipText !== '未开通'}}" class="vip-expire">（{{item.vipText}}）</text>
+    </view>
+
+    <!-- 第四行：操作按钮 -->
+    <view class="op-row">
+      <!-- 编辑用主键 _id 定位：老数据可能缺业务 id 字段，用 id 会打不开编辑页 -->
+      <text class="op" bindtap="editLine" data-id="{{item._id || item.id}}">编辑</text>
+      <text class="op" bindtap="toggleLine" data-item="{{item}}">
+        {{item.status===1?'下架':'上架'}}
+      </text>
+      <text class="op del" bindtap="deleteLine" data-item="{{item}}">删除</text>
+    </view>
+
+  </view>
+</view>

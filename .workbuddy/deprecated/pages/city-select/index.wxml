@@ -1,0 +1,35 @@
+<!-- 城市选择页面结构 -->
+<view class="container">
+  
+  <!-- 热门城市区域 -->
+  <view class="section-title">热门城市</view>
+  <view class="city-grid">
+    <!-- 循环渲染热门城市 -->
+    <!-- wx:for 是小程序的循环指令 -->
+    <view 
+      wx:for="{{hotCities}}" 
+      wx:key="id" 
+      class="city-tag"
+      bindtap="onCityTap"
+      data-city="{{item}}"
+    >
+      {{item.name}}
+    </view>
+  </view>
+
+  <!-- 所有城市区域 -->
+  <view class="section-title">全部城市</view>
+  <view class="city-list">
+    <!-- 循环渲染全部城市 -->
+    <view 
+      wx:for="{{cityList}}" 
+      wx:key="id" 
+      class="city-item"
+      bindtap="onCityTap"
+      data-city="{{item}}"
+    >
+      {{item.name}}
+    </view>
+  </view>
+
+</view>

@@ -1,0 +1,232 @@
+.page{min-height:100vh;background:var(--bg-page);}
+
+/* 渐变头图 */
+.hero{background:linear-gradient(135deg,var(--brand),var(--brand-light));padding:50rpx 30rpx 90rpx;border-radius:0 0 44rpx 44rpx;position:relative;text-align:center;}
+.fav-btn{position:absolute;top:24rpx;right:24rpx;font-size:24rpx;padding:10rpx 20rpx;background:rgba(255,255,255,.2);border-radius:24rpx;color:#fff;}
+.fav-btn.active{background:#fbbf24;color:#fff;}
+.hero-route{color:rgba(255,255,255,.9);font-size:28rpx;}
+.hero-title{color:#fff;font-size:30rpx;margin-top:10rpx;}
+/* 详情页会员企业名称艺术动感效果（挂在公司名上）：
+   = 金色流光横向流动
+   = 闪电闪烁（随机节奏高亮闪现，模拟雷电）
+   = 多层发光呼吸（金光晕由内向外脉动）
+   = 金色描边 + 立体阴影投射
+   优化：GPU 加速合成层保证流畅
+   【光晕收紧】特效只贴在公司名文字上，不外溢到上下相邻元素 */
+.hero-company.vip-name-shine{
+  display:inline-block;
+  font-weight:bold;
+  animation:vipNameFlow 2.5s infinite linear,
+            vipFlash 3.5s infinite linear,
+            vipGlowBreath 2.4s infinite ease-in-out;
+  will-change:transform,filter;
+  text-shadow:
+    0 0 4rpx rgba(255,215,0,.85),
+    0 0 10rpx rgba(255,215,0,.55),
+    0 0 16rpx rgba(255,165,0,.35),
+    0 3rpx 8rpx rgba(0,0,0,.35);
+  -webkit-text-stroke:1rpx rgba(255,215,0,.45);
+  position:relative;
+}
+.hero-company.vip-name-shine::before{
+  content:'';
+  position:absolute;
+  left:50%;top:50%;
+  width:100%;height:115%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse at center,rgba(255,215,0,.16) 0%,rgba(255,215,0,.07) 40%,transparent 70%);
+  border-radius:50%;
+  z-index:-1;
+  animation:vipHaloBreath 2.4s infinite ease-in-out;
+  pointer-events:none;
+}
+/* 电流光带：::after 伪元素，金白光带从左到右穿过文字，配合闪电节奏触发 */
+.hero-company.vip-name-shine::after{
+  content:'';
+  position:absolute;
+  top:0;
+  left:-15%;
+  width:10rpx;
+  height:100%;
+  background:linear-gradient(180deg,
+    transparent 0%,
+    rgba(255,245,200,.4) 10%,
+    rgba(255,215,0,.9) 30%,
+    rgba(255,255,255,1) 50%,
+    rgba(255,215,0,.9) 70%,
+    rgba(255,245,200,.4) 90%,
+    transparent 100%);
+  border-radius:6rpx;
+  filter:blur(.5rpx) drop-shadow(0 0 8rpx rgba(255,215,0,1)) drop-shadow(0 0 16rpx rgba(255,255,255,.8));
+  opacity:0;
+  pointer-events:none;
+  animation:vipCurrent 3.5s infinite linear;
+}
+/* 电流穿过：配合闪电时刻，光带快速从左到右穿过，中间有不规律停顿 */
+@keyframes vipCurrent{
+  0%,12%{left:-15%;opacity:0}
+  /* 第一次电流（配合第一次闪电） */
+  13%{opacity:1}
+  15%{left:30%;opacity:1}
+  17%{left:60%;opacity:.8}
+  18%{left:110%;opacity:0}
+  /* 间隙 */
+  19%,46%{left:-15%;opacity:0}
+  /* 第二次电流（配合强闪电，双闪） */
+  47%{opacity:1}
+  49%{left:40%;opacity:1}
+  51%{left:110%;opacity:0}
+  /* 第三次电流（配合尾闪） */
+  75%{opacity:.9}
+  77%{left:35%;opacity:1}
+  79%{left:70%;opacity:.7}
+  80%{left:110%;opacity:0}
+  81%,100%{left:-15%;opacity:0}
+}
+/* 闪电效果：多个不规律短促高亮闪现，模拟雷电闪烁 */
+@keyframes vipFlash{
+  0%,12%,18%,22%,46%,52%,70%,82%,100%{
+    filter:brightness(1) drop-shadow(0 0 4rpx rgba(255,215,0,.5));
+  }
+  14%{filter:brightness(2.2) drop-shadow(0 0 10rpx rgba(255,255,255,.95));}
+  20%{filter:brightness(1.8) drop-shadow(0 0 9rpx rgba(255,255,255,.85));}
+  48%{filter:brightness(2.5) drop-shadow(0 0 12rpx rgba(255,255,255,1));}
+  54%{filter:brightness(1.9) drop-shadow(0 0 10rpx rgba(255,255,255,.9));}
+  76%{filter:brightness(2.2) drop-shadow(0 0 11rpx rgba(255,255,255,1));}
+  80%{filter:brightness(1.5) drop-shadow(0 0 8rpx rgba(255,255,255,.75));}
+}
+@keyframes vipGlowBreath{
+  0%,100%{text-shadow:0 0 4rpx rgba(255,215,0,.85),0 0 10rpx rgba(255,215,0,.55),0 0 16rpx rgba(255,165,0,.35),0 3rpx 8rpx rgba(0,0,0,.35)}
+  50%{text-shadow:0 0 8rpx rgba(255,215,0,.95),0 0 18rpx rgba(255,215,0,.8),0 0 30rpx rgba(255,165,0,.5),0 3rpx 8rpx rgba(0,0,0,.35)}
+}
+@keyframes vipHaloBreath{
+  0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:.9;transform:translate(-50%,-50%) scale(1.08)}
+}
+/* 降频版本（详情页 5 秒后启用，减轻低端机压力） */
+.hero-company.vip-name-shine.vip-slow{
+  animation:vipNameFlow 5s infinite linear,
+            vipFlash 7s infinite linear,
+            vipGlowBreath 4.8s infinite ease-in-out;
+}
+.hero-company.vip-name-shine.vip-slow::before{animation:vipHaloBreath 4.8s infinite ease-in-out;}
+.hero-company.vip-name-shine.vip-slow::after{animation:vipCurrent 7s infinite linear;}
+.hero-company{color:#fff;font-size:42rpx;font-weight:bold;margin-top:18rpx;}
+
+/* 徽章（会员样式统一在 app.wxss 定义，此处仅保留布局与认证徽章） */
+.detail-badges{display:flex;justify-content:center;gap:12rpx;margin-top:20rpx;}
+.cert-badge{display:inline-flex;align-items:center;padding:4rpx 14rpx;border-radius:20rpx;background:var(--brand-wash);color:var(--brand-deep);font-size:20rpx;font-weight:bold;}
+
+/* 主内容（悬浮上移） */
+.main{padding:0 24rpx 40rpx;margin-top:-48rpx;position:relative;z-index:2;}
+
+/* 核心信息卡 */
+.stats-card{display:flex;align-items:stretch;padding:36rpx 10rpx;border-radius:24rpx;box-shadow:0 12rpx 32rpx rgba(31,45,61,.12);}
+.stat{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8rpx;}
+/* 价格列文字较长，给更多宽度 */
+.stat.stat-price{flex:1.4;}
+.stat-v{font-size:28rpx;font-weight:bold;color:var(--ink-title);line-height:1.35;}
+.stat-v.stat-price-v{font-size:24rpx;}
+.stat-v.highlight{color:#059669;}
+.stat-l{font-size:22rpx;color:var(--ink-muted);margin-top:10rpx;}
+.stat-divider{width:1rpx;background:#e2e8f0;align-self:stretch;margin:6rpx 0;}
+
+/* 区块卡 */
+.section-card{margin-top:24rpx;border-radius:24rpx;padding:28rpx;box-shadow:0 8rpx 24rpx rgba(31,45,61,.06);}
+/* 地址与联系：加强阴影 + 悬浮效果 */
+.contact-card{margin-top:32rpx;box-shadow:0 12rpx 32rpx rgba(31,45,61,.12);transform:translateY(-4rpx);transition:transform .12s ease,box-shadow .12s ease;}
+/* 点击下压回弹 */
+.contact-card.card-pressed{transform:translateY(3rpx);box-shadow:0 4rpx 12rpx rgba(31,45,61,.08);}
+.card-title{font-size:30rpx;font-weight:bold;color:var(--ink-title);margin-bottom:20rpx;border-left:6rpx solid var(--brand);padding-left:12rpx;}
+
+/* 标签 */
+.tags-list{display:flex;flex-wrap:wrap;gap:16rpx;}
+.tag-item{background:var(--brand-wash);color:var(--brand);font-size:24rpx;padding:10rpx 24rpx;border-radius:24rpx;}
+
+/* 联系区 */
+.contact-item{display:flex;align-items:center;padding:22rpx 0;border-bottom:1rpx solid #f1f5f9;}
+.contact-item:last-child{border-bottom:none;}
+.c-icon{width:64rpx;height:64rpx;border-radius:18rpx;background:var(--brand-wash);display:flex;align-items:center;justify-content:center;font-size:30rpx;margin-right:16rpx;}
+.contact-info{flex:1;margin-right:12rpx;}
+.contact-label{display:block;font-size:22rpx;color:var(--ink-muted);margin-bottom:6rpx;}
+.phone-line{margin-top:4rpx;}
+.phone-line:first-of-type{margin-top:0;}
+.action-icon{font-size:22rpx;color:var(--brand);padding:8rpx 18rpx;background:var(--brand-wash);border-radius:16rpx;}
+
+/* 底部操作栏 */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;display:flex;gap:16rpx;padding:16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -8rpx 24rpx rgba(31,45,61,.08);}
+.bar-btn{flex:1;height:88rpx;display:flex;align-items:center;justify-content:center;border-radius:44rpx;font-size:28rpx;font-weight:bold;white-space:nowrap;}
+.bar-btn::after{border:none;}
+.btn-share{background:var(--brand-wash);color:var(--brand);}
+.btn-call{background:linear-gradient(135deg,var(--brand),var(--brand-light));color:#fff;box-shadow:0 10rpx 24rpx rgba(37,99,235,.35);}
+/* 主操作按钮加宽突出 */
+.btn-primary-cta{flex:1.6;}
+
+/* 空状态 */
+.empty-card{text-align:center;padding:60rpx 24rpx;border-radius:24rpx;}/* 底部导航按钮 */
+.btn-nav{background:var(--brand-wash);color:var(--brand);}
+/* 后台选点按钮 */
+.loc-btn{flex:1;font-size:26rpx;color:var(--brand);background:var(--brand-wash);padding:14rpx 16rpx;border-radius:12rpx;text-align:center;}
+/* ===== 错误态 ===== */
+.error-emoji { font-size: 80rpx; margin-bottom: 16rpx; }
+.error-text { color: var(--ink-muted); font-size: 28rpx; margin-bottom: 32rpx; }
+.error-actions { display: flex; gap: 24rpx; }
+.error-btn {
+  padding: 16rpx 48rpx;
+  border-radius: 12rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 28rpx;
+}
+.error-btn.ghost {
+  background: #f3f4f6;
+  color: var(--ink-muted);
+}
+
+/* ===== 发站/到站分组 ===== */
+.station-block { margin-bottom: 8rpx; }
+.station-head {
+  font-size: 26rpx; font-weight: bold; margin: 16rpx 0 4rpx;
+  padding-left: 16rpx; border-left: 6rpx solid var(--brand); color: var(--brand);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.station-head.to-head { border-left-color: #059669; color: #059669; }
+/* 分组标题右侧的"复制全部地址" */
+.station-act {
+  font-size: 22rpx; font-weight: normal; color: var(--brand);
+  padding: 4rpx 12rpx; border: 1rpx solid #bfdbfe; border-radius: 20rpx;
+}
+.station-head.to-head .station-act { color: #059669; border-color: #a7f3d0; }
+
+/* ===== 网点条目：地址（带距离标签）在上、电话横排一行、右侧拨号按钮 ===== */
+.pair-item {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 18rpx 0; border-bottom: 1rpx solid #f1f5f9;
+}
+.pair-item:last-of-type { border-bottom: none; }
+.pair-main { flex: 1; min-width: 0; }
+.pair-addr { display: flex; align-items: flex-start; }
+.pair-addr-text {
+  flex: 1; min-width: 0; font-size: 26rpx;
+  color: var(--ink-body); word-break: break-all; line-height: 36rpx;
+}
+/* 距离标签：网点带经纬度且能算出距离时显示（JS 填充 item.km） */
+.pair-km {
+  flex-shrink: 0; font-size: 22rpx; font-weight: bold;
+  color: var(--brand); margin-left: 8rpx; line-height: 36rpx;
+}
+.pair-icon { font-size: 24rpx; margin-right: 8rpx; flex-shrink: 0; line-height: 36rpx; }
+/* 多个电话横排、放不下自动换行；点号码直拨 */
+.pair-phones {
+  display: flex; flex-wrap: wrap;
+  column-gap: 20rpx; row-gap: 6rpx;
+  margin-top: 8rpx;
+}
+.phone-chip { font-size: 26rpx; color: var(--ink-body); }
+/* 右侧拨号按钮：一组一个，垂直居中 */
+.pair-call {
+  flex-shrink: 0; width: 72rpx; height: 72rpx; line-height: 72rpx;
+  text-align: center; font-size: 34rpx;
+  background: var(--brand); border-radius: 16rpx;
+}
+.pair-empty { font-size: 26rpx; color: var(--ink-muted); padding: 12rpx 0; }

@@ -1,0 +1,172 @@
+/**
+ * app.wxss
+ * 全局样式文件
+ * 这里写的样式会作用于所有页面
+ */
+
+/* ==================== 设计令牌（Design Tokens） ====================
+ * 全项目配色的唯一来源。页面/组件一律用 var(--xxx) 引用，禁止再写死色值。
+ *
+ *  | 令牌              | 色值      | 语义                         |
+ *  |-------------------|-----------|------------------------------|
+ *  | --brand           | #2563eb  | 主色（按钮/链接/强调）        |
+ *  | --brand-light     | #4f8bff  | 渐变亮端                     |
+ *  | --brand-deep      | #1d4ed8  | 浅蓝底上的蓝字（保证对比度）   |
+ *  | --brand-wash      | #eef4ff  | 浅蓝底（标签/胶囊）           |
+ *  | --ink-title       | #0f172a  | 标题                         |
+ *  | --ink-body        | #334155  | 正文                         |
+ *  | --ink-muted       | #64748b  | 次要/说明文字（约 4.8:1）     |
+ *  | --ink-disabled    | #c7cdd8  | 禁用态（不做正文用）          |
+ *  | --bg-page         | #f5f7fb  | 页面背景                     |
+ *
+ * 说明：JS / app.json 里不支持 CSS 变量，仍需写字面量，
+ *      改动令牌时记得同步 app.json 的 window.backgroundColor。
+ */
+page {
+  --brand: #2563eb;
+  --brand-light: #4f8bff;
+  --brand-deep: #1d4ed8;
+  --brand-wash: #eef4ff;
+  --ink-title: #0f172a;
+  --ink-body: #334155;
+  --ink-muted: #64748b;
+  --ink-disabled: #c7cdd8;
+  --bg-page: #f5f7fb;
+
+  /* 页面默认背景色（背景使用浅灰色，更接近常见小程序风格） */
+  background-color: var(--bg-page);
+
+  /* 默认文字颜色 */
+  color: var(--ink-body);
+
+  /* 默认字体大小 */
+  /* rpx 是微信小程序响应式单位，会根据手机屏幕自动适配 */
+  font-size: 28rpx;
+
+  /* 默认字体 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+
+  /* 让页面高度至少占满整个屏幕 */
+  min-height: 100%;
+}
+
+/* 常用容器样式 */
+.container {
+  /* 左右留白 */
+  padding: 24rpx;
+
+  /* 盒子模型计算方式 */
+  box-sizing: border-box;
+}
+
+/* 常用标题样式 */
+.page-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--ink-title);
+  margin-bottom: 24rpx;
+}
+
+/* 常用卡片样式 */
+.card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+
+  /* 轻微阴影，让卡片更有层次感 */
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 普通按钮样式 */
+.btn-primary {
+  background-color: var(--brand);
+  color: #ffffff;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  padding: 20rpx 0;
+  text-align: center;
+}
+
+/* 按钮点击后的样式 */
+.btn-primary:active {
+  opacity: 0.85;
+}
+
+/* 灰色提示文字 */
+.text-muted {
+  color: var(--ink-muted);
+  font-size: 24rpx;
+}
+
+/* ==================== 会员企业专属效果（全局） ==================== */
+/* 会员企业名称流光：金白渐变横向流动 + 文字发光 */
+.vip-name-shine {
+  background: linear-gradient(90deg, #b8860b 0%, #ffd700 25%, #fffacd 50%, #ffd700 75%, #b8860b 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: vipNameFlow 2.5s infinite linear;
+  text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.6);
+}
+@keyframes vipNameFlow {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+/* 列表/卡片中的公司名流光：暗金底色保证白卡上可读，流光扫过时亮金高光明显 */
+.vip-company-shine {
+  background: linear-gradient(90deg, #b45309 0%, #d97706 30%, #fcd34d 48%, #fffbeb 52%, #fcd34d 56%, #d97706 74%, #b45309 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: vipNameFlow 2.8s infinite linear;
+  font-weight: bold;
+}
+/* 降频版本（详情页 5 秒后启用，减轻低端机压力） */
+.vip-name-shine.vip-slow { animation-duration: 5s; }
+.vip-company-shine.vip-slow { animation-duration: 6s; }
+
+/* 会员徽章闪耀：金边 + 外发光呼吸 + 双层流光 */
+.vip-badge-shine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #f6d365, #fda085);
+  color: #7c2d12;
+  font-size: 20rpx;
+  font-weight: bold;
+  position: relative;
+  overflow: hidden;
+  border: 2rpx solid #fde68a;
+  box-shadow: 0 0 14rpx rgba(251, 191, 36, 0.7), 0 0 28rpx rgba(251, 191, 36, 0.4);
+  animation: vipGlow 2s infinite ease-in-out;
+}
+.vip-badge-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  animation: vipBadgeSweep 2s infinite;
+}
+@keyframes vipBadgeSweep { 0% { left: -100%; } 100% { left: 100%; } }
+@keyframes vipGlow {
+  0%, 100% { box-shadow: 0 0 14rpx rgba(251, 191, 36, 0.7), 0 0 28rpx rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 24rpx rgba(251, 191, 36, 0.95), 0 0 48rpx rgba(251, 191, 36, 0.6); }
+}
+.vip-icon-shine {
+  animation: vipIconPulse 1.5s infinite;
+  filter: drop-shadow(0 0 6rpx rgba(255, 215, 0, 0.9));
+}
+@keyframes vipIconPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+/* 降频版本 */
+.vip-badge-shine.vip-slow { animation-duration: 4s; }
+.vip-badge-shine.vip-slow::after { animation-duration: 4s; }
+.vip-badge-shine.vip-slow .vip-icon-shine { animation-duration: 3s; }

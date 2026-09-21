@@ -1,0 +1,4 @@
+[
+  { "name": "month_ts", "unique": false, "keys": [ { "field": "month", "direction": "1" }, { "field": "ts", "direction": "-1" } ] },
+  { "name": "ts_1", "unique": false, "keys": [ { "field": "ts", "direction": "-1" } ] }
+]

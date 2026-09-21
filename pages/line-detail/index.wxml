@@ -1,0 +1,107 @@
+<view class="page">
+  <block wx:if="{{lineInfo}}">
+    <view class="hero">
+      <view class="fav-btn {{isFav ? 'active' : ''}}" bindtap="toggleFavorite">{{isFav ? '★ 已收藏' : '☆ 收藏'}}</view>
+      <view class="hero-route">{{lineInfo.fromCityName}} ⇀ {{lineInfo.toCityName}}</view>
+      <!-- 公司名（会员企业）放大置顶并挂金色特效；专线名称缩小置于下方 -->
+      <view class="hero-company {{lineInfo.isVip ? 'vip-name-shine' : ''}} {{reduceAnimation ? 'vip-slow' : ''}}" wx:if="{{lineInfo.companyName && lineInfo.companyName !== lineInfo.title}}">{{lineInfo.companyName}}</view>
+      <view class="hero-title">{{lineInfo.title}}</view>
+      <view class="detail-badges" wx:if="{{lineInfo.isVip || lineInfo.certified}}">
+        <view class="vip-badge-shine {{reduceAnimation ? 'vip-slow' : ''}}" wx:if="{{lineInfo.isVip}}"><text class="vip-icon-shine">👑</text><text>会员企业</text></view>
+        <view class="cert-badge" wx:if="{{lineInfo.certified}}">✓ 已认证</view>
+      </view>
+    </view>
+
+    <view class="main">
+      <view class="card stats-card">
+        <view class="stat"><view class="stat-v highlight">{{lineInfo.aging || '—'}}</view><view class="stat-l">运输时效</view></view>
+        <view class="stat-divider"></view>
+        <view class="stat stat-price"><view class="stat-v stat-price-v">{{lineInfo.priceDesc || '电议'}}</view><view class="stat-l">参考价格</view></view>
+        <view class="stat-divider"></view>
+        <view class="stat"><view class="stat-v">{{lineInfo.lineType || '—'}}</view><view class="stat-l">运输方式</view></view>
+      </view>
+
+      <!-- 无标签时整卡隐藏，避免出现空标题卡片 -->
+      <view class="card section-card" wx:if="{{lineInfo.tags && lineInfo.tags.length > 0}}">
+        <view class="card-title">服务优势</view>
+        <view class="tags-list">
+          <view wx:for="{{lineInfo.tags}}" wx:key="*this" class="tag-item">{{item}}</view>
+        </view>
+      </view>
+
+      <view class="card section-card contact-card" hover-class="card-pressed" hover-stay-time="120">
+        <view class="card-title">地址与联系</view>
+
+        <!-- 始发地：地址（带距离）在上、电话横排一行、右侧一组一个拨号按钮 -->
+        <view class="station-block">
+          <view class="station-head from-head">
+            <text>🚚 始发地</text>
+            <text class="station-act" catchtap="onCopyAllAddr" data-station="from">复制全部地址</text>
+          </view>
+          <view class="pair-item" wx:for="{{fromPairs}}" wx:key="idx">
+            <view class="pair-main">
+              <view class="pair-addr" wx:if="{{item.addr}}" catchtap="onCopyText" data-text="{{item.addr}}">
+                <text class="pair-icon">📍</text>
+                <text class="pair-addr-text">{{item.addr}}</text>
+                <!-- 网点带坐标时显示距离（km 由 JS 填充，无坐标自动隐藏） -->
+                <text class="pair-km" wx:if="{{item.km}}">{{item.km}}</text>
+              </view>
+              <!-- 多个电话横排自动换行，点号码直拨 -->
+              <view class="pair-phones" wx:if="{{item.phones.length > 0}}">
+                <text class="phone-chip" wx:for="{{item.phones}}" wx:for-item="p" wx:key="*this" catchtap="onCallOne" data-phone="{{p}}">{{p}}</text>
+              </view>
+            </view>
+            <view class="pair-call" catchtap="onCallGroup" data-station="from" data-index="{{index}}">📞</view>
+          </view>
+          <view class="pair-empty" wx:if="{{fromPairs.length === 0}}">未填写</view>
+        </view>
+
+        <!-- 目的地：同样式 -->
+        <view class="station-block">
+          <view class="station-head to-head">
+            <text>🏁 目的地</text>
+            <text class="station-act" catchtap="onCopyAllAddr" data-station="to">复制全部地址</text>
+          </view>
+          <view class="pair-item" wx:for="{{toPairs}}" wx:key="idx">
+            <view class="pair-main">
+              <view class="pair-addr" wx:if="{{item.addr}}" catchtap="onCopyText" data-text="{{item.addr}}">
+                <text class="pair-icon">📍</text>
+                <text class="pair-addr-text">{{item.addr}}</text>
+                <text class="pair-km" wx:if="{{item.km}}">{{item.km}}</text>
+              </view>
+              <view class="pair-phones" wx:if="{{item.phones.length > 0}}">
+                <text class="phone-chip" wx:for="{{item.phones}}" wx:for-item="p" wx:key="*this" catchtap="onCallOne" data-phone="{{p}}">{{p}}</text>
+              </view>
+            </view>
+            <view class="pair-call" catchtap="onCallGroup" data-station="to" data-index="{{index}}">📞</view>
+          </view>
+          <view class="pair-empty" wx:if="{{toPairs.length === 0}}">未填写</view>
+        </view>
+      </view>
+
+      <view style="height:140rpx;"></view>
+    </view>
+
+    <view class="bottom-bar">
+      <button class="bar-btn btn-share" open-type="share">分享</button>
+      <view class="bar-btn btn-nav" bindtap="onOpenMap">导航</view>
+      <view class="bar-btn btn-call btn-primary-cta" bindtap="onCallPhone">📞 立即拨打</view>
+    </view>
+  </block>
+
+  <!-- 加载失败/未找到：错误态 + 重新加载 -->
+  <block wx:elif="{{loadError}}">
+    <view class="card empty-card">
+      <view class="error-emoji">⚠️</view>
+      <view class="error-text">{{loadError}}</view>
+      <view class="error-actions">
+        <view class="error-btn" bindtap="retryLoad">重新加载</view>
+        <view class="error-btn ghost" bindtap="goBack">返回</view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="card empty-card"><text>正在加载专线信息...</text></view>
+  </block>
+</view>

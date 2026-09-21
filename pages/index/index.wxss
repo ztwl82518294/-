@@ -1,0 +1,62 @@
+/* 页面底色 */
+.page{min-height:100vh;background:var(--bg-page);}
+
+/* 渐变头图 */
+.hero{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light) 100%);padding:50rpx 30rpx 60rpx;border-radius:0 0 44rpx 44rpx;}
+.hero-title{color:#fff;font-size:46rpx;font-weight:bold;letter-spacing:2rpx;}
+.hero-sub{color:rgba(255,255,255,.85);font-size:26rpx;margin-top:10rpx;}
+
+/* 主内容区 */
+.main{padding:24rpx 24rpx 40rpx;}
+
+/* 公告 */
+.notice-bar{display:flex;align-items:center;background:#fff7ed;border:1rpx solid #ffedd5;border-radius:16rpx;padding:16rpx 20rpx;margin-bottom:20rpx;}
+.notice-icon{font-size:28rpx;margin-right:12rpx;flex-shrink:0;}
+.notice-scroll{flex:1;overflow:hidden;}
+.notice-text{display:inline-block;font-size:24rpx;color:#ea580c;white-space:nowrap;padding-left:100%;animation:notice-marquee 12s linear infinite;}
+@keyframes notice-marquee{from{transform:translateX(0);}to{transform:translateX(-100%);}}
+
+/* 查询卡片 */
+.query-card{padding:40rpx 24rpx;border-radius:24rpx;box-shadow:0 8rpx 24rpx rgba(31,45,61,.08);}
+.qc-row{display:flex;align-items:center;}
+.qc-city{flex:1;text-align:center;}
+.qc-label{font-size:22rpx;color:var(--ink-muted);margin-bottom:12rpx;}
+.qc-value{font-size:38rpx;font-weight:bold;color:var(--ink-title);}
+.qc-value.placeholder{color:#cbd5e1;font-weight:normal;}
+.qc-swap{width:64rpx;height:64rpx;border-radius:50%;background:var(--brand-wash);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:32rpx;margin:0 16rpx;}
+.qc-swap:active{background:var(--brand-wash);}
+
+/* 查询按钮（渐变胶囊） */
+.query-btn{margin-top:28rpx;height:92rpx;line-height:92rpx;text-align:center;border-radius:46rpx;background:linear-gradient(135deg,var(--brand),var(--brand-light));color:#fff;font-size:30rpx;font-weight:bold;box-shadow:0 10rpx 24rpx rgba(37,99,235,.35);}
+.query-btn:active{opacity:.9;}
+
+/* 广告位 */
+.ad-section{margin-top:40rpx;}
+.ad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx;}
+.ad-header-title{font-size:30rpx;font-weight:bold;color:var(--ink-title);}
+.ad-header-sub{font-size:22rpx;color:var(--ink-muted);}
+.ad-grid{display:flex;flex-wrap:wrap;justify-content:space-between;}
+.ad-card{width:48.5%;background:#fff;border-radius:16rpx;display:flex;align-items:center;padding:16rpx;margin-bottom:20rpx;box-shadow:0 4rpx 12rpx rgba(0,0,0,.08);box-sizing:border-box;}
+.ad-logo{width:64rpx;height:64rpx;border-radius:12rpx;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32rpx;font-weight:bold;margin-right:16rpx;}
+.ad-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.ad-company{font-size:24rpx;font-weight:bold;color:var(--ink-title);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ad-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8rpx;}
+.ad-region{font-size:20rpx;color:var(--ink-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.ad-number{font-size:22rpx;color:#f59e0b;font-weight:bold;margin-left:8rpx;flex-shrink:0;}
+.c1{background:linear-gradient(135deg,#5B8CFF,#8A6CFF);}
+.c2{background:linear-gradient(135deg,#FF9A3D,#FF6A3D);}
+.c3{background:linear-gradient(135deg,#FFC93D,#FFA63D);}
+.c4{background:linear-gradient(135deg,#34D399,#10B981);}
+.c5{background:linear-gradient(135deg,#2DD4BF,#0EA5E9);}
+.c6{background:linear-gradient(135deg,#A78BFA,#8B5CF6);}
+.c7{background:linear-gradient(135deg,#F472B6,#EC4899);}
+.c8{background:linear-gradient(135deg,#60A5FA,var(--brand-light));}
+/* 显示所选县区 */
+.qc-district{font-size:22rpx;color:var(--brand);margin-top:8rpx;}/* 市/区县 切换小按钮 */
+.qc-toggle{font-size:22rpx;color:var(--brand);background:var(--brand-wash);padding:4rpx 16rpx;border-radius:16rpx;margin-top:8rpx;display:inline-block;}/* 市/区县 两个可点标签 */
+.qc-chips{display:flex;justify-content:center;gap:12rpx;margin-top:12rpx;}
+.chip{font-size:22rpx;color:#64748b;background:#f1f5f9;padding:6rpx 20rpx;border-radius:20rpx;}
+.chip.active{color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-light));}/* 输入框 + 选择按钮 */
+.qc-input-wrap{display:flex;align-items:center;gap:10rpx;margin-top:12rpx;}
+.qc-input{flex:1;background:#f1f5f9;border-radius:12rpx;padding:14rpx 16rpx;font-size:26rpx;color:var(--ink-title);}
+.pick-btn{font-size:22rpx;color:var(--brand);background:var(--brand-wash);padding:12rpx 20rpx;border-radius:12rpx;}

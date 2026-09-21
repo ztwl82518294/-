@@ -1,0 +1,32 @@
+/* 协议页样式 */
+.doc {
+  padding: 40rpx 32rpx 60rpx;
+  background: #fff;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.doc-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--ink-title);
+  text-align: center;
+}
+.doc-updated {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+  text-align: center;
+  margin: 12rpx 0 32rpx;
+}
+.doc-h {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink-title);
+  margin: 28rpx 0 12rpx;
+}
+.doc-p {
+  font-size: 27rpx;
+  color: #475467;
+  line-height: 1.75;
+  margin-bottom: 12rpx;
+  text-align: justify;
+}

@@ -1,0 +1,58 @@
+/* pages/city-select/index.wxss */
+/* 城市选择页私有样式 */
+
+/* 区域标题 */
+.section-title {
+  font-size: 26rpx;
+  color: var(--ink-muted);
+  margin: 24rpx 0 16rpx;
+}
+
+/* 热门城市网格布局 */
+.city-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+/* 热门城市标签 */
+.city-tag {
+  padding: 12rpx 24rpx;
+  background-color: #ffffff;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: #374151;
+  border: 1rpx solid #e5e7eb;
+}
+
+/* 点击效果 */
+.city-tag:active {
+  background-color: #eff6ff;
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* 全部城市列表 */
+.city-list {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+/* 城市列表项 */
+.city-item {
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f3f4f6;
+  font-size: 28rpx;
+  color: #374151;
+}
+
+/* 最后一项没有下边框 */
+.city-item:last-child {
+  border-bottom: none;
+}
+
+/* 点击效果 */
+.city-item:active {
+  background-color: #f9fafb;
+}

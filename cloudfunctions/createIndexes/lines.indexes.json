@@ -1,0 +1,9 @@
+[
+  { "name": "fromCity_1", "unique": false, "keys": [ { "field": "fromCity", "direction": "1" } ] },
+  { "name": "toCity_1", "unique": false, "keys": [ { "field": "toCity", "direction": "1" } ] },
+  { "name": "fromCity_status", "unique": false, "keys": [ { "field": "fromCity", "direction": "1" }, { "field": "status", "direction": "1" } ] },
+  { "name": "fromCityName_1", "unique": false, "keys": [ { "field": "fromCityName", "direction": "1" } ] },
+  { "name": "toCityName_1", "unique": false, "keys": [ { "field": "toCityName", "direction": "1" } ] },
+  { "name": "from_to_status", "unique": false, "keys": [ { "field": "fromCityName", "direction": "1" }, { "field": "toCityName", "direction": "1" }, { "field": "status", "direction": "1" } ] },
+  { "name": "companyName_1", "unique": false, "keys": [ { "field": "companyName", "direction": "1" } ] }
+]

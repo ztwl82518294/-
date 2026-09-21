@@ -1,0 +1,5 @@
+[
+  { "name": "lineId_1", "unique": false, "keys": [ { "field": "lineId", "direction": "1" } ] },
+  { "name": "openid_lineId_unique", "unique": true, "keys": [ { "field": "_openid", "direction": "1" }, { "field": "lineId", "direction": "1" } ] },
+  { "name": "createTime_1", "unique": false, "keys": [ { "field": "createTime", "direction": "-1" } ] }
+]

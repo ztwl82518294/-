@@ -1,0 +1,6 @@
+.ad-row{display:flex;align-items:center;justify-content:space-between;padding:24rpx;}
+.ad-num{font-size:28rpx;font-weight:bold;color:var(--ink-title);width:160rpx;}
+.ad-cur{flex:1;font-size:26rpx;color:var(--brand);text-align:center;}
+/* #c0c4cc 在白底上对比度不足 2:1，"招租中/加载失败"几乎看不见，提深到 #64748b（约 4.8:1） */
+.ad-cur.muted{color:#64748b;}
+.arrow{font-size:32rpx;color:var(--ink-muted);}

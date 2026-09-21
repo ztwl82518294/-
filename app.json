@@ -1,0 +1,69 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/favorite/index",
+    "pages/user/index",
+    "pages/line-list/index",
+    "pages/line-detail/index",
+    "pages/agreement/index",
+    "pages/contact/index",
+    "pages/prize/index"
+  ],
+  "subPackages": [
+    {
+      "root": "pages/admin",
+      "name": "admin",
+      "pages": [
+        "index",
+        "lines/index",
+        "line-edit/index",
+        "ads/index",
+        "ad-edit/index",
+        "notice/index",
+        "stats/index",
+        "prize/index"
+      ]
+    }
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#2563eb",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "物流专线查询",
+    "backgroundColor": "#f5f7fb"
+  },
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#2563eb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/tabbar/home.png",
+        "selectedIconPath": "assets/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/favorite/index",
+        "text": "收藏",
+        "iconPath": "assets/tabbar/star.png",
+        "selectedIconPath": "assets/tabbar/star-active.png"
+      },
+      {
+        "pagePath": "pages/user/index",
+        "text": "我的",
+        "iconPath": "assets/tabbar/user.png",
+        "selectedIconPath": "assets/tabbar/user-active.png"
+      }
+    ]
+  },
+  "requiredPrivateInfos": ["chooseLocation"],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于选择和展示物流专线发货点位置，便于地图导航到发货点"
+    }
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

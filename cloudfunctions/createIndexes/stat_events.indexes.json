@@ -1,0 +1,5 @@
+[
+  { "name": "month_openid", "unique": false, "keys": [ { "field": "month", "direction": "1" }, { "field": "_openid", "direction": "1" } ] },
+  { "name": "day_openid", "unique": false, "keys": [ { "field": "day", "direction": "1" }, { "field": "_openid", "direction": "1" } ] },
+  { "name": "month_type", "unique": false, "keys": [ { "field": "month", "direction": "1" }, { "field": "type", "direction": "1" } ] }
+]

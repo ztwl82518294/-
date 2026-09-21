@@ -1,0 +1,73 @@
+<!-- 排行榜兑奖（用户端） -->
+<view class="page">
+
+  <block wx:if="{{loading}}">
+    <view class="loading-tip">加载中...</view>
+  </block>
+
+  <!-- 有兑奖码 -->
+  <block wx:elif="{{hasCode}}">
+    <view class="trophy {{shipped ? 'trophy-done' : ''}}">{{shipped ? '🎁' : (claimed ? '✅' : '🏆')}}</view>
+
+    <view class="card prize-card">
+      <view class="prize-month">{{label}}榜单 · {{manual ? '特邀奖励' : '第 ' + rank + ' 名'}}</view>
+
+      <!-- 未核销：展示兑奖码 -->
+      <block wx:if="{{!claimed}}">
+        <view class="prize-label">您的专属兑奖码</view>
+        <view class="code-box" bindtap="copyCode">{{code}}</view>
+        <view class="prize-tip">请凭此码联系客服兑奖（点击可复制）</view>
+        <button class="contact-btn" bindtap="goContact">🎧 联系客服兑奖</button>
+        <button class="copy-btn" bindtap="copyCode">复制兑奖码</button>
+      </block>
+
+      <!-- 已核销、待发放 -->
+      <block wx:elif="{{!shipped}}">
+        <view class="done-tip claim-tip">兑奖码已核销，奖品发放中</view>
+        <view class="prize-tip">请耐心等待，或联系客服咨询发放进度</view>
+      </block>
+
+      <!-- 已发放 -->
+      <block wx:else>
+        <view class="done-tip">🎁 奖品已发放，请注意查收！</view>
+        <view class="prize-tip">感谢您的支持，下月榜单继续加油</view>
+      </block>
+
+      <view class="rule-box">
+        <view class="rule-title">活动规则</view>
+        <view class="rule-text">1. 统计口径：按自然月统计每人的搜索与浏览次数，每月 1 日结算上月榜单；</view>
+        <view class="rule-text">2. 奖励：活跃前 {{topN}} 名获得兑奖码，次月初可在本页查看；</view>
+        <view class="rule-text">3. 兑奖：凭兑奖码联系客服，经管理员核销后发放奖品；</view>
+        <view class="rule-text">4. 公平提示：异常高频刷量行为不计入排名；</view>
+        <view class="rule-text">5. 活动期限：本活动长期开展，如需调整或终止规则，将提前在本页公告，已获得未核销的兑奖码仍可有效使用。</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 无兑奖码 -->
+  <block wx:else>
+    <view class="trophy">📊</view>
+    <view class="card prize-card">
+      <block wx:if="{{rank > 0}}">
+        <view class="prize-month">{{label}}榜单</view>
+        <view class="rank-line">您的名次：<text class="rank-num">第 {{rank}} 名</text></view>
+        <view class="prize-tip">
+          {{rank <= topN ? '兑奖码生成中，请稍后再来查看' : '每月活跃前 ' + topN + ' 名可获得兑奖码，继续加油！'}}
+        </view>
+      </block>
+      <block wx:else>
+        <view class="prize-month">{{label}}榜单</view>
+        <view class="prize-tip">上月暂无您的访问记录，多搜专线、多看详情即可上榜</view>
+      </block>
+      <view class="rule-box">
+        <view class="rule-title">活动规则</view>
+        <view class="rule-text">1. 统计口径：按自然月统计每人的搜索与浏览次数，每月 1 日结算上月榜单；</view>
+        <view class="rule-text">2. 奖励：活跃前 {{topN}} 名获得兑奖码，次月初可在本页查看；</view>
+        <view class="rule-text">3. 兑奖：凭兑奖码联系客服，经管理员核销后发放奖品；</view>
+        <view class="rule-text">4. 公平提示：异常高频刷量行为不计入排名；</view>
+        <view class="rule-text">5. 活动期限：本活动长期开展，如需调整或终止规则，将提前在本页公告，已获得未核销的兑奖码仍可有效使用。</view>
+      </view>
+    </view>
+  </block>
+
+</view>
