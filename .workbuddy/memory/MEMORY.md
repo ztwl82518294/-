@@ -30,7 +30,8 @@
 - 管理端编辑页城市字段是「手输 input + region picker」双通道（乡镇级目的地如"羊流镇"不在级联数据里，必须能手输）。
 
 ## 运维事项
-- git 仓库仍 0 提交、无版本备份（已多次提醒用户，未处理）。
+- **git 仓库已建基线**（2026-09-21）：分支 `main`，首次提交 `4edc3dc`（156 文件）。`.workbuddy/memory` 与 `.workbuddy/scripts` **入库**（团队资产），`.workbuddy/reports/` 排除（生成物）。
+- **远程推送受阻**：本机沙箱代理（127.0.0.1:59788）拒绝 CONNECT 到 github.com:443（502）；系统另有 127.0.0.1:7897 代理（Clash 类）但沙箱未走。需用户在沙箱外推送。仓库无任何密钥/凭证，可安全推公开或私有远程。
 - 云函数改动后需在开发者工具重新上传；adminLine 最近一次修复（2026-09-16）后用户需重传。
 - 导入文件放 `E:\微信小程序公司信息\`；项目自带的 JSON 处理脚本在 `.workbuddy/scripts/`（fix-shandong-json.js 可作为其他公司数据修复的模板）。
 - 一键回归：`node .workbuddy/scripts/run-tests.js`；静态体检：`node .workbuddy/scripts/scan-project-health.js`（绑定/dataset/路由/wx:key）。改前端绑定时先跑体检。
