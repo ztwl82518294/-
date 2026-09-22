@@ -29,7 +29,11 @@ const DAY_OPTIONS = [
 Page({
   data: {
     fromCity: '',
+    /** 出发地区县（可空；★ 只影响展示，查询按 fromCity 走） */
+    fromArea: '',
     toCity: '',
+    /** 到达地区县（同上） */
+    toArea: '',
 
     /** 城市选择器 */
     pickerVisible: false,
@@ -69,8 +73,15 @@ Page({
     const q = this.options || {};
     const from = params.safeDecode(q.from);
     const to = params.safeDecode(q.to);
-    if (from) this.setData({ fromCity: from });
-    if (to) this.setData({ toCity: to });
+    const next = {};
+    if (from) next.fromCity = from;
+    if (to) next.toCity = to;
+    // 区县只做展示，但既然传来了就收下，否则用户选的区县一跳就没了
+    const fa = params.safeDecode(q.fromArea);
+    const ta = params.safeDecode(q.toArea);
+    if (fa) next.fromArea = fa;
+    if (ta) next.toArea = ta;
+    if (Object.keys(next).length) this.setData(next);
   },
 
   /** 下拉刷新：有查询条件就重查，没有就只是收掉刷新动画 */
@@ -133,6 +144,13 @@ Page({
     const next = {};
     if (pending.from) next.fromCity = pending.from;
     if (pending.to) next.toCity = pending.to;
+    /*
+     * ★ 区县要一起带过来。首页搜「朝阳」时 hit.city = '北京'、hit.area = '朝阳区'，
+     *   若这里只接城市，用户会看到「朝阳区」跳过来变成光秃秃的「北京」，
+     *   像是我们把他的选择丢了。
+     */
+    next.fromArea = pending.fromArea || '';
+    next.toArea = pending.toArea || '';
     // 带入新条件时清掉旧的筛选，避免「上次勾了直达导致看着像没结果」
     next.directOnly = false;
     next.dailyOnly = false;
@@ -157,12 +175,28 @@ Page({
     this.setData({ pickerVisible: true, pickerTarget: 'to', pickerTitle: '选择目的地' });
   },
 
+  /**
+   * 城市（含区县）选定
+   *
+   * ★ detail 里 city 与 area 是两回事：
+   *   city 用于**查询**（专线库按城市收录），area 只用于**展示**。
+   *   这里绝不能拿 detail.name / detail.area 去覆盖 city ——
+   *   否则选了「朝阳区」就变成查「朝阳区」，永远查不到线路。
+   */
   onCitySelected(e) {
-    const name = e.detail && e.detail.name;
-    if (!name) return;
-    const key = this.data.pickerTarget === 'from' ? 'fromCity' : 'toCity';
+    const d = e.detail || {};
+    const city = d.city || '';
+    if (!city) return;
+
+    const isFrom = this.data.pickerTarget === 'from';
     const next = { pickerVisible: false };
-    next[key] = name;
+    if (isFrom) {
+      next.fromCity = city;
+      next.fromArea = d.area || '';
+    } else {
+      next.toCity = city;
+      next.toArea = d.area || '';
+    }
     // 条件变了，旧结果失效
     next.rows = [];
     next.searched = false;
@@ -173,13 +207,13 @@ Page({
     this.setData({ pickerVisible: false });
   },
 
-  /** 清空某一侧 */
+  /** 清空某一侧（区县跟着一起清，否则会残留一个没城市的区县） */
   onClearFrom() {
-    this.setData({ fromCity: '', rows: [], searched: false });
+    this.setData({ fromCity: '', fromArea: '', rows: [], searched: false });
   },
 
   onClearTo() {
-    this.setData({ toCity: '', rows: [], searched: false });
+    this.setData({ toCity: '', toArea: '', rows: [], searched: false });
   },
 
   /* ============================================================
@@ -187,12 +221,20 @@ Page({
    * ============================================================ */
 
   onSwap() {
-    const { fromCity, toCity } = this.data;
+    const { fromCity, toCity, fromArea, toArea } = this.data;
     if (!fromCity && !toCity) {
       wx.showToast({ title: '请先选择城市', icon: 'none' });
       return;
     }
-    this.setData({ fromCity: toCity, toCity: fromCity, rows: [], searched: false }, () => {
+    // 区县跟着城市一起换，否则「北京·朝阳 → 上海」反向后变成「上海 → 北京·朝阳」
+    this.setData({
+      fromCity: toCity,
+      fromArea: toArea,
+      toCity: fromCity,
+      toArea: fromArea,
+      rows: [],
+      searched: false
+    }, () => {
       // 交换后若两侧都有值，自动查一次（这就是「反向查」的价值：少点一步）
       if (this.data.fromCity && this.data.toCity) this.doSearch();
     });
@@ -406,7 +448,9 @@ Page({
   onResetQuery() {
     this.setData({
       fromCity: '',
+      fromArea: '',
       toCity: '',
+      toArea: '',
       rows: [],
       total: 0,
       searched: false,

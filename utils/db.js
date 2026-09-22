@@ -12,6 +12,8 @@
 
 const { COLLECTIONS } = require('../shared/schema');
 const common = require('./common');
+/* 公告与推广位的默认内容：云库没建集合或取不到时用它兜底，首页不开天窗 */
+const { DEFAULT_ANNOUNCEMENTS, DEFAULT_FEATURED } = require('../data/announcements');
 
 const PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
@@ -279,6 +281,134 @@ async function listRecentCompanies(limit) {
   return r.data;
 }
 
+/* ============================================================
+ * 运营位：公告 / 优质线路推广
+ *
+ * ★★ 为什么这两个要带「内置兜底」：
+ *   它们是**纯运营内容**，云库里没建集合、没导数据、或网络抖动时，
+ *   页面不能开天窗 —— 首页顶部一块空板比没有更难看。
+ *   所以取不到就退回到 data/announcements.js 里的默认内容，
+ *   保证任何情况下首页都是完整的。返回体里用 source 标明数据来源，
+ *   便于排查「为什么后台改了公告、首页没变」这类问题。
+ * ============================================================ */
+
+/**
+ * 公告（只要上线的，且在生效时间窗内）
+ *
+ * 时间窗在客户端过滤：云开发的 where 做不了「startAt <= now <= endAt」这种
+ * 双边界判断，而公告条数极少（几条），本地过滤比折腾查询条件划算。
+ *
+ * @returns {{ok:boolean, data:Array, source:'cloud'|'fallback'}}
+ */
+async function listAnnouncements(limit) {
+  /*
+   * 兜底数据要补 _id：默认内容里用的是业务 id（ann_001 这种），
+   * 而页面 wx:key="_id" 需要它。不补的话 swiper 会报
+   * "Duplicate key" 警告，滚动时还可能复用错乱。
+   */
+  const fallbackData = DEFAULT_ANNOUNCEMENTS
+    .filter((x) => x.enabled !== false)
+    .map((x, i) => Object.assign({}, x, { _id: x.id || ('local_a' + i) }));
+
+  let r;
+  try {
+    r = await listData(
+      coll(COLLECTIONS.ANNOUNCEMENTS)
+        .where({ enabled: true })
+        .orderBy('sortOrder', 'asc')
+        .limit(normLimit(limit || 10))
+    );
+  } catch (err) {
+    return { ok: false, data: fallbackData, source: 'fallback', err: err };
+  }
+
+  if (!r.ok || !r.data.length) {
+    return { ok: r.ok, data: fallbackData, source: 'fallback', err: r.err };
+  }
+
+  const now = Date.now();
+  const data = r.data.filter((x) => {
+    if (x.enabled === false) return false;
+    const s = Number(x.startAt) || 0;
+    const e = Number(x.endAt) || 0;
+    if (s && now < s) return false;
+    if (e && now > e) return false;
+    return true;
+  });
+
+  // 云库里有数据但全被时间窗筛掉了，仍然退回内置，不留空板
+  if (!data.length) return { ok: true, data: fallbackData, source: 'fallback', err: null };
+  return { ok: true, data: data, source: 'cloud', err: null };
+}
+
+/**
+ * 优质线路推广位
+ *
+ * ★ 推广位本身不存公司数/时效 —— 那些是实时数据，存在推广位里会过期。
+ *   这里按 routeKey 回 routes 表现场取，保证「推广位写的家数」
+ *   和「点进去看到的家数」永远是同一个数。
+ *   route 为 null 表示这条推广位指向的线路已被删除，页面应跳过而不是显示空白卡。
+ *
+ * @returns {{ok:boolean, data:Array, source:'cloud'|'fallback'}}
+ */
+/**
+ * 按 routeKey 批量回 routes 表，把实时数据补进推广位
+ *
+ * ★ 抽出来的原因：兜底路径也要走这一步。
+ *   推广位集合没建 ≠ routes 表没数据，兜底时同样能查到真实的公司数。
+ *   否则首页会显示「0 家」，比不显示更糟。
+ *
+ * @returns 补齐 route / companyCount 的行（route 为 null 表示线路已被删除）
+ */
+async function fillRoutes(rows) {
+  const keys = [];
+  rows.forEach((x) => { if (x.routeKey) keys.push(x.routeKey); });
+
+  let byKey = {};
+  if (keys.length) {
+    try {
+      const rr = await listData(
+        coll(COLLECTIONS.ROUTES).where({ routeKey: db().command.in(keys) }).limit(MAX_PAGE_SIZE)
+      );
+      (rr.data || []).forEach((x) => { byKey[x.routeKey] = x; });
+    } catch (err) {
+      byKey = {};
+    }
+  }
+
+  return rows.map((x) => {
+    const route = byKey[x.routeKey] || null;
+    return Object.assign({}, x, {
+      route: route,
+      companyCount: route ? (Number(route.companyCount) || 0) : 0
+    });
+  });
+}
+
+async function listFeaturedRoutes(limit) {
+  const fallbackRows = DEFAULT_FEATURED
+    .filter((x) => x.enabled !== false)
+    .map((x, i) => Object.assign({}, x, { _id: x.id || ('local_f' + i) }));
+
+  let r;
+  try {
+    r = await listData(
+      coll(COLLECTIONS.FEATURED_ROUTES)
+        .where({ enabled: true })
+        .orderBy('sortOrder', 'asc')
+        .limit(normLimit(limit || 10))
+    );
+  } catch (err) {
+    return { ok: false, data: await fillRoutes(fallbackRows), source: 'fallback', err: err };
+  }
+
+  if (!r.ok || !r.data.length) {
+    return { ok: r.ok, data: await fillRoutes(fallbackRows), source: 'fallback', err: r.err };
+  }
+
+  return { ok: true, data: await fillRoutes(r.data), source: 'cloud', err: null };
+}
+
 module.exports = {
   PAGE_SIZE,
   MAX_PAGE_SIZE,
@@ -299,5 +429,7 @@ module.exports = {
   listCompanyRoutes,
   listHotCities,
   listHotRoutes,
-  listRecentCompanies
+  listRecentCompanies,
+  listAnnouncements,
+  listFeaturedRoutes
 };

@@ -72,6 +72,8 @@ function rebuildAdminData(tables) {
     companies: (tables.companies || []).length,
     routes: (tables.routes || []).length,
     route_companies: (tables.routeCompanies || []).length,
+    announcements: (tables.announcements || []).length,
+    featured_routes: (tables.featuredRoutes || tables.featured_routes || []).length,
     corrections: 0
   };
 }
@@ -79,9 +81,20 @@ function rebuildAdminData(tables) {
 function main() {
   const stdoutOnly = process.argv.indexOf('--stdout') >= 0;
   const adminOnly = process.argv.indexOf('--admin-only') >= 0;
-  const { companies, routes, routeCompanies } = buildTables();
+  const { companies, routes, routeCompanies, announcements, featuredRoutes } = buildTables();
   const cities = buildCities();
-  const tables = { companies: companies, routes: routes, routeCompanies: routeCompanies };
+  const tables = {
+    companies: companies,
+    routes: routes,
+    routeCompanies: routeCompanies,
+    /*
+     * 两张运营位表也要重建 —— 它们是首页的门面，
+     * 若后台副本里缺了，后台的公告栏/优质线路页会显示「还没有数据」，
+     * 管理员会误以为功能坏了。
+     */
+    announcements: announcements,
+    featuredRoutes: featuredRoutes
+  };
 
   if (adminOnly) {
     const n = rebuildAdminData(tables);
@@ -90,6 +103,8 @@ function main() {
     console.log('  admin/data/' + COLLECTIONS.ROUTES + '.json           ' + n.routes + ' 条');
     console.log('  admin/data/' + COLLECTIONS.ROUTE_COMPANIES + '.json  ' + n.route_companies + ' 条');
     console.log('  admin/data/' + COLLECTIONS.CORRECTIONS + '.json      ' + n.corrections + ' 条（有意清空）');
+    console.log('  admin/data/' + COLLECTIONS.ANNOUNCEMENTS + '.json   ' + n.announcements + ' 条');
+    console.log('  admin/data/' + COLLECTIONS.FEATURED_ROUTES + '.json ' + n.featured_routes + ' 条');
     console.log('');
     console.log('admins.json 未改动（管理员账号与密码保留）。');
     return;
@@ -99,7 +114,9 @@ function main() {
     [COLLECTIONS.COMPANIES, companies],
     [COLLECTIONS.ROUTES, routes],
     [COLLECTIONS.ROUTE_COMPANIES, routeCompanies],
-    [COLLECTIONS.CITIES, cities]
+    [COLLECTIONS.CITIES, cities],
+    [COLLECTIONS.ANNOUNCEMENTS, announcements],
+    [COLLECTIONS.FEATURED_ROUTES, featuredRoutes]
   ];
 
   console.log('=== 待导入数据 ===');
@@ -126,7 +143,8 @@ function main() {
   const n = rebuildAdminData(tables);
   console.log('');
   console.log('已重建 admin/data/（公司 ' + n.companies + ' / 线路 ' + n.routes +
-    ' / 关联 ' + n.route_companies + '，纠错清空）');
+    ' / 关联 ' + n.route_companies + ' / 公告 ' + n.announcements +
+    ' / 推广位 ' + n.featured_routes + '，纠错清空）');
 
   console.log('');
   console.log('导入方法：云开发控制台 → 数据库 → 新建集合 → 导入 → 选择对应 .jsonl，冲突模式选「insert」');

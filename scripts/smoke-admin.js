@@ -25,7 +25,15 @@ const http = require('http');
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'admin', 'data');
 const PORT = Number(process.env.SMOKE_PORT || 8791);
-const FILES = ['companies.json', 'routes.json', 'route_companies.json', 'corrections.json', 'admins.json'];
+/*
+ * ★ 新增运营位两表（announcements / featured_routes）必须列进来：
+ *   本脚本把 admin/data 当临时工作区，跑完还原；没列进 FILES 的文件
+ *   **不会被备份**，冒烟里做的增删改就会真留在磁盘上。
+ */
+const FILES = [
+  'companies.json', 'routes.json', 'route_companies.json', 'corrections.json', 'admins.json',
+  'announcements.json', 'featured_routes.json'
+];
 
 let pass = 0;
 let fail = 0;
@@ -65,7 +73,9 @@ function assertDataHealthy() {
   const expectCount = {
     'companies.json': expect.companies.length,
     'routes.json': expect.routes.length,
-    'route_companies.json': expect.routeCompanies.length
+    'route_companies.json': expect.routeCompanies.length,
+    'announcements.json': (expect.announcements || []).length,
+    'featured_routes.json': (expect.featuredRoutes || []).length
   };
 
   const problems = [];
@@ -497,6 +507,84 @@ async function main() {
     r = await req('GET', '/quality');
     t('看板页渲染', r.status === 200 && /一致性检查/.test(r.text));
 
+    /* ---------- 运营位：公告栏 / 优质线路推广（2026-09-22 新增） ---------- */
+    /*
+     * ★ 为什么后台逻辑已被单元测试覆盖，这里还要跑一遍 HTTP：
+     *   首页这两块是「改了后台 → 首页才变」的链路，中间多一层 API 与落盘。
+     *   单元测试只证明 store 对，证明不了「接口接对了、写进磁盘了」。
+     *   这条链路断了的表现是：后台改完看着成功了，刷新首页还是老样子。
+     */
+    section('运营位：公告栏 / 优质线路推广');
+
+    r = await req('GET', '/announcements');
+    t('公告栏页渲染', r.status === 200 && /公告栏/.test(r.text), 'HTTP ' + r.status);
+
+    r = await req('GET', '/announcements/edit');
+    t('公告新建页渲染（含级别下拉）', r.status === 200 && /name="level"/.test(r.text));
+
+    r = await req('GET', '/featured');
+    t('优质线路页渲染', r.status === 200 && /优质线路/.test(r.text), 'HTTP ' + r.status);
+
+    r = await req('GET', '/featured/edit');
+    t('推广位新建页渲染（含线路下拉）', r.status === 200 && /name="routeKey"/.test(r.text));
+
+    /* 新建公告 → 落盘 → 删除 */
+    r = await req('POST', '/api/announcement/save',
+      'title=冒烟公告&content=冒烟正文&level=tip&link=&enabled=on&sortOrder=99',
+      'application/x-www-form-urlencoded');
+    t('新建公告成功', r.json && r.json.ok === true, JSON.stringify(r.json));
+    const annId = (r.json && r.json.id) || '';
+
+    r = await req('GET', '/announcements');
+    t('新公告出现在列表里', r.status === 200 && /冒烟公告/.test(r.text));
+    t('新公告已落盘',
+      JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'announcements.json'), 'utf8'))
+        .some((x) => x.title === '冒烟公告'));
+
+    r = await req('POST', '/api/announcement/save',
+      'title=外链公告&content=正文&level=info&link=https://example.com',
+      'application/x-www-form-urlencoded');
+    t('★ 外链公告被拒（小程序里点了没反应）', r.json && r.json.ok === false,
+      (r.json && r.json.message) || '');
+
+    r = await req('POST', '/api/announcement/save',
+      'title=空正文&content=&level=info', 'application/x-www-form-urlencoded');
+    t('空正文公告被拒', r.json && r.json.ok === false, (r.json && r.json.message) || '');
+
+    r = await req('POST', '/api/announcement/delete', '_id=' + encodeURIComponent(annId),
+      'application/x-www-form-urlencoded');
+    t('删除公告成功', r.json && r.json.ok === true, JSON.stringify(r.json));
+
+    /* 新建推广位：必须选一条真实存在的线路 */
+    const routeRows = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'routes.json'), 'utf8'));
+    const featRows = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'featured_routes.json'), 'utf8'));
+    const usedKeys = {};
+    featRows.forEach((x) => { usedKeys[x.routeKey] = true; });
+    const freeRoute = routeRows.filter((x) => !usedKeys[x.routeKey])[0];
+
+    r = await req('POST', '/api/featured/save',
+      'routeKey=' + encodeURIComponent(freeRoute.routeKey) + '&tag=直达&reason=冒烟&enabled=on&sortOrder=99',
+      'application/x-www-form-urlencoded');
+    t('新建推广位成功（从 routeKey 反解城市）', r.json && r.json.ok === true, JSON.stringify(r.json));
+    const featId = (r.json && r.json.id) || '';
+
+    t('推广位的 routeKey 与所选线路一致',
+      JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'featured_routes.json'), 'utf8'))
+        .some((x) => x._id === featId && x.routeKey === freeRoute.routeKey));
+
+    r = await req('POST', '/api/featured/save',
+      'routeKey=' + encodeURIComponent(freeRoute.routeKey) + '&tag=再来一次&reason=x',
+      'application/x-www-form-urlencoded');
+    t('★ 同一线路重复推广被拒', r.json && r.json.ok === false, (r.json && r.json.message) || '');
+
+    r = await req('POST', '/api/featured/save',
+      'routeKey=漠河-三沙&tag=直达&reason=x', 'application/x-www-form-urlencoded');
+    t('★ 指向不存在线路的推广位被拒', r.json && r.json.ok === false, (r.json && r.json.message) || '');
+
+    r = await req('POST', '/api/featured/delete', '_id=' + encodeURIComponent(featId),
+      'application/x-www-form-urlencoded');
+    t('删除推广位成功', r.json && r.json.ok === true, JSON.stringify(r.json));
+
     /* ---------- 安全 ---------- */
     section('安全边界');
 
@@ -548,7 +636,7 @@ async function main() {
      *   对得上。这里只做最基本的一条：三张核心表都**不能是空**。
      *   挡的是「某个写操作把整表覆盖成 []」这类灾难性回归。
      */
-    ['companies.json', 'routes.json', 'route_companies.json'].forEach((f) => {
+    ['companies.json', 'routes.json', 'route_companies.json', 'announcements.json', 'featured_routes.json'].forEach((f) => {
       const arr = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8'));
       t(f + ' 未被清空（覆盖写事故回归护栏）', Array.isArray(arr) && arr.length > 0,
         arr.length + ' 条');

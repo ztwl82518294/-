@@ -13,13 +13,15 @@
 
 ## 一、架构
 
-> ⚠️ 2026-09-21 按用户要求**从零重写**整个项目（「之前的全部删除，一点不留」）。旧 v6.x 已整体删除。
+> ⚠️ 2026-09-21 按用户要求**从零重写**（「之前的全部删除，一点不留」）。旧 v6.x 已整体删除。
 
-**数据模型 6 表**：`companies` / `routes` / `route_companies` / `cities` / `corrections` / `admins`
-- 集合名与字段定义**唯一来源** `shared/schema.js`
+**数据模型 8 表**：`companies` / `routes` / `route_companies` / `cities` / `corrections` / `admins`
+/ `announcements` / `featured_routes`
+- 集合名与字段定义**唯一来源** `shared/schema.js`（小程序 / 云函数 / 后台 / 导出脚本都引它）
 - ★ 核心取舍：**`transitDays` / `isDirect` / `frequency` 挂 `route_companies`**，不挂 `routes`
   （同一家公司跑济南→广州 2 天、跑济南→乌鲁木齐 5 天，塞 `companies` 或 `routes` 都是错的）
-- 唯一数据源：`data/seed-data.js`（40 公司 / 55 线路 / 72 关联）+ `data/cities.js`（344 城）
+- 数据源：`data/seed-data.js`（40 公司 / 55 线路 / 72 关联）+ `data/cities.js`（344 城）
+  + `data/districts.js`（**2980 区县，344 城 0 缺失**）+ `data/announcements.js`（公告/推广默认内容）
 
 | 端 | 内容 |
 |---|---|
@@ -29,8 +31,29 @@
 | 云函数 | `submitCorrection` / `trackCompanyView` |
 | 后台 | `admin/` —— 唯一 Web 端 / 唯一写入口 / 唯一需登录 |
 
-**视觉四条铁律**：无渐变、无光斑、无半透明染色、无高光内阴影。
+### 首页（2026-09-22 改版）
+三个旧入口已删：热门专线 / 最近更新线路 / 我知道公司名看他跑那些线路。
+现为：`.sky` 天气式头部 + **公告栏**（swiper 滚动）+ **优质线路推广**（横向卡片流）+ 两个查询入口。
+- 公告 / 推广位由**后台 admin 维护**，云库取不到时退回 `data/announcements.js`（首页不开天窗）
+- **公告 `link` 只允许本小程序页面路径或空串** —— 跳外域要配业务域名，个人主体受限，写了就是死按钮
+- **推广位不复制线路数据**，只存 `routeKey` + 包装文案，公司数按 routeKey 现场回 `routes` 查
+  （防「推广位写 8 家、点进去只剩 3 家」）
+
+### ★ 区县只影响展示，不影响查询
+`data/districts.js` 全量字典早已存在（此前没代码引用）。专线按城市收录（`routeKey='济南-广州'`），
+不存在「济南-朝阳区」这种线路 ⇒ **选区县后仍按所属城市查询**，`routes` 一条不改、
+routeKey 口径完全不变。区县有重名（市中区 / 鼓楼区）⇒ 反查是「区县 → 城市数组」，由 `cityHint` 消歧。
+
+### 视觉五条铁律
+1. 无渐变（**唯一例外**：首页 `.sky`，见下）
+2. 无光斑（全局无 `radial-gradient`）
+3. 无半透明染色（`--tint-*` 全实色）
+4. 无高光内阴影（无 `inset 0 0 0 1rpx`）
+5. **字体无毛玻璃**（禁 `backdrop-filter`、禁 `filter:blur()`、禁半透明文字色）—— 用户明说要
+
 主色 `#0B6E99`，页底 `#F7F6F3`，卡片纯白，文字 `#37352F`/`#6B6B6B`/`#9B9A97`，边框 `rgba(55,53,47,0.09)`。
+**渐变白名单制**：`check-project.js` 的 `GRADIENT_ALLOW` 精确到「文件 + 选择器」，
+当前唯一放行 `pages/index/index.wxss` 的 `.sky`。放行新渐变 = 改这个白名单，不要全局放开。
 **JS/app.json 不支持 CSS 变量**：改主色须同步 `app.json` 的 navigationBar / tabBar 配色。
 
 ---
@@ -49,7 +72,11 @@ lib/api.js JSON接口  lib/views.js 服务端渲染HTML
 - **`admin/data/` 是工作副本，不入版本库**；改乱了用 `node scripts/export-seed.js --admin-only` 重建（`admins.json` 不动）
 - 导入模板 `/api/import/template` 是**公开资源**，路由**必须在鉴权之前**，别挪回去
 - 导入**先预览后确认**，预览阶段绝不写数据；错误行带 Excel 行号
-- 只做「登录 + 增删改 + 批量导入 + 质量看板」，**不做注册入口**
+- 只做「登录 + 增删改 + 批量导入 + 质量看板 + 运营位（公告/推广）」，**不做注册入口**
+- 运营位校验要点：公告**正文不能空**、level 在枚举内、**link 必须以 `/` 开头**、时间窗不倒挂；
+  推广位 **routeKey 必须真实存在**、**同一线路只能一个推广位**、角标必填 ≤8 字
+- `parseTimeInput()`：把 `2026-10-01` 转时间戳（直接 `Number()` 得 NaN 会静默变 0）
+- store 的 `T` **键名必须等于集合名**，否则 flush 取不到行
 
 ---
 
@@ -67,27 +94,30 @@ lib/api.js JSON接口  lib/views.js 服务端渲染HTML
 
 | 层 | 命令 | 规模 |
 |---|---|---|
-| 单元 | `node test/run-all.js` | 6 套件 **341 断言** |
+| 单元 | `node test/run-all.js` | **7 套件 373 断言** |
 | 体检 | `node scripts/check-project.js` | **12 类**静态检查 |
 | 模块基础能力 | `node .workbuddy/scripts/check-module-basics.js` | **8 个页面**（改页面必跑） |
-| 部署前 | `node scripts/check-deploy.js` | 云函数 **17 项** |
-| 验收 | `node scripts/check-acceptance.js` | A1~A12 **59 断言** + 12 项人工 |
-| 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP **72 断言**（临时端口 8791） |
-| BOM | `node .workbuddy/scripts/check-bom.js` | **提审前必跑** |
+| 部署前 | `node scripts/check-deploy.js` | **19 项** |
+| 验收 | `node scripts/check-acceptance.js` | **61 断言** + 12 项人工 |
+| 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP **89 断言**（临时端口 8791） |
+| BOM | `node .workbuddy/scripts/check-bom.js` | **139 文件，提审前必跑** |
 
 > **自检报错先分清「代码错」还是「检查逻辑错」**（同「修测试而不是修功能」）。
-> 写静态扫描的两个坑：① `collection()` 参数常是**常量引用**，只匹配字符串字面量会误报；
-> ② 已知例外用**显式白名单**豁免，别只在注释里说明。
+> 已多次遇到「检查器关键词落后于实现」—— 一律改检查器并注释说明，
+> **绝不为过检查而给页面加无用代码**（如给首页加整页 loading）。
 
 - `run-all.js` 用**子进程逐个跑**（套件内会 `process.exit()`，`submitCorrection` 会替换 `Module._load`，同进程会污染）。别改同进程串跑。
 - `admin.test.js` 测逻辑（秒级）；`smoke-admin.js` 测 HTTP 层（Cookie、状态码、目录穿越）——「逻辑对」≠「线上能用」。
 - 冒烟把 `admin/data` 当临时工作区（备份→跑→还原），**开跑前先体检数据目录**，坏数据直接拒跑。
+  **新增集合必须同步进 `FILES`**，否则冒烟改动会真留在磁盘。
 - 测试自身坑：`/logout` 下发**清空型 Cookie**，别无脑 `split(';')[0]` 覆盖 token，否则后续全静默 401。
+- **集合清单要同源**：`check-acceptance.js` 的 A2 用 `Object.values(COLLECTIONS)` 取，别手抄（防漂移）。
 
 ### 写静态扫描工具的铁律（check-requires.js 踩坑）
 正则扫源码：① **必须剥注释**（否则注释里的示例变假警报，假失败比不检查更糟）；
 ② **必须保留字符串**（`require('./x')` 的路径就在字符串里，抹掉会变成 0 处、检查形同虚设）；
 ③ **剥注释用等长空白替换**，保行号才能定位；④ 状态机逐字符扫描，字符串内不判注释。
+⑤ 匹配 CSS 属性用**后行否定** `(?<![-\w])color`（否则 `background-color` 被误判）。
 
 `.workbuddy/scripts/` **只放跨项目通用工具**（现 6 个：check-bom / check-requires / scan-toast-length /
 apply-design-tokens / audit-company-phones / fix-import-json）。失效脚本已归档到
@@ -103,7 +133,7 @@ apply-design-tokens / audit-company-phones / fix-import-json）。失效脚本�
   禁用 PowerShell `Out-File`/`Set-Content`/`>`（5.1 默认带 BOM）。
 - 必须走 PS 时用 `[System.IO.File]::WriteAllText($p,$t,(New-Object System.Text.UTF8Encoding($false)))`。
 
-### ★★ 小程序端禁用「需要 @swc/runtime 的语法」（2026-09-22 白屏事故）
+### ★★ 小程序端禁用「需要 @swc/runtime 的语法」（白屏事故）
 
 `project.config.json` 开了 **增强编译 `enhance:true`** ⇒ 用 **SWC** 编译；下列语法会生成
 `require('@swc/runtime/_xxx.js')`，而项目**零依赖** ⇒ **页面加载即抛错、整页白屏**。
@@ -133,7 +163,7 @@ Component is not found in path "wx://not-found".            ← 结果不是原�
 - `rm` 不可用 ⇒ 用 Node `fs.unlinkSync()`
 
 ### 网络 / git
-- **先试直连 `git push origin main`**（2026-09-22 实测直连即通）；不通再跑
+- **先试直连 `git push origin main`**（实测直连即通）；不通再跑
   `.workbuddy/scripts/push-backup.js`（自动写 `http.proxy=127.0.0.1:7897` + 敏感数据自检）
 - **本机 git 怪毛病**：远程跟踪引用存不住，`update-ref` 返回 0 却不写 ⇒ `git status` 显示
   `[origin/main: gone]`。**判断有没有推上去只看 `git ls-remote origin`**（问服务端）
@@ -147,7 +177,7 @@ Component is not found in path "wx://not-found".            ← 结果不是原�
 
 ## 五之二、组件与页面的硬约定
 
-### ★★ 遮罩 / 弹层三条铁律（2026-09-22 连踩两次）
+### ★★ 遮罩 / 弹层三条铁律（同一天连踩两次）
 1. **样式自备**：组件是 `styleIsolation:"isolated"` ⇒ `app.wxss` 全局 `.mask` 进不来。
    漏写 `.mask` ⇒ 遮罩零尺寸看不见，但 `position:fixed` 的父容器**仍是整屏块，照吃点击**
    ⇒ 表现为「页面所有按钮点了没反应」。
@@ -184,6 +214,7 @@ isolated 组件须自备 `.mask`），三个分支均已反向验证。
 - ★★ **空态 ≠ 失败态**：空态重试无用（引导换条件/反馈）；失败态**必须给「重新加载」按钮**。
   混为一谈会让用户把故障当成"没数据"。
 - 多区块页面（首页）要**独立降级**：一块失败只显示那一块重试，不整页白屏。
+  首页用区块级 `featLoading` / `featError`，空态可只写在模板里。
 - 统一用 `app.wxss` 的 `.empty-btn`；旧 `.empty-action` 只在两个页面有局部定义，**别复用**。
 - **客户端筛选 + 分页的坑**：查专线页触底要**循环补页**直到攒够可展示条数，
   否则「这一页全被筛掉」会误判为没有直达公司。
@@ -197,6 +228,7 @@ isolated 组件须自备 `.mask`），三个分支均已反向验证。
 | 集合名与字段定义 | `shared/schema.js` |
 | `routeKey` 派生 | `utils/common.js` 的 `buildRouteKey`（两侧都过 `normCity`） |
 | 城市归一 `normCity` | `utils/common.js`（去「市/区/县/省」后缀） |
+| 区县字典与反查 | `data/districts.js` + `utils/search.js` 的 `resolvePlace` / `searchPlaces` |
 | 公司搜索打分 | `utils/search.js` 的 `searchCompanies` |
 | 电话校验 | `utils/common.js` 的 `isPhoneLike` |
 | 客服联系方式 | `utils/privacy.js` 的 `CONTACT` |
@@ -213,6 +245,7 @@ isolated 组件须自备 `.mask`），三个分支均已反向验证。
 - 打分：全称相等 100 / 简称相等 95 / 全称前缀 90 / 简称前缀 85 / 全称包含 80 /
   简称包含 75 / 拼音前缀 70 / 拼音包含 65 / 首字母 60
 - `detectKeywordType` 命中城市即优先返回 `'both'`
+- 混合搜（城市 + 区县）：城市结果排前，区县命中时 `resolvePlace` 返回的 `city` **必是已知城市**
 
 ---
 
@@ -237,7 +270,7 @@ v4.3（含 `F-xx`/`R-xx` 编号、护栏 R-10~R-15）**已丢失**，从未进�
 - 客服 `15165018553` / `A15165018553`
 - **上线后任何代码改动都需重新提审**；不得在生产配置上「顺手优化」（`libVersion` 保持 `trial`）
 - 云函数改动后**必须重新上传部署**（阻断项）
-- 部署清单见 `docs/验收自检报告.md`：建 6 集合 → 导入 `.data/*.jsonl` →
+- 部署清单见 `docs/验收自检报告.md`：建 **8 集合** → 导入 `.data/*.jsonl` →
   `corrections` 加索引 `openid+day`、`openid+targetId+day` → 上传云函数 → 12 项人工 → 提审
 
 ---
@@ -251,12 +284,14 @@ v4.3（含 `F-xx`/`R-xx` 编号、护栏 R-10~R-15）**已丢失**，从未进�
 
 ## 十、待办
 
-1. ✅ **远程备份（2026-09-22，最新 `5ef7d1c`）** —— `https://github.com/ztwl82518294/-`
-   远程 `main` = 本地 = `5ef7d1c`。⚠️ **仍需用户确认该仓库是 Private**（含客服电话与公司信息）
-2. ⬜ **云函数上传部署**（阻断项）—— 本地 `check-deploy.js` 17/17 全绿，只剩手动上传：
+1. ✅ **远程备份** —— `https://github.com/ztwl82518294/-`（最新 `5ef7d1c`）
+   ⚠️ **仍需用户确认该仓库是 Private**（含客服电话与公司信息）
+2. ⬜ **云函数上传部署**（阻断项）—— 本地 `check-deploy.js` 19/19 全绿，只剩手动上传：
    右键 `submitCorrection` / `trackCompanyView` → **上传并部署：云端安装依赖**
    （本地无 node_modules，不能选「所有文件」）
-3. ⬜ 云控制台建 6 集合 + 导入 `.data/*.jsonl`（companies 40 / routes 55 / route_companies 72 / cities 344）
+3. ⬜ 云控制台建 **8** 集合 + 导入 `.data/*.jsonl`：
+   companies 40 / routes 55 / route_companies 72 / cities 344 /
+   **announcements 4** / **featured_routes 6**
 4. ⬜ `corrections` 加索引 `openid+day`、`openid+targetId+day`
 5. ⬜ **12 项人工验证**（清单在 `docs/验收自检报告.md`）
 6. ⬜ `admin/data/` 与云数据库衔接：缺「从云数据库导出纠错」脚本

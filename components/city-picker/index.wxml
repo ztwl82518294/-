@@ -1,10 +1,12 @@
-<!-- 城市选择器 -->
+<!-- 出发地 / 目的地选择器：一级选城市，二级选区县 -->
 <view wx:if="{{visible}}" class="cp-root">
   <view class="mask" bindtap="onClose"></view>
 
-  <view class="cp-sheet">
+  <!-- catchtap：面板内点击到此为止，不穿透到遮罩 -->
+  <view class="cp-sheet" catchtap="noop">
     <view class="cp-head">
-      <text class="cp-title">{{title}}</text>
+      <text wx:if="{{level === 2}}" class="cp-back" bindtap="onBack">‹</text>
+      <text class="cp-title">{{level === 2 ? curCity : title}}</text>
       <text class="cp-close" bindtap="onClose">✕</text>
     </view>
 
@@ -12,7 +14,7 @@
       <input
         class="cp-input"
         value="{{keyword}}"
-        placeholder="输入城市名或拼音，如 济南 / jinan"
+        placeholder="输入城市或区县，如 济南 / 朝阳"
         placeholder-class="cp-placeholder"
         confirm-type="search"
         bindinput="onInput"
@@ -21,33 +23,59 @@
     </view>
 
     <scroll-view class="cp-body" scroll-y>
-      <!-- 搜索结果模式 -->
+      <!-- 模式一：搜索结果（城市 + 区县混合） -->
       <block wx:if="{{searching}}">
         <view wx:if="{{results.length === 0}}" class="cp-empty">
-          没有找到匹配的城市
+          没有找到匹配的城市或区县
         </view>
         <view
           wx:for="{{results}}"
-          wx:key="name"
-          class="cp-item {{item.name === current ? 'cp-item--on' : ''}}"
-          data-name="{{item.name}}"
-          bindtap="onPick"
+          wx:key="index"
+          class="cp-item"
+          data-index="{{index}}"
+          bindtap="onPickResult"
         >
-          <text class="cp-item-name">{{item.name}}</text>
-          <text class="cp-item-prov">{{item.province}}</text>
+          <view class="cp-item-main">
+            <text class="cp-item-name">{{item.label}}</text>
+            <text class="cp-item-sub">{{item.subLabel}}</text>
+          </view>
+          <text class="cp-item-tag">{{item.type === 'area' ? '区县' : '全市 ›'}}</text>
         </view>
       </block>
 
-      <!-- 默认模式：热门 + 分组 -->
+      <!-- 模式二：二级 —— 某城市下的区县 -->
+      <block wx:elif="{{level === 2}}">
+        <view class="cp-whole {{currentCity === curCity && !currentArea ? 'cp-whole--on' : ''}}" bindtap="onPickWhole">
+          <text class="cp-whole-name">全市（不限区县）</text>
+          <text class="cp-whole-desc">按 {{curCity}} 全境查找</text>
+        </view>
+
+        <view class="cp-sec-title">{{curCity}} · 区县（{{areas.length}} 个）</view>
+        <view class="cp-grid">
+          <view
+            wx:for="{{areas}}"
+            wx:for-item="a"
+            wx:key="*this"
+            class="cp-cell {{currentArea === a && currentCity === curCity ? 'cp-cell--on' : ''}}"
+            data-name="{{a}}"
+            bindtap="onPickArea"
+          >{{a}}</view>
+        </view>
+
+        <!-- 说实话，别让用户选了区县却发现结果和选全市一样、以为坏了 -->
+        <view class="cp-note">专线按城市收录，选区县不会改变查找范围，只是把目的地表达得更清楚。</view>
+      </block>
+
+      <!-- 模式三：一级 —— 热门城市 + 按省分组 -->
       <block wx:else>
         <view class="cp-sec-title">热门城市</view>
         <view class="cp-hot">
           <view
             wx:for="{{hotCities}}"
             wx:key="name"
-            class="cp-hot-item {{item.name === current ? 'cp-hot-item--on' : ''}}"
+            class="cp-hot-item {{item.name === currentCity ? 'cp-hot-item--on' : ''}}"
             data-name="{{item.name}}"
-            bindtap="onPick"
+            bindtap="onPickCity"
           >{{item.name}}</view>
         </view>
 
@@ -58,9 +86,9 @@
               wx:for="{{item.cities}}"
               wx:for-item="city"
               wx:key="name"
-              class="cp-cell {{city.name === current ? 'cp-cell--on' : ''}}"
+              class="cp-cell {{city.name === currentCity ? 'cp-cell--on' : ''}}"
               data-name="{{city.name}}"
-              bindtap="onPick"
+              bindtap="onPickCity"
             >{{city.name}}</view>
           </view>
         </view>

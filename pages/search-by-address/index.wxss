@@ -58,10 +58,25 @@
   color: var(--color-text-tertiary);
 }
 
+/* 区县后缀：「北京 · 朝阳区」里朝阳区这半截 */
+.addr-area {
+  font-size: 26rpx;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
 .addr-clear {
   flex-shrink: 0;
   padding: 8rpx 16rpx;
   font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 选了区县才出现的说明行：把「区县不参与查询」讲清楚 */
+.addr-note {
+  padding: 0 var(--gap-md) 4rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
   color: var(--color-text-tertiary);
 }
 

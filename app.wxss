@@ -12,13 +12,21 @@
  *   4. 强调色克制：链接与选中态统一深蓝 #0B6E99，其余靠 Notion 标签色点缀
  *   5. 无渐变、无光斑、无半透明叠层 —— 完全扁平（flat），与 Notion 一致
  *
- * ★★ 四条铁律（改动任何样式前先读这四条）：
+ * ★★ 五条铁律（改动任何样式前先读这五条）：
  *   1. 无渐变     —— 主按钮是纯色，:active 用 --color-primary-dark，不用 linear-gradient
  *   2. 无光斑     —— 全局不得出现 radial-gradient，页面底是纯色
  *   3. 无半透明染色 —— 所有 --tint-* 是全实色（#XXXXXX），不是 rgba
  *   4. 无高光内阴影 —— 全局不得出现 inset 0 0 0 1rpx
- *   这四条由 test/suites/notion-theme.test.js 数据驱动遍历全部 wxml/wxss 强制校验，
- *   新增页面自动纳入覆盖。
+ *   5. 字体无毛玻璃 —— 全局不得出现 backdrop-filter / filter: blur() / 半透明文字色
+ *                     （用户 2026-09-22 明确：「字体不要有毛玻璃效果」）
+ *
+ * ★ 铁律 1 的唯一例外：首页 .sky 天空大卡（pages/index/index.wxss），
+ *   用户确认「放开低饱和渐变」用于融合 macOS 天气 App 风格。
+ *   例外是**白名单制**（精确到文件 + 选择器），写死在
+ *   scripts/check-project.js 的 GRADIENT_ALLOW 里，不是谁都能加。
+ *
+ * 这五条由 scripts/check-project.js 第 6 类检查遍历全部 wxss 强制校验，
+ * 新增页面自动纳入覆盖。
  *
  * 分层只有两层：
  *   1. page 元素：页面底色（纯色 #F7F6F3）

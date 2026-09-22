@@ -1,181 +1,279 @@
-/* 首页 */
+/**
+ * 首页
+ *
+ * ============ 视觉：Notion 扁平 × macOS 天气 ============
+ *
+ * 融合的是 macOS 天气 App 的**信息组织方式**，不是它的毛玻璃质感：
+ *   1. 大圆角信息卡（.sky）—— 天气 App 的顶部卡是 28rpx 级圆角
+ *   2. 一个超大数字作为视觉锚点（.feat-count）—— 天气 App 用温度数字，
+ *      本场景里用户最先想知道的是「有几家公司在跑这条线」
+ *   3. 信息分层：主信息大号、次信息中号、辅助信息小号灰
+ *   4. 横向卡片流（.feat-scroll）—— 天气 App 的「逐小时预报」排列
+ *
+ * ★★ 字体硬约束（用户 2026-09-22 明确要求）：字体不要有毛玻璃效果。
+ *   ⇒ 全文件禁止 backdrop-filter、禁止 filter: blur()、禁止半透明文字色。
+ *     次信息用**实色的浅蓝**（#DCEEF7）而不是 rgba(255,255,255,.8)。
+ *     由 scripts/check-project.js 第 6 类检查强制校验。
+ *
+ * ★★ 渐变例外（用户确认「放开低饱和渐变」）：
+ *   全站唯一允许 linear-gradient 的地方是 .sky，且必须是低饱和的天空蓝。
+ *   其余一切元素仍是纯色。改这里之前先看 scripts/check-project.js 的白名单。
+ */
 
-/* 品牌区 */
-.hero {
-  padding: 40rpx 8rpx 32rpx;
+/* ============================================================
+ * 区块 1：天空大卡（品牌 + 搜索）
+ * ============================================================ */
+
+.sky {
+  padding: 40rpx 32rpx 36rpx;
+  border-radius: 28rpx;
+  /* 低饱和天空蓝：不做高饱和，否则会把下面 Notion 的暖灰页面压得失真 */
+  background-image: linear-gradient(180deg, #4A93B8 0%, #2C7BA0 55%, #0B6E99 100%);
+  box-shadow: 0 2rpx 10rpx rgba(11, 110, 153, 0.18);
 }
 
-.hero-title {
-  font-size: 48rpx;
+.sky-title {
+  font-size: 52rpx;
   font-weight: 600;
-  color: var(--color-text-primary);
-  letter-spacing: 1rpx;
+  color: #FFFFFF;
+  letter-spacing: 2rpx;
+  line-height: 1.25;
 }
 
-.hero-sub {
+.sky-sub {
   margin-top: 12rpx;
-  font-size: 27rpx;
-  color: var(--color-text-secondary);
+  font-size: 26rpx;
+  /* 实色浅蓝，不用 rgba 半透明 —— 「字体不要毛玻璃」 */
+  color: #DCEEF7;
+  line-height: 1.6;
 }
 
-/* 搜索框 */
-.home-search {
-  margin-bottom: var(--gap-md);
-  height: 92rpx;
+/* 搜索框：白底实色压在渐变上，靠明度差而不是毛玻璃来做区分 */
+.sky-search {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  margin-top: 32rpx;
 }
 
-.home-search-btn {
+.sky-input {
+  flex: 1;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+  background-color: #FFFFFF;
+  border-radius: var(--radius-pill);
+}
+
+.sky-placeholder {
+  color: #9B9A97;
+}
+
+.sky-search-btn {
   flex-shrink: 0;
+  height: 76rpx;
   padding: 0 32rpx;
-  height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28rpx;
-  color: var(--color-text-inverse);
-  background-color: var(--color-primary);
-  border-radius: var(--radius-sm);
-}
-
-.home-search-btn:active {
-  background-color: var(--color-primary-dark);
-}
-
-/* 快捷入口 */
-.entry-row {
-  display: flex;
-  gap: var(--gap-md);
-  margin-bottom: var(--gap-md);
-}
-
-.entry-card {
-  flex: 1;
-  padding: 28rpx 24rpx;
-  border-radius: var(--radius-md);
-}
-
-.entry-name {
-  font-size: 30rpx;
   font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.entry-desc {
-  margin-top: 8rpx;
-  font-size: 23rpx;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-
-/* 热门专线 */
-.hot-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 22rpx 0;
-  border-bottom: 1rpx solid var(--color-border);
-}
-
-.hot-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.hot-main {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  min-width: 0;
-}
-
-.hot-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.hot-count {
-  font-size: 23rpx;
   color: var(--ink-blue);
-  background-color: var(--tint-blue);
-  border: 1rpx solid var(--edge-blue);
-  border-radius: var(--radius-sm);
-  padding: 2rpx 12rpx;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-pill);
 }
 
-.hot-arrow {
-  font-size: 32rpx;
-  color: var(--color-text-tertiary);
+.sky-search-btn:active {
+  background-color: #E4EEF4;
+}
+
+/* ============================================================
+ * 区块 2：公告栏（垂直滚动播）
+ * ============================================================ */
+
+.notice {
+  margin-top: var(--gap-md);
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* 固定高度：swiper 在小程序里必须给死高度，否则垂直滚动会塌成 0 */
+.notice-swiper {
+  height: 84rpx;
+}
+
+.notice-item {
+  display: flex;
+  align-items: center;
+  height: 84rpx;
+  padding: 0 var(--gap-md);
+}
+
+/* 左侧色条：公告级别用颜色区分，比加图标省地方 */
+.notice-bar {
   flex-shrink: 0;
+  width: 6rpx;
+  height: 26rpx;
+  margin-right: 16rpx;
+  border-radius: 3rpx;
+  background-color: var(--ink-blue);
 }
 
-/* 最近更新 */
-.recent-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid var(--color-border);
+.notice-bar--tip {
+  background-color: var(--ink-teal);
 }
 
-.recent-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.notice-bar--warning {
+  background-color: var(--color-warning);
 }
 
-.recent-main {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-xs);
+.notice-text {
+  flex: 1;
   min-width: 0;
-}
-
-.recent-name {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--color-text-primary);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.recent-time {
+.notice-more {
   flex-shrink: 0;
-  margin-left: var(--gap-sm);
-  font-size: 23rpx;
+  margin-left: 12rpx;
+  font-size: 30rpx;
   color: var(--color-text-tertiary);
 }
 
-/* 空态（区块内联，比整页空态轻） */
-.empty-inline {
-  padding: 40rpx 0;
-  text-align: center;
-  font-size: 26rpx;
-  color: var(--color-text-tertiary);
+/* ============================================================
+ * 区块 3：优质线路推广（横向卡片流）
+ * ============================================================ */
+
+.feat-scroll {
+  width: 100%;
+  /* scroll-view 横向滚动：子项必须 inline-block，且容器不能折行 */
+  white-space: nowrap;
 }
 
-/* 区块内联的失败重试（加载失败时替代空文案，避免把异常说成「没数据」） */
-.empty-inline-text {
-  display: block;
-  font-size: 25rpx;
-  color: var(--color-text-tertiary);
-}
-
-.empty-inline-btn {
+.feat-card {
   display: inline-block;
-  margin-top: var(--gap-sm);
-  padding: 10rpx 32rpx;
-  font-size: 25rpx;
-  color: var(--color-primary);
-  background-color: var(--color-bg-card);
+  width: 280rpx;
+  padding: 22rpx 20rpx;
+  margin-right: var(--gap-sm);
+  vertical-align: top;
+  /* 卡片内文字要正常折行，只让卡片本身横向排 */
+  white-space: normal;
+  background-color: var(--color-bg-hover);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.feat-card:active {
+  background-color: var(--color-bg-sunken);
+}
+
+.feat-head {
+  display: flex;
+  align-items: center;
+  min-height: 36rpx;
+}
+
+.feat-tag {
+  padding: 2rpx 12rpx;
+  font-size: 22rpx;
+  color: var(--ink-blue);
+  background-color: var(--tint-blue);
   border: 1rpx solid var(--edge-blue);
   border-radius: var(--radius-sm);
 }
 
-.empty-inline-btn:active {
+/* 视觉锚点：本场景里用户最先想知道的「有几家能打电话的公司」 */
+.feat-count {
+  margin-top: 14rpx;
+  font-size: 48rpx;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink-blue);
+}
+
+.feat-unit {
+  margin-left: 6rpx;
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.feat-route {
+  margin-top: 10rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.feat-reason {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.55;
+  color: var(--color-text-tertiary);
+  /* 理由最多两行，超了截断，卡片高度才不会参差不齐 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* ============================================================
+ * 区块 4：我要发货（通栏）
+ * ============================================================ */
+
+.entry-wide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--gap-md);
+  padding: 28rpx var(--gap-md);
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.entry-wide:active {
   background-color: var(--color-bg-hover);
 }
 
-/* 底部公示 */
+.entry-wide-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-wide-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.entry-wide-desc {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.entry-wide-arrow {
+  flex-shrink: 0;
+  margin-left: var(--gap-md);
+  font-size: 36rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* ============================================================
+ * 区块 5：底部公示
+ * ============================================================ */
+
 .foot {
   margin-top: var(--gap-xl);
   padding: 0 8rpx 40rpx;
@@ -214,4 +312,36 @@
   margin-top: 20rpx;
   font-size: 23rpx;
   color: var(--color-text-tertiary);
+}
+
+/* ============================================================
+ * 区块内联空态 / 失败重试
+ * ============================================================ */
+
+.empty-inline {
+  padding: 40rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}
+
+.empty-inline-text {
+  display: block;
+  font-size: 25rpx;
+  color: var(--color-text-tertiary);
+}
+
+.empty-inline-btn {
+  display: inline-block;
+  margin-top: var(--gap-sm);
+  padding: 10rpx 32rpx;
+  font-size: 25rpx;
+  color: var(--color-primary);
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--edge-blue);
+  border-radius: var(--radius-sm);
+}
+
+.empty-inline-btn:active {
+  background-color: var(--color-bg-hover);
 }

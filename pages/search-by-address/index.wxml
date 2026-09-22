@@ -7,7 +7,7 @@
       <view class="addr-row" bindtap="onPickFrom">
         <view class="addr-key addr-key--from">发</view>
         <view class="addr-val">
-          <text wx:if="{{fromCity}}" class="addr-city">{{fromCity}}</text>
+          <text wx:if="{{fromCity}}" class="addr-city">{{fromCity}}<text wx:if="{{fromArea}}" class="addr-area"> · {{fromArea}}</text></text>
           <text wx:else class="addr-holder">选择出发地</text>
         </view>
         <text wx:if="{{fromCity}}" class="addr-clear" catchtap="onClearFrom">✕</text>
@@ -23,11 +23,15 @@
       <view class="addr-row" bindtap="onPickTo">
         <view class="addr-key addr-key--to">到</view>
         <view class="addr-val">
-          <text wx:if="{{toCity}}" class="addr-city">{{toCity}}</text>
+          <text wx:if="{{toCity}}" class="addr-city">{{toCity}}<text wx:if="{{toArea}}" class="addr-area"> · {{toArea}}</text></text>
           <text wx:else class="addr-holder">选择目的地</text>
         </view>
         <text wx:if="{{toCity}}" class="addr-clear" catchtap="onClearTo">✕</text>
       </view>
+
+      <!-- ★ 选了区县才出现：把「区县不参与查询」这件事说清楚，
+           否则用户会以为查的是「朝阳区 → 浦东新区」结果发现是「北京 → 上海」 -->
+      <view wx:if="{{fromArea || toArea}}" class="addr-note">专线按城市收录，查询按所选城市进行，区县用于说明具体发货位置</view>
 
       <view class="addr-search" bindtap="doSearch">查询专线</view>
     </view>
@@ -167,7 +171,8 @@
 <city-picker
   visible="{{pickerVisible}}"
   title="{{pickerTitle}}"
-  current="{{pickerTarget === 'from' ? fromCity : toCity}}"
+  currentCity="{{pickerTarget === 'from' ? fromCity : toCity}}"
+  currentArea="{{pickerTarget === 'from' ? fromArea : toArea}}"
   bind:select="onCitySelected"
   bind:close="onPickerClose"
 />

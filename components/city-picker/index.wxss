@@ -51,7 +51,22 @@
   padding: 28rpx 32rpx 16rpx;
 }
 
+/* 二级返回按钮：留出和右侧 ✕ 对称的位置，标题才不会歪 */
+.cp-back {
+  font-size: 40rpx;
+  line-height: 1;
+  color: #6B6B6B;
+  padding: 0 16rpx 0 0;
+  min-width: 56rpx;
+}
+
+.cp-back:active {
+  color: #37352F;
+}
+
 .cp-title {
+  flex: 1;
+  min-width: 0;
   font-size: 32rpx;
   font-weight: 600;
   color: #37352F;
@@ -185,4 +200,74 @@
   text-align: center;
   font-size: 27rpx;
   color: #9B9A97;
+}
+
+/* ---- 二级：全市 / 区县 ---- */
+
+/* 「全市」是全宽卡，与下方区县网格拉开层级，用户第一眼就知道可以不选区县 */
+.cp-whole {
+  display: flex;
+  flex-direction: column;
+  padding: 24rpx 24rpx;
+  background-color: #FFFFFF;
+  border: 1rpx solid rgba(55, 53, 47, 0.09);
+  border-radius: 14rpx;
+  margin-bottom: 8rpx;
+}
+
+.cp-whole:active {
+  background-color: #F7F6F3;
+}
+
+.cp-whole--on {
+  background-color: #E7F3F8;
+  border-color: rgba(35, 131, 226, 0.35);
+}
+
+.cp-whole-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #37352F;
+}
+
+.cp-whole-desc {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #9B9A97;
+}
+
+/* ---- 搜索结果行 ---- */
+
+.cp-item-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cp-item-sub {
+  margin-top: 4rpx;
+  font-size: 23rpx;
+  color: #9B9A97;
+}
+
+.cp-item-tag {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  font-size: 22rpx;
+  color: #9B9A97;
+}
+
+/*
+ * 二级底部说明。
+ * 不写这句的后果：用户选了「朝阳区」发现结果和选「北京」一样，
+ * 会以为选择器坏了。把规则讲清楚，反而不容易被当成 bug。
+ */
+.cp-note {
+  margin-top: 28rpx;
+  padding: 20rpx 24rpx;
+  font-size: 23rpx;
+  line-height: 1.6;
+  color: #9B9A97;
+  background-color: #F7F6F3;
+  border-radius: 12rpx;
 }

@@ -249,7 +249,14 @@ const EXPECT = [
   { name: 'companies', rows: tables.companies, fields: schema.COMPANY_FIELDS },
   { name: 'routes', rows: tables.routes, fields: schema.ROUTE_FIELDS },
   { name: 'route_companies', rows: tables.routeCompanies, fields: schema.ROUTE_COMPANY_FIELDS },
-  { name: 'cities', rows: cityMod.CITIES, fields: schema.CITY_FIELDS }
+  { name: 'cities', rows: cityMod.CITIES, fields: schema.CITY_FIELDS },
+  /*
+   * ★ 运营位两张表也要纳入部署前检查：
+   *   漏了它们的后果是「首页公告栏和推广位永远走内置兜底」，
+   *   后台改了内容首页不变 —— 页面不报错，只是功能不对，只能靠这里发现。
+   */
+  { name: 'announcements', rows: tables.announcements, fields: schema.ANNOUNCEMENT_FIELDS },
+  { name: 'featured_routes', rows: tables.featuredRoutes, fields: schema.FEATURED_ROUTE_FIELDS }
 ];
 
 for (const t of EXPECT) {

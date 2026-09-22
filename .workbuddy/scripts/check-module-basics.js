@@ -26,7 +26,7 @@ const SPEC = {
   'index': {
     kind: 'list',
     need: ['pullDown', 'loading', 'empty', 'error'],
-    note: '首页：热门/最近区块，下拉刷新'
+    note: '首页：天空大卡 + 公告栏 + 优质线路推广，下拉刷新'
   },
   'search-by-address': {
     kind: 'list',
@@ -85,7 +85,12 @@ Object.keys(SPEC).forEach((name) => {
 
   hit.pullDown = json.enablePullDownRefresh === true && /onPullDownRefresh\s*\(/.test(js);
   hit.reachBottom = /onReachBottom\s*\(/.test(js) || /bindscrolltolower|scrolltolower/.test(wxml);
-  hit.loading = /loading\s*[:=]/.test(js) && /loading/.test(wxml);
+  /*
+   * 加载态：标志名可以是 loading，也可以是**区块级的** featLoading / xxLoading。
+   * 首页改版后只有「优质线路」一块需要加载态（公告有内置兜底，不会空），
+   * 所以标志叫 featLoading —— 只认 `loading:` 会把一个真的有的加载态判成缺失。
+   */
+  hit.loading = /[A-Za-z]*[Ll]oading\s*[:=]/.test(js) && /loading/.test(wxml);
   /**
    * 空态：两种合法写法都算
    *   a) 有专门的 empty/notFound/noResult 状态标志
@@ -94,14 +99,24 @@ Object.keys(SPEC).forEach((name) => {
    */
   hit.empty =
     (/empty|notFound|noResult|noData/.test(js) && /empty|notFound|noResult|noData/.test(wxml)) ||
-    (/\.length\s*===?\s*0|\.length\s*<\s*1/.test(wxml) && /empty-title|empty-desc/.test(wxml));
+    (/\.length\s*===?\s*0|\.length\s*<\s*1/.test(wxml) && /empty-title|empty-desc/.test(wxml)) ||
+    /*
+     * 第三种合法写法：空态**只写在模板里**（wx:else + 空态样式类 / 文案）。
+     * 首页的「暂无推广线路」就是这个形态 —— JS 里没有 empty 标志，
+     * 靠 wx:elif/wx:else 分支驱动。用户看得见，就该算有。
+     */
+    (/wx:else/.test(wxml) && /empty-inline|empty-title|empty-desc|class="empty"/.test(wxml));
   /**
    * 失败态：必须有「明确区分于空态」的失败标志 + 可点的重试入口。
    *   只在注释里提「重试」不算 —— 用户点不到就不算有失败态。
    */
+  /*
+   * 失败态的标志名同样允许区块级（featError / xxError）：
+   * 只认 loadError 会让「明明有失败态可重试」的页面被判成缺口。
+   */
   hit.error =
-    /loadError|recommendError|loadFailed|networkError/.test(js) &&
-    /loadError|recommendError|loadFailed|networkError/.test(wxml) &&
+    /\w*Error\s*[:=]/.test(js) &&
+    /\w*Error/.test(wxml) &&
     (/bindtap="onRetry|bindtap="onRetryLoad|bindtap="onRetryRecommend/.test(wxml) || /重试|重新加载|重新查询|重新搜索/.test(wxml));
   hit.submitting = /submitting/.test(js) && /submitting/.test(wxml);
   hit.validate = /必填|validate|请填写|请选择/.test(js);

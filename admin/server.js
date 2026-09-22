@@ -327,6 +327,39 @@ const PAGE_ROUTES = {
       };
     }
   },
+  '/announcements': {
+    view: 'announcements',
+    data: () => ({ rows: repo.listAnnouncements() })
+  },
+  '/announcements/edit': {
+    view: 'announcement-edit',
+    data: (q) => ({
+      announcement: q.id ? repo.getAnnouncement(q.id) : null,
+      levels: schema.ANNOUNCEMENT_LEVELS
+    })
+  },
+  '/featured': {
+    view: 'featured',
+    data: () => ({ rows: repo.listFeatured() })
+  },
+  '/featured/edit': {
+    view: 'featured-edit',
+    data: (q) => {
+      const t = repo.tables();
+      const used = {};
+      t.featured_routes.forEach((x) => { used[x.routeKey] = true; });
+      return {
+        featured: q.id ? repo.getFeatured(q.id) : null,
+        routes: t.routes
+          .map((r) => ({
+            routeKey: r.routeKey,
+            label: r.routeKey + '（' + (r.companyCount || 0) + ' 家）',
+            taken: !!used[r.routeKey]
+          }))
+          .sort((a, b) => a.routeKey.localeCompare(b.routeKey, 'zh'))
+      };
+    }
+  },
   '/corrections': {
     view: 'corrections',
     data: (q) => {

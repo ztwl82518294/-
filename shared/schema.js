@@ -4,13 +4,15 @@
  * 目的：避免两端字段名不一致导致的数据写入异常。
  * 本文件是六表模型的唯一契约来源，任何一侧新增字段都必须先改这里。
  *
- * 六张表（PRD 附录「数据表结构」）：
+ * 八张表（PRD 附录「数据表结构」+ 2026-09-22 新增运营位两张）：
  *   companies        公司表
  *   routes           线路表（枢纽）
  *   route_companies  关联表（多对多，承载线路属性）
  *   cities           城市字典
  *   corrections      纠错表
  *   admins           管理员
+ *   announcements    公告表（首页公告栏滚动播）
+ *   featured_routes  优质线路推广位（首页推广区块）
  *
  * ★ 关键设计取舍：时效（transitDays）/ 是否直达（isDirect）/ 发车频率（frequency）
  *   必须放在 route_companies 而非 companies 或 routes。
@@ -23,7 +25,9 @@ const COLLECTIONS = {
   ROUTE_COMPANIES: 'route_companies',
   CITIES: 'cities',
   CORRECTIONS: 'corrections',
-  ADMINS: 'admins'
+  ADMINS: 'admins',
+  ANNOUNCEMENTS: 'announcements',
+  FEATURED_ROUTES: 'featured_routes'
 };
 
 const COMPANY_FIELDS = {
@@ -120,6 +124,54 @@ const ADMIN_FIELDS = {
   createdAt: 'createdAt'
 };
 
+/**
+ * 公告表字段
+ *
+ * ★ link 只允许两类值：空串（纯公告，点了不跳）或本项目内的页面路径
+ *   （如 '/pages/privacy/index'）。**不允许外链** —— 小程序内跳外域需要
+ *   配置业务域名且个人主体受限，硬写外链只会得到一个点了没反应的按钮。
+ */
+const ANNOUNCEMENT_FIELDS = {
+  _id: '_id',
+  title: 'title',         // 公告标题（滚动条里展示的主文案）
+  content: 'content',     // 正文（点开后的详情，可为空）
+  level: 'level',         // info / tip / warning（决定左侧色条）
+  link: 'link',           // 可选：点击后跳转的本小程序页面路径
+  enabled: 'enabled',     // 是否上线（下线不用删，改标记即可）
+  sortOrder: 'sortOrder', // 越小越靠前
+  startAt: 'startAt',     // 生效时间（时间戳，0 表示不限制）
+  endAt: 'endAt',         // 失效时间（时间戳，0 表示不限制）
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+/**
+ * 优质线路推广位字段
+ *
+ * ★ 推广位只存「指向哪条线路 + 怎么包装」，**不复制线路数据本身**。
+ *   公司数、时效这些实时数据仍从 routes / route_companies 现场读，
+ *   避免推广位显示「8 家公司」而线路详情里其实只剩 3 家这种对不上的情况。
+ */
+const FEATURED_ROUTE_FIELDS = {
+  _id: '_id',
+  routeKey: 'routeKey',   // 指向 routes.routeKey，如 '济南-广州'
+  fromCity: 'fromCity',   // 冗余，便于后台一眼看懂
+  toCity: 'toCity',
+  tag: 'tag',             // 角标文案，如 '天天发车' / '直达'
+  reason: 'reason',       // 推荐理由，如 '济南发货首选，2 天到'
+  enabled: 'enabled',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+/** 公告级别（决定公告栏左侧色条与图标） */
+const ANNOUNCEMENT_LEVELS = [
+  { value: 'info', label: '通知' },
+  { value: 'tip', label: '提示' },
+  { value: 'warning', label: '重要' }
+];
+
 /** 公司规模枚举 */
 const SCALE_OPTIONS = [
   { value: 'small', label: '小型' },
@@ -174,6 +226,9 @@ module.exports = {
   CITY_FIELDS,
   CORRECTION_FIELDS,
   ADMIN_FIELDS,
+  ANNOUNCEMENT_FIELDS,
+  FEATURED_ROUTE_FIELDS,
+  ANNOUNCEMENT_LEVELS,
   SCALE_OPTIONS,
   FREQUENCY_OPTIONS,
   CORRECTION_TYPES,

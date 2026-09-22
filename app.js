@@ -70,9 +70,28 @@ App({
    * 跨 Tab 传参通道
    * ============================================================ */
 
-  /** 写：设置待处理的地址查询 */
-  setPendingAddressQuery(from, to) {
-    this.globalData.pendingAddressQuery = (from && to) ? { from, to } : null;
+  /**
+   * 写：设置待处理的地址查询
+   *
+   * ★ 2026-09-22：加了两个区县级参数。出发地/目的地现在可以选到区县，
+   *   跨 Tab 传参必须一起带过去，否则从首页搜「朝阳」跳过去只剩城市。
+   *
+   * ★ 原来写成 `(from && to) ? ... : null` —— 只填了出发地时整个被丢掉，
+   *   首页搜索（只带出发地）带不过来，等于白跳。改成「有其一就传」。
+   */
+  setPendingAddressQuery(from, to, fromArea, toArea) {
+    const f = String(from || '').trim();
+    const t = String(to || '').trim();
+    if (!f && !t) {
+      this.globalData.pendingAddressQuery = null;
+      return;
+    }
+    this.globalData.pendingAddressQuery = {
+      from: f,
+      to: t,
+      fromArea: String(fromArea || '').trim(),
+      toArea: String(toArea || '').trim()
+    };
   },
 
   /** 读并清空：地址查询 */

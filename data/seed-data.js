@@ -663,7 +663,28 @@ const RAW_LINKS = [
 ];
 
 /* ============================================================
- * 构建三张表（companies / routes / route_companies）
+ * 公告与优质线路推广位
+ *
+ * 内容统一放在 data/announcements.js —— 小程序端在云库取不到时也要用它兜底，
+ * 若写在本文件里，小程序端 require 进来会连带把 40 家公司 / 55 条线路 /
+ * 72 条关联全部打进包体。详见该文件的说明。
+ *
+ * 这里只补 seed 需要的时间字段，文案本身不动。
+ * ============================================================ */
+
+const DEFAULT_ANNOUNCEMENTS = require('./announcements').DEFAULT_ANNOUNCEMENTS;
+const DEFAULT_FEATURED = require('./announcements').DEFAULT_FEATURED;
+
+const RAW_ANNOUNCEMENTS = DEFAULT_ANNOUNCEMENTS.map((a, i) =>
+  Object.assign({}, a, { startAt: 0, endAt: 0, updatedAt: D(i * 2) })
+);
+
+const RAW_FEATURED = DEFAULT_FEATURED.map((f, i) =>
+  Object.assign({}, f, { updatedAt: D(i + 1) })
+);
+
+/* ============================================================
+ * 构建数据表
  *
  * 本函数是确定性的纯函数：同样输入必得同样输出，便于测试断言。
  * ============================================================ */
@@ -737,7 +758,33 @@ function buildTables() {
 
   const routes = routeOrder.map((k) => routeMap[k]);
 
-  return { companies, routes, routeCompanies: links };
+  const announcements = RAW_ANNOUNCEMENTS.map((a) => {
+    const o = Object.assign({}, a);
+    delete o.id;
+    return Object.assign(o, {
+      _id: a.id,
+      enabled: a.enabled !== false,
+      sortOrder: a.sortOrder || 999,
+      startAt: a.startAt || 0,
+      endAt: a.endAt || 0,
+      createdAt: BASE_TIME,
+      updatedAt: a.updatedAt || BASE_TIME
+    });
+  });
+
+  const featuredRoutes = RAW_FEATURED.map((f) => {
+    const o = Object.assign({}, f);
+    delete o.id;
+    return Object.assign(o, {
+      _id: f.id,
+      enabled: f.enabled !== false,
+      sortOrder: f.sortOrder || 999,
+      createdAt: BASE_TIME,
+      updatedAt: f.updatedAt || BASE_TIME
+    });
+  });
+
+  return { companies, routes, routeCompanies: links, announcements, featuredRoutes };
 }
 
 module.exports = {
@@ -745,5 +792,7 @@ module.exports = {
   D,
   RAW_COMPANIES,
   RAW_LINKS,
+  RAW_ANNOUNCEMENTS,
+  RAW_FEATURED,
   buildTables
 };

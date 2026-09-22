@@ -18,7 +18,10 @@
 const db = require('./db');
 const store = require('./store');
 
-const FILES = [store.FILE_COMPANIES, store.FILE_ROUTES, store.FILE_LINKS, store.FILE_CORRECTIONS];
+const FILES = [
+  store.FILE_COMPANIES, store.FILE_ROUTES, store.FILE_LINKS, store.FILE_CORRECTIONS,
+  store.FILE_ANNOUNCEMENTS, store.FILE_FEATURED
+];
 
 /**
  * ★ 「已装载」标志 —— 这道护栏防的是一次**会清空运营数据的事故**。
@@ -43,7 +46,9 @@ function loadAll() {
     companies: db.read(store.FILE_COMPANIES),
     routes: db.read(store.FILE_ROUTES),
     route_companies: db.read(store.FILE_LINKS),
-    corrections: db.read(store.FILE_CORRECTIONS)
+    corrections: db.read(store.FILE_CORRECTIONS),
+    announcements: db.read(store.FILE_ANNOUNCEMENTS),
+    featured_routes: db.read(store.FILE_FEATURED)
   });
   loaded = true;
   return store.tables();
@@ -55,11 +60,15 @@ function bootstrapFrom(tables) {
   db.write(store.FILE_ROUTES, tables.routes || []);
   db.write(store.FILE_LINKS, tables.routeCompanies || tables.route_companies || []);
   db.write(store.FILE_CORRECTIONS, []);
+  db.write(store.FILE_ANNOUNCEMENTS, tables.announcements || []);
+  db.write(store.FILE_FEATURED, tables.featuredRoutes || tables.featured_routes || []);
   store.replaceAll({
     companies: tables.companies || [],
     routes: tables.routes || [],
     route_companies: tables.routeCompanies || tables.route_companies || [],
-    corrections: []
+    corrections: [],
+    announcements: tables.announcements || [],
+    featured_routes: tables.featuredRoutes || tables.featured_routes || []
   });
   loaded = true;
   return true;
@@ -175,6 +184,28 @@ function mergeCorrections(rows) {
   return commit([store.FILE_CORRECTIONS], () => store.mergeCorrections(rows));
 }
 
+/* ---------- 运营位：公告 ---------- */
+function createAnnouncement(input) {
+  return commit([store.FILE_ANNOUNCEMENTS], () => store.createAnnouncement(input));
+}
+function updateAnnouncement(id, input) {
+  return commit([store.FILE_ANNOUNCEMENTS], () => store.updateAnnouncement(id, input));
+}
+function deleteAnnouncement(id) {
+  return commit([store.FILE_ANNOUNCEMENTS], () => store.deleteAnnouncement(id));
+}
+
+/* ---------- 运营位：优质线路推广 ---------- */
+function createFeatured(input) {
+  return commit([store.FILE_FEATURED], () => store.createFeatured(input));
+}
+function updateFeatured(id, input) {
+  return commit([store.FILE_FEATURED], () => store.updateFeatured(id, input));
+}
+function deleteFeatured(id) {
+  return commit([store.FILE_FEATURED], () => store.deleteFeatured(id));
+}
+
 /* ---------- 导入（走事务，只落一次） ---------- */
 function applyImport(validRows) {
   return transaction(ALL, () => store.applyImportRows(validRows));
@@ -191,6 +222,11 @@ const read = {
   listCorrections: store.listCorrections,
   correctionCounts: store.correctionCounts,
   getCorrection: store.getCorrection,
+  listAnnouncements: store.listAnnouncements,
+  getAnnouncement: store.getAnnouncement,
+  listFeatured: store.listFeatured,
+  getFeatured: store.getFeatured,
+  listRouteOptions: store.listRoutes,
   qualityStats: store.qualityStats,
   validateImportRows: store.validateImportRows,
   recountRoutes: store.recountRoutes,
@@ -217,6 +253,12 @@ module.exports = Object.assign({}, read, {
   reviewCorrection,
   deleteCorrection,
   mergeCorrections,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  createFeatured,
+  updateFeatured,
+  deleteFeatured,
   applyImport,
   FILES,
   ALL

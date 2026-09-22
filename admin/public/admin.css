@@ -275,6 +275,9 @@ a.stat:hover { border-color: var(--border-strong); text-decoration: none; }
 }
 .field__label .hint { display: block; font-weight: 400; }
 .field--check .check { margin-top: 6px; }
+/* 行内字段：标签、控件、说明挤在一行（开关类字段用） */
+.field--inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.field--inline .field__label { margin-bottom: 0; }
 
 .input {
   width: 100%;

@@ -24,13 +24,24 @@ const FILE_COMPANIES = schema.COLLECTIONS.COMPANIES;
 const FILE_ROUTES = schema.COLLECTIONS.ROUTES;
 const FILE_LINKS = schema.COLLECTIONS.ROUTE_COMPANIES;
 const FILE_CORRECTIONS = schema.COLLECTIONS.CORRECTIONS;
+/* 运营位两张表（2026-09-22 新增）：首页公告栏 + 优质线路推广 */
+const FILE_ANNOUNCEMENTS = schema.COLLECTIONS.ANNOUNCEMENTS;
+const FILE_FEATURED = schema.COLLECTIONS.FEATURED_ROUTES;
 
-/** 内存表（由 repository.loadAll / bootstrapFrom 填充） */
+/**
+ * 内存表（由 repository.loadAll / bootstrapFrom 填充）
+ *
+ * ★ 键名必须**等于集合名**（announcements / featured_routes）：
+ *   repository.flush() 是按集合名去 snapshot 里取行的（`snap[n]`），
+ *   键名对不上就是「改了内存但不落盘」，且不报任何错。
+ */
 const T = {
   companies: [],
   routes: [],
   route_companies: [],
-  corrections: []
+  corrections: [],
+  announcements: [],
+  featured_routes: []
 };
 
 /* ============================================================
@@ -43,6 +54,8 @@ function replaceAll(data) {
   T.routes = clone(data.routes || []);
   T.route_companies = clone(data.route_companies || []);
   T.corrections = clone(data.corrections || []);
+  T.announcements = clone(data.announcements || []);
+  T.featured_routes = clone(data.featured_routes || []);
 }
 
 /** 取当前内存表的深拷贝（供落盘） */
@@ -51,7 +64,9 @@ function snapshot() {
     companies: clone(T.companies),
     routes: clone(T.routes),
     route_companies: clone(T.route_companies),
-    corrections: clone(T.corrections)
+    corrections: clone(T.corrections),
+    announcements: clone(T.announcements),
+    featured_routes: clone(T.featured_routes)
   };
 }
 
@@ -607,6 +622,207 @@ function mergeCorrections(rows) {
 }
 
 /* ============================================================
+ * 运营位：公告 / 优质线路推广（2026-09-22 新增）
+ *
+ * ★ 这两张表是**纯运营内容**，不参与线路查询。但有三条硬校验不能省：
+ *   1. 公告的 link 必须是以 / 开头的小程序页面路径 —— 外链在小程序里
+ *      点了没反应（个人主体配不了业务域名），写了就是死按钮；
+ *   2. 推广位的 routeKey 必须真实存在于 routes —— 否则首页会出现一张
+ *      点进去是空页的卡片，比不显示更糟；
+ *   3. 同一条线路只能有一个推广位 —— 否则首页会并排出现两张一样的卡。
+ * ============================================================ */
+
+const ANNOUNCEMENT_LEVEL_VALUES = schema.ANNOUNCEMENT_LEVELS.map((o) => o.value);
+
+/** 排序：sortOrder 升序（越小越靠前），同序按更新时间倒序 */
+function sortByOrder(list) {
+  return list.slice().sort((a, b) => {
+    const sa = Number(a.sortOrder) || 0;
+    const sb = Number(b.sortOrder) || 0;
+    if (sa !== sb) return sa - sb;
+    return (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0);
+  });
+}
+
+function listAnnouncements() {
+  return sortByOrder(T.announcements);
+}
+
+function getAnnouncement(id) {
+  return T.announcements.find((x) => x._id === id) || null;
+}
+
+function validateAnnouncement(input) {
+  const errors = [];
+  const title = String((input && input.title) || '').trim();
+  const content = String((input && input.content) || '').trim();
+  const level = String((input && input.level) || 'info').trim();
+  const link = String((input && input.link) || '').trim();
+  const startAt = Number((input && input.startAt) || 0);
+  const endAt = Number((input && input.endAt) || 0);
+
+  if (!title) errors.push({ field: 'title', message: '公告标题不能为空' });
+  else if (title.length > 40) errors.push({ field: 'title', message: '标题请控制在 40 字以内（公告栏一行要显示完）' });
+
+  // 正文不能空：公告栏只显示标题，点开必须看到东西，否则用户会觉得「点了没反应」
+  if (!content) errors.push({ field: 'content', message: '公告正文不能为空（点开后要能看到内容）' });
+
+  if (ANNOUNCEMENT_LEVEL_VALUES.indexOf(level) < 0) {
+    errors.push({ field: 'level', message: '公告级别不合法（可选：' + ANNOUNCEMENT_LEVEL_VALUES.join(' / ') + '）' });
+  }
+  if (link && link.charAt(0) !== '/') {
+    errors.push({ field: 'link', message: '跳转路径必须是 /pages/... 形式；外链在小程序里点了没反应，不要填' });
+  }
+  if (startAt && endAt && startAt > endAt) {
+    errors.push({ field: 'endAt', message: '失效时间不能早于生效时间' });
+  }
+  return errors;
+}
+
+function createAnnouncement(input) {
+  const errors = validateAnnouncement(input);
+  if (errors.length) return { ok: false, errors: errors };
+
+  const now = Date.now();
+  const row = {
+    _id: nextId('ann_', T.announcements),
+    title: String(input.title).trim(),
+    content: String(input.content).trim(),
+    level: String(input.level || 'info').trim(),
+    link: String(input.link || '').trim(),
+    enabled: input.enabled === false ? false : true,
+    sortOrder: Number(input.sortOrder) || 10,
+    startAt: Number(input.startAt) || 0,
+    endAt: Number(input.endAt) || 0,
+    createdAt: now,
+    updatedAt: now
+  };
+  T.announcements.push(row);
+  return { ok: true, announcement: row };
+}
+
+function updateAnnouncement(id, input) {
+  const row = T.announcements.find((x) => x._id === id);
+  if (!row) return { ok: false, errors: [{ field: '_id', message: '公告不存在' }] };
+
+  const merged = Object.assign({}, row, input || {}, { _id: id });
+  const errors = validateAnnouncement(merged);
+  if (errors.length) return { ok: false, errors: errors };
+
+  row.title = String(merged.title).trim();
+  row.content = String(merged.content).trim();
+  row.level = String(merged.level || 'info').trim();
+  row.link = String(merged.link || '').trim();
+  row.enabled = merged.enabled === false ? false : true;
+  row.sortOrder = Number(merged.sortOrder) || 10;
+  row.startAt = Number(merged.startAt) || 0;
+  row.endAt = Number(merged.endAt) || 0;
+  row.updatedAt = Date.now();
+  return { ok: true, announcement: row };
+}
+
+function deleteAnnouncement(id) {
+  const idx = T.announcements.findIndex((x) => x._id === id);
+  if (idx < 0) return { ok: false, message: '公告不存在' };
+  const removed = T.announcements.splice(idx, 1)[0];
+  return { ok: true, announcement: removed };
+}
+
+function listFeatured() {
+  return sortByOrder(T.featured_routes);
+}
+
+function getFeatured(id) {
+  return T.featured_routes.find((x) => x._id === id) || null;
+}
+
+function validateFeatured(input, ignoreId) {
+  const errors = [];
+  const fromCity = String((input && input.fromCity) || '').trim();
+  const toCity = String((input && input.toCity) || '').trim();
+  const routeKey = common.buildRouteKey(fromCity, toCity);
+  const tag = String((input && input.tag) || '').trim();
+  const reason = String((input && input.reason) || '').trim();
+
+  if (!fromCity) errors.push({ field: 'fromCity', message: '出发城市不能为空' });
+  if (!toCity) errors.push({ field: 'toCity', message: '到达城市不能为空' });
+  if (fromCity && toCity && !routeKey) {
+    errors.push({ field: 'toCity', message: '出发与到达是同一城市' });
+  }
+
+  /*
+   * ★ 指向的线路必须真实存在。
+   *   推广位卡片点进去就是线路详情，若线路不存在，用户看到的是一个空页 ——
+   *   比首页少一张卡更伤信任。所以宁可在后台拦下来，也不让它上线。
+   */
+  if (routeKey && !T.routes.some((r) => r.routeKey === routeKey)) {
+    errors.push({ field: 'toCity', message: '线路库里还没有「' + routeKey + '」，请先到线路管理里添加' });
+  }
+
+  // 同一线路只能推广一次，否则首页会并排出现两张一模一样的卡
+  if (routeKey && T.featured_routes.some((x) => x.routeKey === routeKey && x._id !== ignoreId)) {
+    errors.push({ field: 'routeKey', message: '这条线路已经在推广位里了' });
+  }
+
+  // 角标是卡片的识别点，空了就只剩一个数字，看着像没填完
+  if (!tag) errors.push({ field: 'tag', message: '角标不能为空，例如「天天发车」「直达」' });
+  else if (tag.length > 8) errors.push({ field: 'tag', message: '角标请控制在 8 字以内' });
+
+  if (reason.length > 60) errors.push({ field: 'reason', message: '推荐理由请控制在 60 字以内' });
+
+  return errors;
+}
+
+function createFeatured(input) {
+  const errors = validateFeatured(input, null);
+  if (errors.length) return { ok: false, errors: errors };
+
+  const fromCity = String(input.fromCity).trim();
+  const toCity = String(input.toCity).trim();
+  const now = Date.now();
+  const row = {
+    _id: nextId('feat_', T.featured_routes),
+    routeKey: common.buildRouteKey(fromCity, toCity),
+    fromCity: fromCity,
+    toCity: toCity,
+    tag: String(input.tag).trim(),
+    reason: String(input.reason || '').trim(),
+    enabled: input.enabled === false ? false : true,
+    sortOrder: Number(input.sortOrder) || 10,
+    createdAt: now,
+    updatedAt: now
+  };
+  T.featured_routes.push(row);
+  return { ok: true, featured: row };
+}
+
+function updateFeatured(id, input) {
+  const row = T.featured_routes.find((x) => x._id === id);
+  if (!row) return { ok: false, errors: [{ field: '_id', message: '推广位不存在' }] };
+
+  const merged = Object.assign({}, row, input || {}, { _id: id });
+  const errors = validateFeatured(merged, id);
+  if (errors.length) return { ok: false, errors: errors };
+
+  row.fromCity = String(merged.fromCity).trim();
+  row.toCity = String(merged.toCity).trim();
+  row.routeKey = common.buildRouteKey(row.fromCity, row.toCity);
+  row.tag = String(merged.tag).trim();
+  row.reason = String(merged.reason || '').trim();
+  row.enabled = merged.enabled === false ? false : true;
+  row.sortOrder = Number(merged.sortOrder) || 10;
+  row.updatedAt = Date.now();
+  return { ok: true, featured: row };
+}
+
+function deleteFeatured(id) {
+  const idx = T.featured_routes.findIndex((x) => x._id === id);
+  if (idx < 0) return { ok: false, message: '推广位不存在' };
+  const removed = T.featured_routes.splice(idx, 1)[0];
+  return { ok: true, featured: removed };
+}
+
+/* ============================================================
  * 数据质量看板（PRD B8）
  * ============================================================ */
 
@@ -845,6 +1061,7 @@ function applyImportRows(validRows) {
 module.exports = {
   // 常量
   FILE_COMPANIES, FILE_ROUTES, FILE_LINKS, FILE_CORRECTIONS,
+  FILE_ANNOUNCEMENTS, FILE_FEATURED,
   STALE_MS, CORRECTION_STATUS,
   // 装载
   replaceAll, snapshot, tables,
@@ -858,6 +1075,10 @@ module.exports = {
   listLinks, getLink, createLink, updateLink, deleteLink, normalizeLink,
   // 纠错
   listCorrections, correctionCounts, reviewCorrection, getCorrection, deleteCorrection, mergeCorrections,
+  // 运营位：公告 / 优质线路推广
+  listAnnouncements, getAnnouncement, createAnnouncement, updateAnnouncement, deleteAnnouncement,
+  validateAnnouncement, ANNOUNCEMENT_LEVEL_VALUES,
+  listFeatured, getFeatured, createFeatured, updateFeatured, deleteFeatured, validateFeatured,
   // 质量
   qualityStats,
   // 导入

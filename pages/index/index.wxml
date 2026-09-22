@@ -5,99 +5,104 @@
 
   <view class="page-body">
 
-    <!-- 品牌区 -->
-    <view class="hero">
-      <view class="hero-title">物流专线查询</view>
-      <view class="hero-sub">查哪家公司跑你要的线路，直接打电话</view>
-    </view>
-
-    <!-- 区块 1：搜索框 -->
-    <view class="search-bar home-search">
-      <input
-        class="search-input"
-        value="{{keyword}}"
-        placeholder="输入城市或公司名，如 济南 / 鲁通物流"
-        placeholder-class="field-placeholder"
-        confirm-type="search"
-        bindinput="onSearchInput"
-        bindconfirm="onSearchConfirm"
-      />
-      <view class="home-search-btn" bindtap="onSearchConfirm">查询</view>
-    </view>
-
-    <!-- 区块 2：快捷入口 -->
-    <view class="entry-row">
-      <view class="entry-card tint-blue" bindtap="goShip">
-        <view class="entry-name">我要发货</view>
-        <view class="entry-desc">选出发地和目的地，查谁跑这条线</view>
+    <!-- 区块 1：天空大卡 —— 品牌 + 搜索
+         借鉴 macOS 天气 App 的顶部信息卡：大圆角、大号标题、信息分层。
+         唯一放开低饱和渐变的地方（用户 2026-09-22 确认）。
+         文字一律纯白不透明，不做毛玻璃、不做半透明字。 -->
+    <view class="sky">
+      <view class="sky-brand">
+        <view class="sky-title">物流专线查询</view>
+        <view class="sky-sub">查哪家公司跑你要的线路，直接打电话</view>
       </view>
-      <view class="entry-card tint-teal" bindtap="goCompany">
-        <view class="entry-name">我知道公司名</view>
-        <view class="entry-desc">输入公司名，看它跑哪些线路</view>
+
+      <view class="sky-search">
+        <input
+          class="sky-input"
+          value="{{keyword}}"
+          placeholder="输入城市或公司名，如 济南 / 鲁通物流"
+          placeholder-class="sky-placeholder"
+          confirm-type="search"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+        />
+        <view class="sky-search-btn" bindtap="onSearchConfirm">查询</view>
       </view>
     </view>
 
-    <!-- 区块 3：热门专线 -->
+    <!-- 区块 2：公告栏（垂直滚动播）
+         一条公告一行，点开看全文。只有 1 条时不自动滚动，
+         否则 swiper 会反复播同一条，看着像在抽搐。 -->
+    <view wx:if="{{announcements.length > 0}}" class="notice">
+      <swiper
+        class="notice-swiper"
+        vertical
+        circular
+        interval="4000"
+        duration="500"
+        autoplay="{{announcements.length > 1}}"
+      >
+        <swiper-item
+          wx:for="{{announcements}}"
+          wx:key="_id"
+          class="notice-item"
+          data-index="{{index}}"
+          bindtap="onNoticeTap"
+        >
+          <view class="notice-bar notice-bar--{{item.level}}"></view>
+          <text class="notice-text">{{item.title}}</text>
+          <text class="notice-more">›</text>
+        </swiper-item>
+      </swiper>
+    </view>
+
+    <!-- 区块 3：优质线路推广
+         横向卡片流，借鉴 macOS 天气的「逐小时预报」排列。
+         每卡一个显著数字（有几家公司在跑），这是本场景里用户最先想知道的。 -->
     <view class="card">
       <view class="card-head">
-        <text class="card-title">热门专线</text>
+        <text class="card-title">优质线路</text>
         <text class="card-more" bindtap="goShip">更多 ›</text>
       </view>
       <view class="card-body">
-        <view wx:if="{{loading}}" class="loading">加载中…</view>
-        <!-- 加载失败：可重试（与「暂无数据」区分开，避免把异常说成没数据） -->
-        <view wx:elif="{{loadError}}" class="empty-inline">
+        <view wx:if="{{featLoading}}" class="loading">加载中…</view>
+        <!-- 加载失败：可重试（与「暂无数据」分开，不把异常说成没数据） -->
+        <view wx:elif="{{featError}}" class="empty-inline">
           <text class="empty-inline-text">加载失败，请检查网络</text>
           <text class="empty-inline-btn" bindtap="onRetryLoad">重新加载</text>
         </view>
-        <block wx:elif="{{hotRoutes.length > 0}}">
+        <scroll-view wx:elif="{{featured.length > 0}}" class="feat-scroll" scroll-x>
           <view
-            wx:for="{{hotRoutes}}"
-            wx:key="routeKey"
-            class="hot-item"
+            wx:for="{{featured}}"
+            wx:key="_id"
+            class="feat-card"
             data-key="{{item.routeKey}}"
-            bindtap="onHotTap"
+            bindtap="onFeatTap"
           >
-            <view class="hot-main">
-              <text class="hot-title">{{item.title}}</text>
-              <text class="hot-count">{{item.companyText}}</text>
+            <view class="feat-head">
+              <text class="feat-tag">{{item.tag}}</text>
             </view>
-            <text class="hot-arrow">›</text>
+            <!-- 公司数为 0（线路还没收录公司）时整行不显示，
+                 比起显示一个大大的「0 家」，缺一行更不像坏了 -->
+            <view wx:if="{{item.companyCount > 0}}" class="feat-count">
+              {{item.companyCount}}<text class="feat-unit">家公司在跑</text>
+            </view>
+            <view class="feat-route">{{item.fromCity}} → {{item.toCity}}</view>
+            <view class="feat-reason">{{item.reason}}</view>
           </view>
-        </block>
-        <view wx:else class="empty-inline">暂无线路数据</view>
+        </scroll-view>
+        <view wx:else class="empty-inline">暂无推广线路</view>
       </view>
     </view>
 
-    <!-- 区块 4：最近更新 -->
-    <view class="card">
-      <view class="card-head">
-        <text class="card-title">最近更新</text>
-        <text class="card-more" bindtap="goCompany">更多 ›</text>
+    <!-- 区块 4：我要发货（通栏）
+         删掉「我知道公司名」后只剩一个入口，改成通栏而不是半宽卡，
+         免得右边空一大块。查公司仍可从底部 tab 进入。 -->
+    <view class="entry-wide" bindtap="goShip">
+      <view class="entry-wide-main">
+        <view class="entry-wide-name">我要发货</view>
+        <view class="entry-wide-desc">选出发地和目的地，区县也能选，查谁跑这条线</view>
       </view>
-      <view class="card-body">
-        <view wx:if="{{loading}}" class="loading">加载中…</view>
-        <view wx:elif="{{loadError}}" class="empty-inline">
-          <text class="empty-inline-text">加载失败，请检查网络</text>
-          <text class="empty-inline-btn" bindtap="onRetryLoad">重新加载</text>
-        </view>
-        <block wx:elif="{{recentCompanies.length > 0}}">
-          <view
-            wx:for="{{recentCompanies}}"
-            wx:key="_id"
-            class="recent-item"
-            data-id="{{item._id}}"
-            bindtap="onRecentTap"
-          >
-            <view class="recent-main">
-              <text class="recent-name">{{item.displayName}}</text>
-              <text wx:if="{{item.verified}}" class="badge-verified">已核实</text>
-            </view>
-            <text class="recent-time">{{item.updatedText}}</text>
-          </view>
-        </block>
-        <view wx:else class="empty-inline">暂无数据</view>
-      </view>
+      <text class="entry-wide-arrow">›</text>
     </view>
 
     <!-- 区块 5：底部公示（合规必需，不可省略） -->

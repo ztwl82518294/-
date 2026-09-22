@@ -15,6 +15,27 @@ const repo = require('./repository');
 const store = require('./store');
 const importer = require('./importer');
 const schema = require('../../shared/schema');
+const common = require('../../utils/common');
+
+/**
+ * 解析时间输入 → 时间戳
+ *
+ * 表单里时间窗是给人看的（2026-10-01），存的是时间戳。
+ * 直接 Number('2026-10-01') 是 NaN，落到 store 里会变成 0（不限制），
+ * 管理员设了生效时间却没生效，还没任何提示 —— 所以这里显式解析。
+ *
+ * @returns 时间戳；空或解析不了返回 0（0 表示不限制）
+ */
+function parseTimeInput(v) {
+  const s = String(v === undefined || v === null ? '' : v).trim();
+  if (!s) return 0;
+  if (/^\d+$/.test(s)) return Number(s);
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?$/);
+  if (!m) return 0;
+  return new Date(
+    Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 0), Number(m[5] || 0)
+  ).getTime();
+}
 
 /** 解析 application/x-www-form-urlencoded */
 function parseForm(raw) {
@@ -184,6 +205,80 @@ async function route(ctx) {
     return ok(r);
   }
 
+  /* ---------- 运营位：公告 ---------- */
+  if (p === '/api/announcement/save' && m === 'POST') {
+    const form = parseForm(raw);
+    const isNew = !form._id;
+    const payload = {
+      title: form.title,
+      content: form.content,
+      level: form.level,
+      link: form.link,
+      enabled: form.enabled === 'on' || form.enabled === 'true' || form.enabled === '1',
+      sortOrder: form.sortOrder,
+      startAt: parseTimeInput(form.startAt),
+      endAt: parseTimeInput(form.endAt)
+    };
+    const r = isNew ? repo.createAnnouncement(payload) : repo.updateAnnouncement(form._id, payload);
+    if (!r.ok) return fail('VALIDATION', errText(r.errors));
+    return ok({ id: (r.announcement || {})._id, created: isNew });
+  }
+
+  if (p === '/api/announcement/delete' && m === 'POST') {
+    const form = parseForm(raw);
+    const r = repo.deleteAnnouncement(form._id);
+    if (!r.ok) return fail('NOT_FOUND', r.message);
+    return ok({});
+  }
+
+  /* ---------- 运营位：优质线路推广 ---------- */
+  if (p === '/api/featured/save' && m === 'POST') {
+    const form = parseForm(raw);
+    const isNew = !form._id;
+    /*
+     * 表单用的是「选一条已有线路」（下拉），不是让管理员手打城市名 ——
+     * 手打就会出现推广位指向一条库里没有的线路，首页那张卡点进去是空页。
+     * 所以这里从 routeKey 反解出发/到达城市，再交给 store 校验。
+     */
+    const picked = common.parseRouteKey(form.routeKey);
+    const payload = {
+      fromCity: form.fromCity || picked.fromCity,
+      toCity: form.toCity || picked.toCity,
+      tag: form.tag,
+      reason: form.reason,
+      enabled: form.enabled === 'on' || form.enabled === 'true' || form.enabled === '1',
+      sortOrder: form.sortOrder
+    };
+    const r = isNew ? repo.createFeatured(payload) : repo.updateFeatured(form._id, payload);
+    if (!r.ok) return fail('VALIDATION', errText(r.errors));
+    return ok({ id: (r.featured || {})._id, created: isNew });
+  }
+
+  if (p === '/api/featured/delete' && m === 'POST') {
+    const form = parseForm(raw);
+    const r = repo.deleteFeatured(form._id);
+    if (!r.ok) return fail('NOT_FOUND', r.message);
+    return ok({});
+  }
+
+  /* 推广位表单的线路下拉：只给已在库里的线路，避免填出一个空页 */
+  if (p === '/api/featured/options' && m === 'GET') {
+    const t = store.tables();
+    const used = {};
+    t.featured_routes.forEach((x) => { used[x.routeKey] = x._id; });
+    const routes = t.routes
+      .map((r) => ({
+        id: r._id,
+        routeKey: r.routeKey,
+        fromCity: r.fromCity,
+        toCity: r.toCity,
+        label: r.routeKey + '（' + (r.companyCount || 0) + ' 家）',
+        taken: !!used[r.routeKey]
+      }))
+      .sort((a, b) => a.routeKey.localeCompare(b.routeKey, 'zh'));
+    return ok({ routes: routes, levels: schema.ANNOUNCEMENT_LEVELS });
+  }
+
   /* ---------- 导入 ---------- */
   if (p === '/api/import/preview' && m === 'POST') {
     /*
@@ -263,7 +358,8 @@ async function route(ctx) {
       scales: schema.SCALE_OPTIONS,
       frequencies: schema.FREQUENCY_OPTIONS,
       correctionTypes: schema.CORRECTION_TYPES,
-      correctionStatus: schema.CORRECTION_STATUS_LABELS
+      correctionStatus: schema.CORRECTION_STATUS_LABELS,
+      announcementLevels: schema.ANNOUNCEMENT_LEVELS
     });
   }
 

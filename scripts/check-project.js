@@ -159,7 +159,10 @@ function checkBindings(files) {
 /* ============================================================
  * 5. 集合名硬编码检查
  * ============================================================ */
-const COLLECTION_NAMES = ['companies', 'routes', 'route_companies', 'cities', 'corrections', 'admins'];
+const COLLECTION_NAMES = [
+  'companies', 'routes', 'route_companies', 'cities', 'corrections', 'admins',
+  'announcements', 'featured_routes'
+];
 
 function checkHardcodedCollections(files) {
   checks++;
@@ -200,19 +203,88 @@ function stripCssComments(src) {
   return src.replace(/\/\*[\s\S]*?\*\//g, '');
 }
 
+/**
+ * 渐变白名单（用户 2026-09-22 确认「放开低饱和渐变」后新增）
+ *
+ * ★ 为什么用白名单而不是直接放开：
+ *   放开「允许渐变」后，任何人都能在任何地方写渐变，四条铁律就名存实亡。
+ *   白名单精确到「文件 + 选择器」，除 .sky（首页天空大卡）外仍是零渐变。
+ *   要新增渐变处，必须**显式**改这里 —— 改的时候会重新想一遍「真的需要吗」。
+ */
+const GRADIENT_ALLOW = [
+  { file: 'pages/index/index.wxss', selector: '.sky' }
+];
+
+/**
+ * 把白名单命中的规则块正文换成等长空白（保留换行，行号不变）
+ *
+ * 只抹正文、保留选择器：这样「选择器里写了渐变名」这种怪情况仍会被抓到。
+ */
+function stripAllowedBlocks(src, fileRel) {
+  const rules = GRADIENT_ALLOW.filter((a) => a.file === fileRel);
+  if (!rules.length) return src;
+
+  let out = '';
+  let i = 0;
+  while (i < src.length) {
+    const open = src.indexOf('{', i);
+    if (open < 0) { out += src.slice(i); break; }
+    const close = src.indexOf('}', open);
+    if (close < 0) { out += src.slice(i); break; }
+
+    const sel = src.slice(i, open);
+    const body = src.slice(open + 1, close);
+    const s = sel.trim();
+    /*
+     * ★ 前缀判断必须用 (?![-\w]) 收尾：
+     *   写成 `s.indexOf('.sky') === 0` 的话，`.sky-probe`、`.skycard` 这类
+     *   **另一个类**也会被当成 .sky 放行 —— 白名单会被一个随便起的类名绕过。
+     */
+    const hit = rules.some((rule) => {
+      const re = new RegExp('^' + rule.selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![-\\w])');
+      return re.test(s);
+    });
+
+    out += sel + '{' + (hit ? body.replace(/[^\n]/g, ' ') : body) + '}';
+    i = close + 1;
+  }
+  return out;
+}
+
 function checkTheme(files) {
   checks++;
   const styles = files.filter((f) => path.extname(f) === '.wxss');
   for (const f of styles) {
-    const src = stripCssComments(fs.readFileSync(f, 'utf8'));
     const r = rel(f);
+    const src = stripAllowedBlocks(stripCssComments(fs.readFileSync(f, 'utf8')), r);
 
-    // 铁律 1：无渐变
+    // 铁律 1：无渐变（.sky 已在白名单里被抹掉）
     if (/linear-gradient/.test(src)) fail('[铁律1 无渐变] ' + r + ' 出现 linear-gradient');
     // 铁律 2：无光斑
     if (/radial-gradient/.test(src)) fail('[铁律2 无光斑] ' + r + ' 出现 radial-gradient');
     // 铁律 4：无高光内阴影
     if (/inset\s+0\s+0\s+0/.test(src)) fail('[铁律4 无高光内阴影] ' + r + ' 出现 inset 0 0 0');
+
+    /*
+     * 铁律 5（2026-09-22 用户明确要求）：**字体不要有毛玻璃效果**。
+     *   ① backdrop-filter —— 毛玻璃本尊，全站禁止；
+     *   ② filter: blur() —— 文字模糊，禁止；
+     *   ③ color: rgba(...) —— 半透明文字。在渐变底上尤其明显，
+     *      会呈现「字被底色吃掉」的毛玻璃观感，次信息一律用实色浅蓝。
+     */
+    if (/backdrop-filter/.test(src)) fail('[铁律5 无毛玻璃] ' + r + ' 出现 backdrop-filter');
+    if (/filter\s*:\s*[^;]*blur\(/.test(src)) fail('[铁律5 无毛玻璃] ' + r + ' 出现 filter: blur()');
+    /*
+     * ★ 必须用 (?<![-\w]) 排除 background-color / border-color / --x-color：
+     *   第一版写成 /color\s*:\s*rgba\(/ 会把 `background-color: rgba(15,15,15,.6)`
+     *   （遮罩底色）也判成「半透明文字」，一次报 10 条假失败。
+     *   遮罩本来就该半透明，禁的是**文字**半透明。
+     */
+    const semiColors = src.match(/(?<![-\w])color\s*:\s*rgba\([^)]*\)[^;]*;/g) || [];
+    semiColors.forEach((d) => {
+      fail('[铁律5 无毛玻璃] ' + r + ' 半透明文字色 ' + d.trim() + ' —— 改用实色');
+    });
+
     // 铁律 3：--tint-* 必须是实色
     if (r === 'app.wxss') {
       const m = src.match(/--tint-[a-z]+:\s*([^;]+);/g) || [];

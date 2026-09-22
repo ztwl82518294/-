@@ -105,16 +105,22 @@ needHuman('列表页有真实数据渲染且无报错',
   '在微信开发者工具打开首页/列表页，确认有数据、Console 无红色报错');
 
 /* ---------- A2 数据表建成 ---------- */
-section('A2 数据表建成（6 张）');
+section('A2 数据表建成（8 张）');
 const schema = read('shared/schema.js');
-const SEVEN = ['companies', 'routes', 'route_companies', 'cities', 'corrections', 'admins'];
-SEVEN.forEach((c) => {
+/*
+ * ★ 集合清单必须与 shared/schema.js 的 COLLECTIONS **同源**，别再手抄一遍。
+ *   2026-09-22 加了 announcements / featured_routes 之后，这里的手写清单
+ *   还停在 6 张，静态检查全绿却漏掉了两张表 —— 手写清单一定会漂移。
+ */
+const ALL_COLLECTIONS = Object.values(require('../shared/schema').COLLECTIONS);
+ALL_COLLECTIONS.forEach((c) => {
   ok('schema 里定义了 ' + c, schema.indexOf(c) >= 0);
 });
 ok('schema 有 COLLECTIONS 常量（集合名唯一来源）', /COLLECTIONS/.test(schema));
 ok('各表字段定义齐全（FIELD 定义存在）', /FIELDS/.test(schema));
-needHuman('云开发控制台里 6 张表实际存在',
-  '打开云开发控制台 → 数据库，确认 6 个集合都在，且已导入 .data/*.jsonl');
+needHuman('云开发控制台里 ' + ALL_COLLECTIONS.length + ' 张表实际存在',
+  '打开云开发控制台 → 数据库，确认 ' + ALL_COLLECTIONS.length + ' 个集合都在（' +
+  ALL_COLLECTIONS.join(' / ') + '），且已导入 .data/*.jsonl');
 
 /* ---------- A3 冷启动完整链路 ---------- */
 section('A3 冷启动完整链路（匿名可查）');

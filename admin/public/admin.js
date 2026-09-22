@@ -171,6 +171,28 @@
       return;
     }
 
+    /* 删公告 */
+    if (t.dataset.delAnnouncement) {
+      var ann = t.dataset.delName || '';
+      if (!confirm('删除公告「' + ann + '」？此操作不可撤销。')) return;
+      postForm('/api/announcement/delete', { _id: t.dataset.delAnnouncement }).then(function (r) {
+        if (!r.ok) { alert(r.message || '删除失败'); return; }
+        location.reload();
+      });
+      return;
+    }
+
+    /* 删推广位 */
+    if (t.dataset.delFeatured) {
+      var fk = t.dataset.delName || '';
+      if (!confirm('删除推广位「' + fk + '」？此操作不可撤销。')) return;
+      postForm('/api/featured/delete', { _id: t.dataset.delFeatured }).then(function (r) {
+        if (!r.ok) { alert(r.message || '删除失败'); return; }
+        location.reload();
+      });
+      return;
+    }
+
     /* 重算某条线路的计数（质量看板里的一键修复） */
     if (t.dataset.fixCount) {
       postForm('/api/route/delete', {}).then(function () { /* 占位，见下 */ });
@@ -460,6 +482,8 @@
     bindEntityForm('#company-form', '/api/company/save', '/companies');
     bindEntityForm('#route-form', '/api/route/save', '/routes');
     bindEntityForm('#link-form', '/api/link/save', '/links');
+    bindEntityForm('#announcement-form', '/api/announcement/save', '/announcements');
+    bindEntityForm('#featured-form', '/api/featured/save', '/featured');
     initImport();
   });
 })();

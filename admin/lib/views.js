@@ -75,6 +75,8 @@ function nav(active) {
     { href: '/companies', key: 'companies', text: '公司' },
     { href: '/routes', key: 'routes', text: '线路' },
     { href: '/links', key: 'links', text: '线路公司' },
+    { href: '/announcements', key: 'announcements', text: '公告栏' },
+    { href: '/featured', key: 'featured', text: '优质线路' },
     { href: '/corrections', key: 'corrections', text: '纠错审核' },
     { href: '/import', key: 'import', text: '批量导入' },
     { href: '/quality', key: 'quality', text: '数据质量' }
@@ -692,6 +694,208 @@ PAGES.quality = function (d) {
     '</div>';
 };
 
+/* ============================================================
+ * 运营位：公告栏 / 优质线路推广
+ *
+ * ★ 这两块是**首页的门面**，但它们的容错很低：
+ *   - 公告写错链接 → 用户点了没反应；
+ *   - 推广位指向不存在的线路 → 点进去是空页。
+ *   所以后台这里能拦的都拦掉（校验在 store 里），页面上则把规则写在旁边，
+ *   让管理员填之前就知道边界。
+ * ============================================================ */
+
+const LEVEL_LABELS = { info: '通知', tip: '提示', warning: '重要' };
+
+/* ---------- 公告列表 ---------- */
+PAGES.announcements = function (d) {
+  return '<div class="page">' +
+    '<div class="page__head">' +
+    '<h1 class="page__title">公告栏 <span class="count">' + d.rows.length + '</span></h1>' +
+    '<a class="btn btn--primary" href="/announcements/edit">新建公告</a>' +
+    '</div>' +
+    '<p class="hint">首页顶部滚动播放，一行一条。排序小的在前；' +
+    '同一时间只会展示「已上线」且在生效时间窗内的公告。</p>' +
+
+    '<table class="tb"><thead><tr>' +
+    '<th class="tc">排序</th><th>标题</th><th class="tc">级别</th><th>正文</th>' +
+    '<th class="tc">状态</th><th>时间窗</th><th>更新时间</th><th class="tr">操作</th>' +
+    '</tr></thead><tbody>' +
+    (d.rows.length ? d.rows.map((a) =>
+      '<tr>' +
+      '<td class="tc mono">' + (a.sortOrder || 0) + '</td>' +
+      '<td><a class="link" href="/announcements/edit?id=' + encodeURIComponent(a._id) + '">' +
+      esc(a.title) + '</a></td>' +
+      '<td class="tc"><span class="tag' + (a.level === 'warning' ? ' tag--warn' : '') + '">' +
+      esc(LEVEL_LABELS[a.level] || a.level || '—') + '</span></td>' +
+      '<td class="clip">' + esc(a.content || '') + '</td>' +
+      '<td class="tc">' + (a.enabled === false
+        ? '<span class="tag">已下线</span>' : '<span class="tag tag--ok">已上线</span>') + '</td>' +
+      '<td class="nowrap">' + fmtDate(a.startAt) + ' ~ ' + fmtDate(a.endAt) + '</td>' +
+      '<td class="nowrap">' + fmtDate(a.updatedAt) + '</td>' +
+      '<td class="tr nowrap">' +
+      '<a class="link" href="/announcements/edit?id=' + encodeURIComponent(a._id) + '">编辑</a>' +
+      '<button class="link link--danger" data-del-announcement="' + esc(a._id) + '" data-del-name="' + esc(a.title) + '">删除</button>' +
+      '</td>' +
+      '</tr>'
+    ).join('') : emptyRow(8, '还没有公告')) +
+    '</tbody></table>' +
+    '</div>';
+};
+
+/* ---------- 公告编辑 ---------- */
+PAGES['announcement-edit'] = function (d) {
+  const a = d.announcement || { _id: '', title: '', content: '', level: 'info', link: '', enabled: true, sortOrder: 10 };
+  const isNew = !d.announcement;
+  const levels = d.levels || [];
+
+  return '<div class="page">' +
+    '<div class="page__head">' +
+    '<h1 class="page__title">' + (isNew ? '新建公告' : '编辑公告') + '</h1>' +
+    '<a class="btn btn--ghost" href="/announcements">返回列表</a>' +
+    '</div>' +
+
+    '<div id="form-error"></div>' +
+
+    '<form class="form" id="announcement-form" data-id="' + esc(a._id) + '">' +
+    '<div class="fieldset">' +
+    '<label class="field"><span class="field__label">标题 <b class="req">*</b>' +
+    '<span class="hint">公告栏里滚动显示的就是这一行，请控制在 40 字以内</span></span>' +
+    '<input class="input" name="title" maxlength="40" value="' + esc(a.title) + '" required></label>' +
+
+    '<label class="field"><span class="field__label">正文 <b class="req">*</b>' +
+    '<span class="hint">点开公告后看到的完整内容</span></span>' +
+    '<textarea class="input input--area" name="content" rows="4" required>' + esc(a.content) + '</textarea></label>' +
+
+    '<div class="grid grid--2">' +
+    '<label class="field"><span class="field__label">级别</span>' +
+    '<select class="input" name="level">' +
+    levels.map((o) =>
+      '<option value="' + esc(o.value) + '"' + (a.level === o.value ? ' selected' : '') + '>' +
+      esc(o.label) + '</option>'
+    ).join('') +
+    '</select></label>' +
+    '<label class="field"><span class="field__label">排序<span class="hint">越小越靠前</span></span>' +
+    '<input class="input" name="sortOrder" type="number" value="' + (a.sortOrder || 10) + '"></label>' +
+    '</div>' +
+
+    '<label class="field"><span class="field__label">跳转页面' +
+    '<span class="hint">可留空。必须是本小程序的页面路径（如 /pages/disclaimer/index）；' +
+    '<b>不要填外链</b> —— 小程序里跳不出去，点了没反应</span></span>' +
+    '<input class="input" name="link" value="' + esc(a.link) + '" placeholder="/pages/disclaimer/index"></label>' +
+
+    '<div class="grid grid--2">' +
+    '<label class="field"><span class="field__label">生效时间<span class="hint">留空 = 不限制</span></span>' +
+    '<input class="input" name="startAt" value="' + esc(fmtDate(a.startAt) === '—' ? '' : fmtDate(a.startAt)) + '" placeholder="2026-10-01"></label>' +
+    '<label class="field"><span class="field__label">失效时间<span class="hint">留空 = 不限制</span></span>' +
+    '<input class="input" name="endAt" value="' + esc(fmtDate(a.endAt) === '—' ? '' : fmtDate(a.endAt)) + '" placeholder="2026-10-07"></label>' +
+    '</div>' +
+
+    '<label class="field field--inline"><span class="field__label">上线</span>' +
+    '<input type="checkbox" name="enabled"' + (a.enabled === false ? '' : ' checked') + '>' +
+    '<span class="hint">不勾选就是下线，公告栏里不会出现（不用删）</span></label>' +
+    '</div>' +
+
+    '<div class="actions">' +
+    '<button class="btn btn--primary" type="submit">保存</button>' +
+    '<a class="btn btn--ghost" href="/announcements">取消</a>' +
+    (isNew ? '' : '<button class="btn btn--danger" type="button" id="btn-delete">删除这条公告</button>') +
+    '</div>' +
+    '</form>' +
+    '</div>';
+};
+
+/* ---------- 优质线路推广列表 ---------- */
+PAGES.featured = function (d) {
+  return '<div class="page">' +
+    '<div class="page__head">' +
+    '<h1 class="page__title">优质线路推广 <span class="count">' + d.rows.length + '</span></h1>' +
+    '<a class="btn btn--primary" href="/featured/edit">新建推广位</a>' +
+    '</div>' +
+    '<p class="hint">首页横向卡片流。推广位只存「指向哪条线路 + 怎么包装」，' +
+    '<b>公司数是从线路库现场读的</b>，不会出现「推广位写 8 家、点进去只剩 3 家」。</p>' +
+
+    '<table class="tb"><thead><tr>' +
+    '<th class="tc">排序</th><th>线路</th><th class="tc">角标</th><th>推荐理由</th>' +
+    '<th class="tc">状态</th><th>更新时间</th><th class="tr">操作</th>' +
+    '</tr></thead><tbody>' +
+    (d.rows.length ? d.rows.map((f) =>
+      '<tr>' +
+      '<td class="tc mono">' + (f.sortOrder || 0) + '</td>' +
+      '<td><a class="link" href="/featured/edit?id=' + encodeURIComponent(f._id) + '">' +
+      esc(f.routeKey) + '</a></td>' +
+      '<td class="tc"><span class="tag">' + esc(f.tag || '—') + '</span></td>' +
+      '<td class="clip">' + esc(f.reason || '') + '</td>' +
+      '<td class="tc">' + (f.enabled === false
+        ? '<span class="tag">已下线</span>' : '<span class="tag tag--ok">已上线</span>') + '</td>' +
+      '<td class="nowrap">' + fmtDate(f.updatedAt) + '</td>' +
+      '<td class="tr nowrap">' +
+      '<a class="link" href="/featured/edit?id=' + encodeURIComponent(f._id) + '">编辑</a>' +
+      '<a class="link" href="/links?q=' + encodeURIComponent(f.routeKey) + '">看公司</a>' +
+      '<button class="link link--danger" data-del-featured="' + esc(f._id) + '" data-del-name="' + esc(f.routeKey) + '">删除</button>' +
+      '</td>' +
+      '</tr>'
+    ).join('') : emptyRow(7, '还没有推广位')) +
+    '</tbody></table>' +
+    '</div>';
+};
+
+/* ---------- 优质线路推广编辑 ---------- */
+PAGES['featured-edit'] = function (d) {
+  const f = d.featured || { _id: '', routeKey: '', tag: '', reason: '', enabled: true, sortOrder: 10 };
+  const isNew = !d.featured;
+  const routes = d.routes || [];
+
+  return '<div class="page">' +
+    '<div class="page__head">' +
+    '<h1 class="page__title">' + (isNew ? '新建推广位' : '编辑推广位') + '</h1>' +
+    '<a class="btn btn--ghost" href="/featured">返回列表</a>' +
+    '</div>' +
+
+    '<div id="form-error"></div>' +
+
+    '<form class="form" id="featured-form" data-id="' + esc(f._id) + '">' +
+    '<div class="fieldset">' +
+    '<label class="field"><span class="field__label">线路 <b class="req">*</b>' +
+    '<span class="hint">只能选线路库里已有的 —— ' +
+    '指向不存在的线路，首页那张卡点进去就是空页</span></span>' +
+    '<select class="input" name="routeKey">' +
+    '<option value="">（请选择）</option>' +
+    routes.map((r) =>
+      '<option value="' + esc(r.routeKey) + '"' +
+      (f.routeKey === r.routeKey ? ' selected' : '') + '>' +
+      esc(r.label) + (r.taken && f.routeKey !== r.routeKey ? '（已推广）' : '') + '</option>'
+    ).join('') +
+    '</select></label>' +
+
+    (routes.length ? '' : '<div class="alert alert--error">线路库里还没有数据，' +
+      '请先到 <a href="/routes">线路</a> 或 <a href="/import">批量导入</a> 里添加。</div>') +
+
+    '<div class="grid grid--2">' +
+    '<label class="field"><span class="field__label">角标 <b class="req">*</b>' +
+    '<span class="hint">8 字以内，如 天天发车 / 直达 / 价格低</span></span>' +
+    '<input class="input" name="tag" maxlength="8" value="' + esc(f.tag) + '" required></label>' +
+    '<label class="field"><span class="field__label">排序<span class="hint">越小越靠前</span></span>' +
+    '<input class="input" name="sortOrder" type="number" value="' + (f.sortOrder || 10) + '"></label>' +
+    '</div>' +
+
+    '<label class="field"><span class="field__label">推荐理由' +
+    '<span class="hint">60 字以内，写具体的：几天到、发什么货、有什么限制</span></span>' +
+    '<textarea class="input input--area" name="reason" rows="3" maxlength="60">' + esc(f.reason || '') + '</textarea></label>' +
+
+    '<label class="field field--inline"><span class="field__label">上线</span>' +
+    '<input type="checkbox" name="enabled"' + (f.enabled === false ? '' : ' checked') + '>' +
+    '<span class="hint">不勾选就是下线，首页不会出现</span></label>' +
+    '</div>' +
+
+    '<div class="actions">' +
+    '<button class="btn btn--primary" type="submit">保存</button>' +
+    '<a class="btn btn--ghost" href="/featured">取消</a>' +
+    (isNew ? '' : '<button class="btn btn--danger" type="button" id="btn-delete">删除这个推广位</button>') +
+    '</div>' +
+    '</form>' +
+    '</div>';
+};
+
 /* ---------- 404 ---------- */
 PAGES.notfound = function () {
   return '<div class="page"><h1 class="page__title">404</h1>' +
@@ -730,6 +934,8 @@ function shell(view, data) {
 const VIEW_TITLES = {
   dashboard: '总览', companies: '公司', 'company-edit': '编辑公司',
   routes: '线路', 'route-edit': '编辑线路', links: '线路公司', 'link-edit': '编辑关联',
+  announcements: '公告栏', 'announcement-edit': '编辑公告',
+  featured: '优质线路推广', 'featured-edit': '编辑推广位',
   corrections: '纠错审核', import: '批量导入', quality: '数据质量',
   login: '登录', notfound: '未找到'
 };
