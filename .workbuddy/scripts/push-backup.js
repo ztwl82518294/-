@@ -29,14 +29,31 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 
+/**
+ * 跑一条命令并拿回 stdout。
+ *
+ * ★ 坑（真实踩过）：Node 的 execSync 在 Windows 上走 **cmd.exe**，不是 bash。
+ *   所以 `cmd 2>/dev/null || true` 这类 POSIX 写法会报
+ *   「'true' 不是内部或外部命令」并让整个脚本崩掉。
+ *   ⇒ 需要「失败也要继续」的探测，一律用 try/catch，不要写 shell 兜底。
+ */
 function sh(cmd, opts = {}) {
   return execSync(cmd, {
     cwd: ROOT,
     encoding: 'utf8',
     maxBuffer: 1e8,
-    stdio: opts.inherit ? 'inherit' : 'pipe',
+    stdio: 'pipe',
     ...opts,
   });
+}
+
+/** 跑一条命令拿 stdout，失败返回 fallback（替代 `|| true`） */
+function trySh(cmd, fallback = '') {
+  try {
+    return sh(cmd);
+  } catch {
+    return fallback;
+  }
 }
 
 function fail(msg) {
@@ -80,8 +97,7 @@ for (const f of mustIgnore) {
   } catch {
     notIgnored.push(f);
   }
-}
-if (notIgnored.length) {
+}if (notIgnored.length) {
   fail('以下敏感路径**未被忽略**，推送会泄露真实公司电话与地址：\n  ' + notIgnored.join('\n  '));
 }
 console.log('✓ .data/ 与 admin/data/ 仍被忽略（真实电话地址不会外泄）');
@@ -95,7 +111,7 @@ if (leaks.length) {
 console.log('✓ 版本库 ' + tracked.length + ' 个文件，无数据文件');
 
 // ---------- 配 remote ----------
-const existing = sh('git remote get-url origin 2>/dev/null || true').trim();
+const existing = trySh('git remote get-url origin').trim();
 if (existing && existing !== url) {
   console.log('\n⚠ origin 已存在，将从 ' + existing + ' 改为 ' + url);
   sh('git remote set-url origin "' + url + '"');
