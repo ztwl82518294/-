@@ -157,6 +157,37 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
   `[System.IO.File]::WriteAllText($p,$t,(New-Object System.Text.UTF8Encoding($false)))`。
 - 批量改动后跑 `node scripts/check-project.js`，里面有 BOM 自检。
 
+### ★★ 小程序端禁用「需要 @swc/runtime 的语法」（2026-09-22 白屏事故）
+
+`project.config.json` 开了 **「增强编译」`enhance:true`** ⇒ 开发者工具用 **SWC** 编译。
+遇到下列语法会生成 `require('@swc/runtime/_xxx.js')`，而本项目**零依赖**
+（无 `node_modules`、未开 `packNpmManually`）⇒ 该包不存在 ⇒ **页面加载即抛错、整页白屏**。
+
+事故报错（两个一起出现，第二个是结果不是原因）：
+```
+module '@swc/runtime/_array_with_holes.js' is not defined, require args is './_array_with_holes.js'
+Component is not found in path "wx://not-found".        ← 页面没起来，组件自然找不到
+```
+
+**禁用清单**（小程序端 `pages/` `utils/` `components/` `data/` `shared/`）：
+
+| 不要写 | 改写成 |
+|---|---|
+| `const [a, b] = x`（数组解构） | `const a = x[0]; const b = x[1];` |
+| `{ ...x }`（对象展开） | `Object.assign({}, x)` |
+| `[...a, ...b]` / `f(...args)`（展开） | `concat` / `apply` / 循环 `push` |
+| `for (const x of arr)` | 下标 `for (let i = 0; i < arr.length; i++)` |
+
+**注意**：`admin/` 与 `test/` 跑在 Node 里，不经小程序编译器，**不受此限**。
+
+**护栏**：`scripts/check-project.js` 第 11 类检查会在提交前挡住这类语法
+（已反向验证：故意插入数组解构能被抓到）。栈里的**行号是编译产物的行号**，
+不要按源码行号去找 —— 直接跑静态体检更快。
+
+> 事故成因：我在 `pages/index/index.js` 写了 `const [r1, r2] = await Promise.all([...])`。
+> 顺带清掉了 `utils/common.js` 的 `for...of`（`splitPhones`，每次加载都调用）
+> 与 `utils/db.js` 的 `[...new Set()]`，它们当时没炸但同样不安全。
+
 ### 本机 Bash 环境残缺
 - Bash PATH 损坏：`dirname` / `ls` / `grep` / `tail` / `head` / `cat` 均 `command not found`。
 - **改用 Read/Write/Edit/Glob/Grep 工具**，或调 Node 绝对路径：
