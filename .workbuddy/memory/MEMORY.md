@@ -153,6 +153,20 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
 - **改用 Read/Write/Edit/Glob/Grep 工具**，或调 Node 绝对路径：
   `C:/Users/怀瑾/.workbuddy/binaries/node/versions/22.22.2-3/node.exe`
 - Node 脚本参数须用 Windows 风格路径（`G:/...`）；`/g/...` 会被解析成 `g:\g\...`。
+- **Node 的 `execSync` 在 Windows 上走 `cmd.exe`，不是 bash** ——
+  `cmd 2>/dev/null || true` 这类 POSIX 兜底会报「'true' 不是内部或外部命令」并**整脚本崩掉**。
+  探测型调用一律 `try/catch`。**别写 POSIX 兜底语法。**
+- PATH 损坏 ⇒ **没法用 `export https_proxy=...` 传环境变量**；
+  要给单条命令设代理，用工具自身配置（如 `git config http.proxy`）。
+
+### 网络：GitHub 需要绕代理（别误判「推不了」）
+| 通道 | 结果 |
+|---|---|
+| 默认（沙箱代理 `127.0.0.1:59788`） | ❌ github:443 `CONNECT tunnel failed, response 502` |
+| **仓库级 `git config http.proxy http://127.0.0.1:7897`** | ✅ **通** |
+| Gitee（走默认通道） | ✅ 通 |
+- **遇到「GitHub 连不上」先试 7897 代理，再下结论。**
+- 一键备份：`.workbuddy/scripts/push-backup.js <仓库地址>`（含敏感数据自检，推送前强制过三关）。
 
 ### 工作方式
 - **坚持「修测试而不是修功能」**：断言失败时先查清是代码错还是断言写错，并在注释里写明原因防复发。
@@ -215,7 +229,11 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
 
 ## 十、待办
 
-1. ⬜ **远程备份** —— 两个仓库都无 remote，本机是唯一副本（**最高优先级，连续多次提醒**）
+1. ⬜ **远程备份（进行中）** —— 代码已全部提交（4 个提交到 `main`），
+   **仓库级 7897 代理已验证可连通 GitHub**，自检脚本就绪。
+   只差用户建好 GitHub 私有仓库后跑：
+   `node .workbuddy/scripts/push-backup.js https://github.com/ztwl82518294/<仓库名>.git`
+   **在此之前本机仍是唯一副本。**
 2. ⬜ 云函数上传部署 `submitCorrection` / `trackCompanyView`（阻断项）
 3. ⬜ 云控制台建 6 集合 + 导入 `.data/*.jsonl`
 4. ⬜ `corrections` 集合加索引 `openid+day`、`openid+targetId+day`
