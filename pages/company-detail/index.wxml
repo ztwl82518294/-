@@ -2,11 +2,22 @@
 <view class="page">
   <view class="page-body">
 
-    <view wx:if="{{loading}}" class="loading">加载中…</view>
+    <view wx:if="{{loading}}" class="cd-loading">
+      <view class="cd-spinner"></view>
+      <text class="cd-loading-text">加载中…</text>
+    </view>
+
+    <!-- 加载失败：可重试（与「没有这家公司」区分开） -->
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">加载失败</view>
+      <view class="empty-desc">网络或服务异常，请检查网络后重试</view>
+      <view class="empty-btn" bindtap="onRetry">重新加载</view>
+    </view>
 
     <view wx:elif="{{notFound}}" class="empty">
       <view class="empty-title">没有找到这家公司</view>
       <view class="empty-desc">该公司可能已下架，或链接已失效</view>
+      <view class="empty-btn" bindtap="goCompanySearch">去查其它公司</view>
     </view>
 
     <block wx:else>
@@ -24,7 +35,7 @@
           <text wx:if="{{info.updatedText}}" class="cd-meta-item">{{info.updatedText}}</text>
         </view>
 
-        <!-- 电话区：逐号渲染，点哪个拨哪个 -->
+        <!-- 电话区：逐号渲染，点哪个拨哪个；长按可复制单号 -->
         <view wx:if="{{info.phones.length > 0}}" class="cd-phones">
           <text
             wx:for="{{info.phones}}"
@@ -32,6 +43,7 @@
             class="cd-phone"
             data-phone="{{item}}"
             bindtap="onCall"
+            bindlongpress="onCopyPhone"
           >{{item}}</text>
         </view>
         <view wx:else class="cd-nophone">暂无联系电话，可通过下方纠错入口补充</view>
@@ -51,19 +63,50 @@
         </view>
       </view>
 
-      <!-- 覆盖线路：按出发城市分组 -->
+      <!-- 覆盖线路：默认平铺全部（同一公司线路合并在一起） -->
       <view class="card">
-        <view class="card-head">
+        <view class="card-head cd-routes-head">
           <text class="card-title">覆盖线路（{{routeCount}} 条）</text>
+          <text
+            wx:if="{{routeCount > 1}}"
+            class="cd-mode-toggle"
+            bindtap="onToggleGroupMode"
+          >{{grouped ? '平铺显示' : '按出发地分组'}}</text>
         </view>
 
-        <view wx:if="{{groups.length === 0}}" class="empty-inline">
+        <view wx:if="{{routeCount === 0}}" class="empty-inline">
           暂未录入该公司的线路信息
         </view>
 
+        <!-- ★ 默认视图：平铺全部线路，按出发城市→目的地排序，不拆组 -->
+        <block wx:elif="{{!grouped}}">
+          <view
+            wx:for="{{routes}}"
+            wx:key="routeKey"
+            class="cd-route"
+            data-key="{{item.routeKey}}"
+            bindtap="onRouteTap"
+          >
+            <view class="cd-route-main">
+              <text class="cd-route-title">{{item.title}}</text>
+              <text class="cd-route-count">{{item.companyCount}} 家在跑</text>
+            </view>
+            <view class="cd-route-tags">
+              <text wx:if="{{item.transitText}}" class="tag">{{item.transitText}}</text>
+              <text wx:if="{{item.isDirect}}" class="tag tag--green">直达</text>
+              <text wx:if="{{item.frequencyText}}" class="tag">{{item.frequencyText}}</text>
+            </view>
+            <view wx:if="{{item.priceNote || item.remark}}" class="cd-route-note">
+              <text wx:if="{{item.priceNote}}">{{item.priceNote}}</text>
+              <text wx:if="{{item.priceNote && item.remark}}" class="cd-route-sep">·</text>
+              <text wx:if="{{item.remark}}">{{item.remark}}</text>
+            </view>
+          </view>
+        </block>
+
+        <!-- 可选视图：按出发地分组（手动切换，默认不开启） -->
         <block wx:else>
           <view wx:for="{{groups}}" wx:key="city" class="cd-group">
-            <!-- 分组头 -->
             <view class="cd-group-head" data-city="{{item.city}}" bindtap="onToggleGroup">
               <view class="cd-group-title">
                 <text class="cd-group-city">从{{item.city}}出发</text>
@@ -72,13 +115,13 @@
               <text class="cd-group-toggle">{{item.collapsed ? '展开' : '收起'}}</text>
             </view>
 
-            <!-- 分组内线路 -->
             <block wx:if="{{!item.collapsed}}">
               <view
                 wx:for="{{item.routes}}"
                 wx:for-item="r"
+                wx:for-index="ri"
                 wx:key="routeKey"
-                class="cd-route"
+                class="cd-route cd-route--in-group"
                 data-key="{{r.routeKey}}"
                 bindtap="onRouteTap"
               >
@@ -90,11 +133,6 @@
                   <text wx:if="{{r.transitText}}" class="tag">{{r.transitText}}</text>
                   <text wx:if="{{r.isDirect}}" class="tag tag--green">直达</text>
                   <text wx:if="{{r.frequencyText}}" class="tag">{{r.frequencyText}}</text>
-                </view>
-                <view wx:if="{{r.priceNote || r.remark}}" class="cd-route-note">
-                  <text wx:if="{{r.priceNote}}">{{r.priceNote}}</text>
-                  <text wx:if="{{r.priceNote && r.remark}}" class="cd-route-sep">·</text>
-                  <text wx:if="{{r.remark}}">{{r.remark}}</text>
                 </view>
               </view>
             </block>
