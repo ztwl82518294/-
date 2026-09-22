@@ -1,9 +1,0 @@
-<!-- 协议页：用户服务协议 / 隐私政策 -->
-<view class="doc" wx:if="{{doc}}">
-  <view class="doc-title">{{doc.title}}</view>
-  <view class="doc-updated">{{doc.updated}}</view>
-  <view class="doc-section" wx:for="{{doc.sections}}" wx:key="h">
-    <view class="doc-h">{{item.h}}</view>
-    <view class="doc-p" wx:for="{{item.ps}}" wx:for-item="p" wx:key="*this">{{p}}</view>
-  </view>
-</view>
