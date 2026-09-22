@@ -130,6 +130,21 @@ const r = spawnSync('git', ['push', '-u', 'origin', 'main'], {
   cwd: ROOT,
   stdio: 'inherit',
 });
+
+/**
+ * ★ 推完就把代理解绑（踩过）：
+ *   这个代理只是「沙箱内绕开拦截」的手段。若留在 .git/config 里，
+ *   你之后在正常终端里 git fetch / git push 会反被它卡住
+ *   （表现为 `schannel: server closed abruptly` 或连接超时），
+ *   而且很难想到是这里配的。所以用完即解绑，需要时脚本会重新写。
+ */
+try {
+  sh('git config --unset http.proxy');
+  console.log('✓ 已解绑仓库级代理（避免影响你正常终端里的 git 操作）');
+} catch (e) {
+  // 本就未设置，忽略
+}
+
 if (r.status !== 0) {
   fail(
     '推送失败（exit ' + r.status + '）。\n' +
@@ -137,12 +152,14 @@ if (r.status !== 0) {
       '    生成：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens\n' +
       '    权限：Repository access 选该仓库，Contents 给 Read and write\n' +
       '  若是 404：仓库地址拼错，或仓库还没在网页上创建\n' +
+      '  若是 ! [rejected] (fetch first)：远程有你本地没有的提交（通常是建仓时勾了 README）。\n' +
+      '    先 git fetch --no-tags origin <远程SHA>，再 git merge FETCH_HEAD --allow-unrelated-histories\n' +
       '  若是连接超时：换代理端口再试，如 --proxy=http://127.0.0.1:7890',
   );
 }
 
 console.log('\n✅ 推送完成\n');
-console.log('=== 在沙箱外复核这几条 ===');
-console.log('  git -C "G:/workbuddy/logistics-line-query" log --oneline origin/main -1');
-console.log('  git ls-remote ' + url + ' main');
+console.log('=== 核验（注意：本机 git 存不住远程跟踪引用，别看 git status 的 [gone]）===');
+console.log('  在沙箱内核验：node .workbuddy/scripts/push-backup.js 之后，用 git ls-remote origin main 比对');
+console.log('  在沙箱外核验：git ls-remote ' + url + ' main');
 console.log('  浏览器打开 ' + url.replace(/\.git$/, '') + ' 确认文件都在、且仓库是 Private\n');
