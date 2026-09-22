@@ -105,8 +105,14 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
 |---|---|---|
 | 单元 | `node test/run-all.js` | 5 套件 **335 断言** |
 | 体检 | `node scripts/check-project.js` | **10 类**静态检查（含相对 require 有效性） |
+| 部署前 | `node scripts/check-deploy.js` | 云函数 **17 项**（前后端字段对齐 / 集合合法性 / 导入数据合规） |
 | 验收 | `node scripts/check-acceptance.js` | A1~A12 **59 断言** + 12 项人工清单 |
 | 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP 层 **72 断言**（临时用端口 8791） |
+
+> **自检脚本报错时，先确认是代码错还是检查逻辑错**（同「修测试而不是修功能」）。
+> 写静态检查的两个已知坑：
+> ① `collection()` 的参数常是**常量引用**（`.collection(COLLECTION)`），只匹配字符串字面量会误报「未发现调用」；
+> ② 已知例外要用**显式白名单**豁免（如 `view_dedup` 是内部表），**别只在注释里说明**。
 
 - `run-all.js` 用**子进程逐个跑**：套件内部会 `process.exit()`，且 `submitCorrection` 会替换模块解析
   （`Module._load`），同进程混跑会互相污染。**别改成同进程串跑。**
@@ -235,9 +241,12 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
    （脚本自动写 `http.proxy=127.0.0.1:7897` 并跑三项敏感数据自检）；
    正常 shell 直连即可。
    ⚠️ **仍需用户确认该仓库是 Private** —— 里面含客服电话与公司信息。
-2. ⬜ 云函数上传部署 `submitCorrection` / `trackCompanyView`（阻断项）
-3. ⬜ 云控制台建 6 集合 + 导入 `.data/*.jsonl`
-4. ⬜ `corrections` 集合加索引 `openid+day`、`openid+targetId+day`
+2. ⬜ **云函数上传部署**（阻断项）—— 本地检查已全绿（`node scripts/check-deploy.js` 17/17），
+   只剩手动上传：右键 `submitCorrection` / `trackCompanyView` → **上传并部署：云端安装依赖**
+   （本地无 `node_modules`，不能选「所有文件」）。
+3. ⬜ 云控制台建 6 集合 + 导入 `.data/*.jsonl`（companies 40 / routes 55 / route_companies 72 / cities 344，
+   已核验行数与字段合规）
+4. ⬜ `corrections` 加索引 `openid+day`、`openid+targetId+day`（云函数频控靠它计数）
 5. ⬜ **12 项人工验证**（清单在 `docs/验收自检报告.md`）
 6. ⬜ `admin/data/` 与云数据库的衔接：`/api/correction/merge` 已预留「拉线上纠错回本地」，
    但还缺「从云数据库导出纠错」的脚本

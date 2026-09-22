@@ -374,7 +374,8 @@ function checkScripts() {
   const must = {
     'scripts/export-seed.js': '数据导出 / 后台副本重建',
     'scripts/check-acceptance.js': 'PRD 验收自检（A1~A12）',
-    'scripts/smoke-admin.js': '管理后台冒烟测试'
+    'scripts/smoke-admin.js': '管理后台冒烟测试',
+    'scripts/check-deploy.js': '云函数部署前检查'
   };
   const missing = Object.keys(must).filter((f) => !fs.existsSync(path.join(ROOT, f)));
   if (missing.length) {
