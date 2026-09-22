@@ -2,7 +2,16 @@
 <view wx:if="{{visible}}" class="pm-root">
   <!-- 遮罩点一下等同「不同意」：保证用户任何情况下都能关掉弹窗、不会卡死 -->
   <view class="mask" bindtap="onReject"></view>
-  <view class="pm-panel">
+
+  <!--
+    catchtap 而不是 bindtap：面板内的点击到这里就停，
+    不会冒泡到 .pm-root，避免任何意外的穿透/二次触发。
+  -->
+  <view class="pm-panel" catchtap="noop">
+    <!-- 右上角关闭：多一条退出路径。
+         万一两个按钮因任何原因点不动，用户至少能把弹窗关掉、不至于彻底用不了小程序。 -->
+    <view class="pm-close" catchtap="onReject">×</view>
+
     <view class="pm-title">{{title}}</view>
 
     <scroll-view class="pm-scroll" scroll-y>

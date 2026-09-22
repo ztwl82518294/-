@@ -446,6 +446,88 @@ function checkSwcRuntimeSyntax() {
 }
 
 /* ============================================================
+ * 12. 弹层（遮罩 / 面板）的层叠与尺寸护栏
+ *
+ * 这一类是「看得见却点不到」「点了没反应」的高发区，血泪教训两轮：
+ *   ① .mask 漏写样式 —— 零尺寸，看不见，但父级 .pm-root 仍是整屏固定块，
+ *      把宿主页面所有按钮的点击全吃掉（首页按钮全无反应）。
+ *   ② 遮罩和面板都不写 z-index —— 只靠 DOM 顺序决胜；面板上又有 transform
+ *      做垂直居中，transform 会创建独立层叠上下文，命中区域可能和肉眼所见
+ *      不一致（弹窗看着好好的，两个按钮点了都没反应）。
+ *   ③ 用 inset: 0 简写 —— 低版本内核不认，整块塌成 0 尺寸。
+ *
+ * 固化成检查，避免第三次踩：
+ *   a) 禁止 inset 简写，四边写开
+ *   b) 弹层类选择器只要声明了 position:absolute/fixed，就必须显式写 z-index
+ *   c) styleIsolation:isolated 的组件，wxml 里用了 .mask 就必须在本组件 wxss 里自备
+ * ============================================================ */
+function checkOverlayLayering() {
+  checks++;
+
+  const OVERLAY_WORD = /(mask|overlay|sheet|panel|dialog|modal|popup|drawer|root)/i;
+  const bad = [];
+
+  const scan = (files) => {
+    files.forEach((f) => {
+      if (path.extname(f) !== '.wxss') return;
+      // 剥注释：注释里常写「不要写 inset: 0」这类示例，不剥会误报
+      const src = stripCssComments(fs.readFileSync(f, 'utf8'));
+
+      // a) inset 简写
+      const insetRe = /(^|[^-])inset\s*:/g;
+      let m;
+      while ((m = insetRe.exec(src))) {
+        const line = src.slice(0, m.index).split('\n').length;
+        bad.push(rel(f) + ':' + line + '  用了 inset 简写 → 四边写开 top/right/bottom/left');
+      }
+
+      // b) 弹层类 + 定位 → 必须有 z-index
+      const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
+      while ((m = ruleRe.exec(src))) {
+        const selector = m[1].trim();
+        const body = m[2];
+        if (!OVERLAY_WORD.test(selector)) continue;
+        if (!/position\s*:\s*(absolute|fixed)/.test(body)) continue;
+        if (/z-index\s*:/.test(body)) continue;
+        const line = src.slice(0, m.index).split('\n').length;
+        bad.push(rel(f) + ':' + line + '  ' + selector + ' 定位了但没写 z-index → 补显式 z-index');
+      }
+    });
+  };
+
+  scan(walk(ROOT, []));
+
+  // c) isolated 组件里用到的 .mask 必须自备
+  const compBase = path.join(ROOT, 'components');
+  if (fs.existsSync(compBase)) {
+    fs.readdirSync(compBase, { withFileTypes: true }).forEach((e) => {
+      if (!e.isDirectory()) return;
+      const dir = path.join(compBase, e.name);
+      const wxml = path.join(dir, 'index.wxml');
+      const wxss = path.join(dir, 'index.wxss');
+      const json = path.join(dir, 'index.json');
+      if (!fs.existsSync(wxml) || !fs.existsSync(wxss)) return;
+
+      let isolated = true;
+      if (fs.existsSync(json)) {
+        try {
+          const cfg = JSON.parse(fs.readFileSync(json, 'utf8'));
+          isolated = cfg.styleIsolation !== 'apply-shared' && cfg.styleIsolation !== 'shared';
+        } catch (err) { /* 解析不了就按隔离处理，宁可多查 */ }
+      }
+      if (!isolated) return;
+      if (!/class="[^"]*\bmask\b/.test(fs.readFileSync(wxml, 'utf8'))) return;
+      if (!/\.mask[\s,{:.]/.test(stripCssComments(fs.readFileSync(wxss, 'utf8')))) {
+        bad.push('components/' + e.name + '  样式隔离下用了 .mask，但组件 wxss 里没有自备 .mask');
+      }
+    });
+  }
+
+  bad.forEach((x) => fail('[弹层] ' + x + '（会造成「看得见点不到 / 点了没反应」）'));
+  if (!bad.length) console.log('弹层遮罩与面板均有显式 z-index，无 inset 简写');
+}
+
+/* ============================================================
  * 主流程
  * ============================================================ */
 function main() {
@@ -462,6 +544,7 @@ function main() {
   checkTests();
   checkScripts();
   checkSwcRuntimeSyntax();
+  checkOverlayLayering();
 
   const counts = {    total: files.length,
     js: files.filter((f) => path.extname(f) === '.js').length,

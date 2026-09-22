@@ -5,20 +5,33 @@
  *   app.wxss 的全局 .mask 进不来，必须在这里自备，
  *   否则遮罩零尺寸——看不见却仍会吃掉底层点击。
  */
+/*
+ * z-index 写死（与 privacy-modal 同一条规则）：
+ * 遮罩 0、面板 1，不靠 DOM 顺序决胜，避免「看得见却点不到」。
+ * 四边全写开，不用 inset 简写：低版本内核不认 inset，整块会塌成 0 尺寸。
+ */
 .mask {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
   background-color: rgba(15, 15, 15, 0.6);
 }
 
 .cp-root {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 950;
 }
 
 .cp-sheet {
   position: absolute;
+  z-index: 1;
   left: 0;
   right: 0;
   bottom: 0;

@@ -5,29 +5,54 @@
  *   本组件是 styleIsolation: "isolated"（见 index.json），
  *   **全局样式默认进不来**。以前这里漏写了 .mask，
  *   导致遮罩元素零尺寸、零背景 —— 视觉上看不见，
- *   但 .pm-root 仍是 position:fixed; inset:0 的整屏块，
+ *   但 .pm-root 仍是 position:fixed 的整屏块，
  *   会把下面首页所有按钮的点击全部吃掉，
  *   表现为「首页所有按钮点击没反应」（踩过这个坑）。
  *   ⇒ 组件内的遮罩/弹层样式一律在组件 wxss 里自备，不要依赖全局类。
  */
+
+/*
+ * ★★ 为什么遮罩和面板都要写死 z-index（第二层坑）：
+ *   只写 position:absolute 不写 z-index 时，两者都是 z-index:auto，
+ *   靠 DOM 顺序决定谁在上 —— 而 .pm-panel 上还有 transform（做垂直居中），
+ *   transform 会创建独立层叠上下文，实际命中区域和肉眼所见可能不一致，
+ *   表现为「弹窗看着好好的，但两个按钮点了都没反应」。
+ *   ⇒ 遮罩 z-index:0、面板 z-index:1，写死，不靠 DOM 顺序。
+ *
+ * ★★ 为什么不用 top:50% + translateY(-50%) 居中（同上）：
+ *   改用父级 flex 居中，面板只写 position:relative。
+ *   少一个 transform 就少一层层叠上下文，命中区域 = 看到的位置。
+ */
+
+/* 四边全写开，不用 inset 简写：低版本内核不认 inset，会整块塌成 0 尺寸 */
+.pm-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 60rpx;
+}
+
 .mask {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
   background-color: rgba(15, 15, 15, 0.6);
 }
 
-.pm-root {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-}
-
 .pm-panel {
-  position: absolute;
-  left: 60rpx;
-  right: 60rpx;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
+  z-index: 1;
+  width: 100%;
   max-height: 78vh;
   display: flex;
   flex-direction: column;
@@ -35,6 +60,25 @@
   border-radius: 20rpx;
   box-shadow: 0 8rpx 32rpx rgba(15, 15, 15, 0.16);
   overflow: hidden;
+}
+
+.pm-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  width: 88rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  line-height: 1;
+  color: #9B9A97;
+}
+
+.pm-close:active {
+  background-color: rgba(55, 53, 47, 0.06);
 }
 
 .pm-title {
@@ -46,9 +90,16 @@
   text-align: center;
 }
 
+/*
+ * 给滚动区一个硬上限：
+ * 万一 flex:1 在个别内核上不生效、scroll-view 被内容撑开，
+ * 按钮区会被挤出面板（overflow:hidden 裁掉）⇒ 用户看不到也点不到按钮。
+ * 有这个 max-height 兜底，按钮区永远留在可视范围内。
+ */
 .pm-scroll {
-  flex: 1;
+  flex: 1 1 0%;
   min-height: 0;
+  max-height: 50vh;
   padding: 0 32rpx;
 }
 
@@ -100,6 +151,10 @@
   color: #0B6E99;
 }
 
+.pm-link:active {
+  color: #085577;
+}
+
 .pm-actions {
   flex-shrink: 0;
   display: flex;
@@ -123,6 +178,11 @@
   background-color: #FFFFFF;
   color: #6B6B6B;
   border: 1rpx solid rgba(55, 53, 47, 0.16);
+}
+
+/* 按下要有反馈：否则用户点下去看不出有没有生效，会以为「点了没反应」 */
+.pm-btn--ghost:active {
+  background-color: rgba(55, 53, 47, 0.08);
 }
 
 .pm-btn--primary {

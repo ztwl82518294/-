@@ -38,10 +38,21 @@ Component({
   },
 
   methods: {
-    /** 同意：落本地存储 + 抛事件给宿主页面 */
+    /**
+     * 同意：落本地存储 + 抛事件给宿主页面
+     *
+     * ★ setData 必须排在最前面：先关窗、再落存储。
+     *   万一 markAgreed() 出任何意外（存储被禁用、配额满等），
+     *   弹窗也已经关掉了，用户不会卡在一个关不掉的弹窗上。
+     *   （这是「点了没反应」最容易踩的坑：副作用先跑，副作用一挂，UI 就永远不动。）
+     */
     onAgree() {
-      markAgreed();
       this.setData({ visible: false });
+      try {
+        markAgreed();
+      } catch (e) {
+        /* 存不下就下次再弹一次，不因此卡住用户 */
+      }
       this.triggerEvent('agree');
     },
 
@@ -59,12 +70,20 @@ Component({
       wx.showToast({ title: '需同意后才能使用查询功能', icon: 'none', duration: 2000 });
     },
 
-    /** 查看完整的《用户信息处理规则》 */
+    /**
+     * 查看完整的《用户信息处理规则》
+     * 带 fail 回调：跳不过去也要有提示，不能让用户点了没任何反馈。
+     */
     onOpenDetail() {
-      wx.navigateTo({ url: '/pages/privacy/index' });
+      wx.navigateTo({
+        url: '/pages/privacy/index',
+        fail: () => {
+          wx.showToast({ title: '页面打开失败，请重试', icon: 'none' });
+        }
+      });
     },
 
-    /** 吞掉遮罩点击，防穿透（遮罩点击走 onReject，这里保留给面板内空白区） */
+    /** 面板内空白区的点击到此为止，不穿透到遮罩（面板绑定的是 catchtap） */
     noop() {}
   }
 });
