@@ -66,7 +66,20 @@ lib/repository.js 写穿透  lib/auth.js 登录  lib/importer.js xlsx/csv
 lib/api.js JSON接口  lib/views.js 服务端渲染HTML
 ```
 - **零依赖**（只 Node 内置 http/fs/crypto/zlib，无 package.json、无 node_modules）—— 刻意如此，为了「换台电脑就能跑」
-- **只绑 127.0.0.1:8787**；启动 `node admin/server.js`；默认 `admin / admin12345`
+- **只绑 127.0.0.1:8787**；默认 `admin / admin12345`
+
+### 进入后台（运营视角）
+**双击项目根目录 `start-admin.bat`** —— 自动起服务 → TCP 探活 → 开浏览器。
+关掉那个黑窗口 = 关掉后台。等价命令 `node scripts/start-admin.js`（`--no-open` 只起服务）。
+完整说明见 `docs/管理后台使用说明.md`。启动入口已在 `check-project.js` 的「工程脚本」清单里，
+删了会报警。
+
+> ★★ **`bootstrap()` 的 P0 事故（2026-09-22 修复）**：曾用 `store.FILE_COMPANIES`
+> （**集合名** `companies`）去 `fs.existsSync`，而真实文件是 `companies.json`
+> （`db.fileOf()` 加后缀）⇒ 永远判定「缺失」⇒ **每次启动都用 seed 覆盖四张表，
+> 运营改的数据重启即丢**。现在一律走 `db.fileOf()`，且**只补缺失的表**，
+> 不再「缺一个就全部重建」。护栏在 `smoke-admin.js`：起来后逐字节比对磁盘与备份。
+> 教训：**判断文件存在性永远用负责命名的那个模块的 API，别自己拼文件名。**
 - xlsx 是 zip：用**中央目录**定位 + `zlib.inflateRawSync`（不用本地头，data descriptor 长度可能为 0）
 - multipart 二进制保真：`readBody` 同时给 `raw`(utf8) 与 `rawBinary`(latin1)，文件走 latin1
 - **`admin/data/` 是工作副本，不入版本库**；改乱了用 `node scripts/export-seed.js --admin-only` 重建（`admins.json` 不动）
@@ -99,8 +112,8 @@ lib/api.js JSON接口  lib/views.js 服务端渲染HTML
 | 模块基础能力 | `node .workbuddy/scripts/check-module-basics.js` | **8 个页面**（改页面必跑） |
 | 部署前 | `node scripts/check-deploy.js` | **19 项** |
 | 验收 | `node scripts/check-acceptance.js` | **61 断言** + 12 项人工 |
-| 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP **89 断言**（临时端口 8791） |
-| BOM | `node .workbuddy/scripts/check-bom.js` | **139 文件，提审前必跑** |
+| 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP **105 断言**（临时端口 8791） |
+| BOM | `node .workbuddy/scripts/check-bom.js` | **141 文件，提审前必跑** |
 
 > **自检报错先分清「代码错」还是「检查逻辑错」**（同「修测试而不是修功能」）。
 > 已多次遇到「检查器关键词落后于实现」—— 一律改检查器并注释说明，

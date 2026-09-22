@@ -120,6 +120,7 @@ PAGES.login = function (d) {
     '<form class="login__box" method="POST" action="/login">' +
     '<h1 class="login__title">物流专线查询 · 管理后台</h1>' +
     '<p class="login__sub">仅限管理员使用。本页面仅监听本机，不对外网开放。</p>' +
+    (d.notice ? '<div class="alert alert--ok">' + esc(d.notice) + '</div>' : '') +
     (d.error ? '<div class="alert alert--error">' + esc(d.error) + '</div>' : '') +
     '<label class="field"><span class="field__label">账号</span>' +
     '<input class="input" name="username" autocomplete="username" autofocus></label>' +
@@ -896,6 +897,40 @@ PAGES['featured-edit'] = function (d) {
     '</div>';
 };
 
+/* ---------- 修改密码 ----------
+ *
+ * ★ 这一页是被「补」出来的：auth.changePassword 早就实现了，但没有任何页面
+ *   或接口调用它 —— 而启动横幅和 README 都在说「登录后请尽快修改密码」。
+ *   等于给了个不存在的入口。所以这里补上，让那句话真正可执行。
+ */
+PAGES.password = function (d) {
+  return '<div class="page">' +
+    '<h1 class="page__title">修改密码</h1>' +
+    '<p class="hint">当前账号：<strong>' + esc((d.user && d.user.username) || '') + '</strong>。' +
+    '改完会立即退出，需要用新密码重新登录。</p>' +
+    (d.error ? '<div class="alert alert--error">' + esc(d.error) + '</div>' : '') +
+    '<form class="form" method="POST" action="/password">' +
+    '<label class="field"><span class="field__label">原密码</span>' +
+    '<input class="input" type="password" name="oldPassword" autocomplete="current-password" autofocus></label>' +
+    '<label class="field"><span class="field__label">新密码</span>' +
+    '<input class="input" type="password" name="newPassword" autocomplete="new-password">' +
+    '<span class="hint">至少 8 位</span></label>' +
+    '<label class="field"><span class="field__label">确认新密码</span>' +
+    '<input class="input" type="password" name="confirmPassword" autocomplete="new-password"></label>' +
+    '<div class="actions">' +
+    '<button class="btn btn--primary" type="submit">保存</button>' +
+    '<a class="btn btn--ghost" href="/">取消</a>' +
+    '</div>' +
+    '</form>' +
+    '<div class="fieldset" style="margin-top:24px">' +
+    '<div class="fieldset__title">忘记了密码怎么办</div>' +
+    '<p class="hint">后台不做「找回密码」（没有邮箱/手机，做了也是假的）。' +
+    '真忘了就直接删掉 <code>admin/data/admins.json</code>，' +
+    '下次启动会自动重建默认账号 <code>admin / admin12345</code>，然后立刻改掉。</p>' +
+    '</div>' +
+    '</div>';
+};
+
 /* ---------- 404 ---------- */
 PAGES.notfound = function () {
   return '<div class="page"><h1 class="page__title">404</h1>' +
@@ -923,6 +958,7 @@ function shell(view, data) {
       nav(view) +
       '<div class="top__right">' +
       '<span class="top__user">' + esc((data.user && data.user.username) || '') + '</span>' +
+      '<a class="top__logout" href="/password">改密码</a>' +
       '<a class="top__logout" href="/logout">退出</a>' +
       '</div>' +
       '</header>') +
@@ -937,6 +973,7 @@ const VIEW_TITLES = {
   announcements: '公告栏', 'announcement-edit': '编辑公告',
   featured: '优质线路推广', 'featured-edit': '编辑推广位',
   corrections: '纠错审核', import: '批量导入', quality: '数据质量',
+  password: '修改密码',
   login: '登录', notfound: '未找到'
 };
 

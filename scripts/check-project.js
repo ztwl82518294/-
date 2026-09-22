@@ -8,7 +8,7 @@
  *   3. 注册    —— app.json 页面 / 组件四件套齐全
  *   4. 绑定    —— WXML 里的事件绑定在对应 JS 中必须有实现
  *   5. 集合名  —— 代码中不得出现硬编码集合名字符串（必须走 shared/schema）
- *   6. 铁律    —— Notion 主题四条铁律（无渐变 / 无光斑 / 无半透明染色 / 无高光内阴影）
+ *   6. 铁律    —— Notion 主题五条铁律（无渐变 / 无光斑 / 无半透明染色 / 无高光内阴影 / 字体无毛玻璃）
  *   7. 隐私    —— 不得出现 utils/privacy.js 里的 FORBIDDEN_APIS
  *   8. require —— 所有相对 require 路径必须真实存在（跳过注释）
  *   9. 测试    —— 测试套件与统一入口存在
@@ -448,6 +448,12 @@ function checkScripts() {
     'scripts/check-acceptance.js': 'PRD 验收自检（A1~A12）',
     'scripts/smoke-admin.js': '管理后台冒烟测试',
     'scripts/check-deploy.js': '云函数部署前检查',
+    /*
+     * ★ 一键进后台的入口也必须在列：它是运营唯一会用到的启动方式，
+     *   一旦被误删，用户会遇到「后台进不去」却没人报警。
+     */
+    'scripts/start-admin.js': '一键进入管理后台',
+    'start-admin.bat': '双击进入管理后台',
     '.workbuddy/scripts/check-module-basics.js': '各页面「符合自身场景的基础能力」自检'
   };
   const missing = Object.keys(must).filter((f) => !fs.existsSync(path.join(ROOT, f)));

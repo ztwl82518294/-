@@ -33,6 +33,7 @@ const path = require('path');
 const url = require('url');
 
 const store = require('./lib/store');
+const db = require('./lib/db');
 const repo = require('./lib/repository');
 const auth = require('./lib/auth');
 const importer = require('./lib/importer');
@@ -59,17 +60,40 @@ function bootstrap() {
   const dataDir = path.join(__dirname, 'data');
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
-  const files = [store.FILE_COMPANIES, store.FILE_ROUTES, store.FILE_LINKS, store.FILE_CORRECTIONS];
-  const missing = files.filter((f) => !fs.existsSync(path.join(dataDir, f)));
+  /*
+   * ★★ 这里踩过一次 P0：判断文件是否存在时用了**集合名**（`companies`），
+   *   而磁盘上的真实文件名是 `companies.json`（db.fileOf 负责加后缀）。
+   *   结果 existsSync 永远是 false ⇒ **每次启动都判定「缺少数据文件」，
+   *   用 seed 把四张表整个覆盖重建** ⇒ 运营在后台改的数据一重启就全没了。
+   *
+   *   所以存在性判断一律走 db.fileOf()，不自己拼文件名。
+   */
+  const files = [
+    store.FILE_COMPANIES, store.FILE_ROUTES, store.FILE_LINKS, store.FILE_CORRECTIONS,
+    store.FILE_ANNOUNCEMENTS, store.FILE_FEATURED
+  ];
+  const missing = files.filter((f) => !fs.existsSync(db.fileOf(f)));
   if (!missing.length) return;
 
   log('[bootstrap] 缺少数据文件：' + missing.join(', ') + '，从 seed 生成…');
   try {
     const seed = require(path.join(__dirname, '..', 'data', 'seed-data.js'));
     const t = seed.buildTables();
-    repo.bootstrapFrom(t);
-    log('[bootstrap] 已生成 companies=' + t.companies.length +
-      ' routes=' + t.routes.length + ' links=' + t.routeCompanies.length);
+    const byName = {
+      companies: t.companies || [],
+      routes: t.routes || [],
+      route_companies: t.routeCompanies || t.route_companies || [],
+      corrections: [],
+      announcements: t.announcements || [],
+      featured_routes: t.featuredRoutes || t.featured_routes || []
+    };
+    /*
+     * ★ 只补缺失的那几张，**绝不顺手重建已存在的表**。
+     *   早期版本是「缺一个就全部重建」（repo.bootstrapFrom 一次写六张），
+     *   那意味着新建一个集合会把别的集合里已经改好的数据一起冲掉。
+     */
+    missing.forEach((n) => db.write(n, byName[n] || []));
+    log('[bootstrap] 已生成：' + missing.join(', '));
   } catch (e) {
     console.error('[bootstrap] 失败：' + e.message);
     console.error('  请先运行：node scripts/export-seed.js');
@@ -194,7 +218,14 @@ async function handle(req, res) {
       return;
     }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderPage('login', { error: '' }));
+    /*
+     * 改完密码会带着 ?changed=1 跳回来。这里给一句成功提示，
+     * 否则用户只看到「被登出了」，会以为改密码失败、以为坏了。
+     */
+    res.end(renderPage('login', {
+      error: '',
+      notice: query.changed === '1' ? '密码已修改，请用新密码重新登录。' : ''
+    }));
     return;
   }
 
@@ -214,6 +245,38 @@ async function handle(req, res) {
       return;
     }
     res.writeHead(302, { Location: '/login' });
+    res.end();
+    return;
+  }
+
+  /* ---------- 修改密码（需登录） ----------
+   * ★ 为什么单独在这里处理而不是走 PAGE_ROUTES：
+   *   它要区分 GET / POST，和 /login 是一类（表单提交 + 重定向），
+   *   放进只支持 GET 渲染的 PAGE_ROUTES 反而要绕。
+   *
+   * ★ 改完**必须强制重新登录**：auth.changePassword 会清掉所有会话，
+   *   这里同时下发过期 Cookie，否则用户手里的旧 Cookie 会一直 302 跳登录，
+   *   表现为「后台突然全都进不去了」。
+   */
+  if (pathname === '/password') {
+    const render = (err) => {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(renderPage('password', { user: sess, error: err || '' }));
+    };
+    if (req.method !== 'POST') { render(''); return; }
+
+    const body = await readBody(req);
+    const form = api.parseForm(body.raw);
+    const oldPassword = String(form.oldPassword || '');
+    const newPassword = String(form.newPassword || '');
+    const confirmPassword = String(form.confirmPassword || '');
+
+    if (newPassword !== confirmPassword) { render('两次输入的新密码不一致'); return; }
+
+    const result = auth.changePassword(sess.username, oldPassword, newPassword);
+    if (!result.ok) { render(result.message); return; }
+
+    res.writeHead(302, { 'Set-Cookie': auth.expiredCookie(), Location: '/login?changed=1' });
     res.end();
     return;
   }

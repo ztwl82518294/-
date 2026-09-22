@@ -219,6 +219,29 @@ async function main() {
   await new Promise((r) => setTimeout(r, 500));
 
   try {
+    /* ---------- 启动不重建已有数据（bootstrap 事故护栏） ---------- */
+    section('启动不重建已有数据（bootstrap 事故护栏）');
+    /*
+     * ★ 回归的是一次真实的 P0：bootstrap 判断数据文件是否存在时，
+     *   用的是**集合名**（`companies`）而不是真实文件名（`companies.json`）。
+     *   existsSync 因此永远是 false ⇒ 每次启动都判定「缺少数据文件」，
+     *   用 seed 把四张表整个覆盖重建 ⇒ **运营在后台改的数据一重启就全没了**。
+     *
+     *   这里是第四层里唯一能验到它的位置：服务真的起来了，
+     *   再拿磁盘内容和开跑前的备份逐字节比对 —— 只要被重建过就一定对不上。
+     *   （单元测试测不到：bootstrap 只在 start() 里跑。）
+     */
+    FILES.forEach((f) => {
+      // 账号文件由 ensureDefaultAdmin 在启动时新建/更新，本来就会变，不参与比对
+      if (f === 'admins.json') return;
+      const backupPath = path.join(BACKUP_DIR, f);
+      if (!fs.existsSync(backupPath)) return;
+      const before = fs.readFileSync(backupPath, 'utf8');
+      const after = fs.readFileSync(path.join(DATA_DIR, f), 'utf8');
+      t('启动后 ' + f + ' 未被 seed 重建', before === after,
+        before === after ? '内容一致' : '内容被改写');
+    });
+
     /* ---------- B1 鉴权 ---------- */
     section('B1 登录与鉴权');
 
@@ -607,6 +630,63 @@ async function main() {
       s.end();
     });
     t('服务器仅监听 127.0.0.1（不对外网暴露）', listeningOnAll === false);
+
+    /* ---------- 修改密码 ---------- */
+    section('修改密码（补齐的入口）');
+    /*
+     * ★ 这一节的存在理由：auth.changePassword 早就写好了，但没有任何页面或
+     *   接口调用它 —— 启动横幅和 README 却都在说「登录后请尽快修改密码」，
+     *   等于指了一个不存在的入口。补上之后用断言把它钉住，防止再退化。
+     *
+     * ★ 必须放在所有需要登录的用例**之后**：改密码会清空全部会话，
+     *   后面的请求就都 401 了。
+     */
+    r = await req('GET', '/password');
+    t('修改密码页可访问', r.status === 200 && /原密码/.test(r.text) && /确认新密码/.test(r.text));
+
+    r = await req('POST', '/password',
+      'oldPassword=admin12345&newPassword=smoke-new-pass&confirmPassword=smoke-new-pass-2',
+      'application/x-www-form-urlencoded');
+    t('两次新密码不一致被拒', /不一致/.test(r.text));
+
+    r = await req('POST', '/password',
+      'oldPassword=wrong-old&newPassword=smoke-new-pass&confirmPassword=smoke-new-pass',
+      'application/x-www-form-urlencoded');
+    t('原密码错误被拒', /原密码不正确/.test(r.text));
+
+    r = await req('POST', '/password',
+      'oldPassword=admin12345&newPassword=123&confirmPassword=123',
+      'application/x-www-form-urlencoded');
+    t('新密码少于 8 位被拒', /至少 8 位/.test(r.text));
+
+    const cookieBeforeChange = cookie;
+    r = await req('POST', '/password',
+      'oldPassword=admin12345&newPassword=smoke-new-pass&confirmPassword=smoke-new-pass',
+      'application/x-www-form-urlencoded');
+    t('改密码成功后跳回登录页并带成功提示',
+      r.status === 302 && /\/login\?changed=1/.test(r.headers.get('location') || ''),
+      'HTTP ' + r.status);
+    t('改密码后下发清空型 Cookie（强制重新登录）',
+      /Max-Age=0/.test(r.headers.get('set-cookie') || ''));
+
+    /* 旧会话必须立刻失效，否则表现为「后台突然全都进不去了」却不知道为什么 */
+    cookie = cookieBeforeChange;
+    r = await req('GET', '/');
+    t('改密码后旧会话立即失效', r.status === 302 && /\/login/.test(r.headers.get('location') || ''));
+
+    r = await req('POST', '/login', 'username=admin&password=smoke-new-pass',
+      'application/x-www-form-urlencoded');
+    t('新密码可以登录', r.status === 302 && !!cookie);
+
+    /* 改回默认密码，别把后续用例和用户的本地数据留在改过的状态 */
+    r = await req('POST', '/password',
+      'oldPassword=smoke-new-pass&newPassword=admin12345&confirmPassword=admin12345',
+      'application/x-www-form-urlencoded');
+    t('可以再改回原密码', r.status === 302);
+
+    r = await req('POST', '/login', 'username=admin&password=admin12345',
+      'application/x-www-form-urlencoded');
+    t('改回后原密码重新可用', r.status === 302 && !!cookie);
 
     /* ---------- 退出 ---------- */
     section('退出登录');
