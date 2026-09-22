@@ -454,6 +454,11 @@ function checkScripts() {
      */
     'scripts/start-admin.js': '一键进入管理后台',
     'start-admin.bat': '双击进入管理后台',
+    /*
+     * ★ 云函数副本同步脚本必须在列：云函数部署只上传自己的目录，
+     *   共用模块靠它生成副本。脚本丢了 ⇒ 副本慢慢变旧且无人察觉。
+     */
+    'scripts/sync-cloud-shared.js': '同步共用模块副本到云函数目录',
     '.workbuddy/scripts/check-module-basics.js': '各页面「符合自身场景的基础能力」自检'
   };
   const missing = Object.keys(must).filter((f) => !fs.existsSync(path.join(ROOT, f)));

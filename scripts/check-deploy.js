@@ -39,7 +39,11 @@ function section(t) {
   console.log('\n【' + t + '】');
 }
 
-const FUNCS = ['submitCorrection', 'trackCompanyView'];
+/*
+ * ★ 新增云函数必须登记在这里 —— 否则部署检查根本不会看它，
+ *   一个缺 package.json 的云函数会一路绿灯直到上传时才炸。
+ */
+const FUNCS = ['submitCorrection', 'trackCompanyView', 'adminApi'];
 
 /* ---------- 1. 文件齐全 ---------- */
 section('1. 云函数文件齐全');
@@ -214,8 +218,22 @@ function collectionsUsed(src) {
   return out;
 }
 
+/**
+ * ★ 例外：集合名全部取自 shared/schema.js 的云函数，静态扫不出来但天然合法。
+ *   adminApi 写成 `C.COMPANIES`（C = schema.COLLECTIONS）与 `COLLECTION_OF[type]`（动态），
+ *   正则既匹配不到 `C.COMPANIES` 也解析不出动态取值 —— 硬凑正则只会误报。
+ *   认这个模式即可：来源是 schema，就不可能越出已声明的集合。
+ */
+function usesSchemaCollections(src) {
+  return /=\s*schema\.COLLECTIONS\b/.test(src) || /COLLECTION_OF\s*=/.test(src);
+}
+
 for (const f of FUNCS) {
   if (!funcSrc[f]) continue;
+  if (usesSchemaCollections(funcSrc[f])) {
+    ok(f + ' 的集合名全部取自 shared/schema.js（天然合法，无需逐个匹配）');
+    continue;
+  }
   const used = collectionsUsed(funcSrc[f]);
   if (used.size === 0) {
     bad(f + ' 里未发现 collection() 调用');
@@ -297,8 +315,30 @@ for (const t of EXPECT) {
   }
 }
 
-/* ---------- 8. 云环境 ID ---------- */
-section('8. 云环境配置');
+/* ---------- 8. 云函数里的共用模块副本与主仓库一致 ---------- */
+section('8. 云函数副本未漂移');
+/*
+ * ★ 云函数部署时只上传自己的目录，所以 shared/ 与 utils/ 的共用模块在
+ *   cloudfunctions/<fn>/ 下各有一份副本（由 scripts/sync-cloud-shared.js 生成）。
+ *   改了主仓库却没同步 ⇒ 本地测试全绿（跑的是主仓库那份），云端跑旧逻辑，且不报错。
+ *   这一步就是把「同步」变成可验证的，而不是靠记性。
+ */
+const { spawnSync } = require('child_process');
+const syncScript = path.join(ROOT, 'scripts', 'sync-cloud-shared.js');
+if (!fs.existsSync(syncScript)) {
+  bad('scripts/sync-cloud-shared.js 缺失（无法校验云函数副本是否漂移）');
+} else {
+  const r = spawnSync(process.execPath, [syncScript, '--check'], { encoding: 'utf8' });
+  const out = ((r.stdout || '') + (r.stderr || '')).trim();
+  if (r.status === 0) {
+    ok('云函数副本与主仓库一致');
+  } else {
+    bad('云函数副本与主仓库不一致', out.split('\n').slice(0, 4).join(' / '));
+  }
+}
+
+/* ---------- 9. 云环境 ID ---------- */
+section('9. 云环境配置');
 const appSrc = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
 const envM = appSrc.match(/CLOUD_ENV\s*=\s*['"]([^'"]+)['"]/);
 if (!envM) {

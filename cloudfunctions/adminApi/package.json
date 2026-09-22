@@ -1,0 +1,9 @@
+{
+  "name": "adminApi",
+  "version": "1.0.0",
+  "description": "小程序端后台的数据通道（openid 白名单鉴权 + 增删改 + 纠错审核 + 批量导入 + 质量看板）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

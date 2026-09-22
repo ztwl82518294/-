@@ -24,6 +24,7 @@ const schema = require('../../shared/schema');
  *   （一边拦得住一边拦不住），脏数据就从小程序端进来了。
  */
 const validate = require('../../shared/validate');
+const importShared = require('../../shared/import');
 
 /* 集合名 → 我们的文件/内存键名（与 shared/schema 的 COLLECTIONS 对应） */
 const FILE_COMPANIES = schema.COLLECTIONS.COMPANIES;
@@ -829,68 +830,9 @@ function qualityStats(now) {
  * @returns {{valid:Array, invalid:Array, summary:object}}
  */
 function validateImportRows(rows) {
-  const list = Array.isArray(rows) ? rows : [];
-  const valid = [];
-  const invalid = [];
-  const seenCompany = {};   // 同一文件内公司名去重
-  const seenPair = {};      // 同一文件内「公司@线路」去重
-
-  list.forEach((row, i) => {
-    const lineNo = i + 2;   // Excel 第 1 行是表头，数据从第 2 行起
-    const errs = [];
-
-    const name = String(row.name || '').trim();
-    const fromCity = String(row.fromCity || '').trim();
-    const toCity = String(row.toCity || '').trim();
-    const phone = String(row.phone || '').trim();
-    const frequency = String(row.frequency || '').trim();
-
-    if (!name) errs.push('公司全称缺失');
-    if (!fromCity) errs.push('出发城市缺失');
-    if (!toCity) errs.push('到达城市缺失');
-    if (fromCity && toCity && normCity(fromCity) === normCity(toCity)) {
-      errs.push('出发与到达是同一城市');
-    }
-    if (phone && !common.isPhoneLike(phone)) {
-      errs.push('电话格式不正确（' + phone + '）');
-    }
-    if (row.transitDays !== '' && row.transitDays !== null && row.transitDays !== undefined) {
-      const d = Number(row.transitDays);
-      if (!isFinite(d) || d < 0 || d > 60) errs.push('时效不合法（' + row.transitDays + '）');
-    }
-    // 频率：空值允许（视为未知），但填了就必须在枚举内
-    if (frequency && schema.FREQUENCY_OPTIONS.map((o) => o.value).indexOf(frequency) < 0) {
-      errs.push('发车频率取值不合法（' + frequency + '）');
-    }
-
-    const routeKey = common.buildRouteKey(fromCity, toCity);
-    const pairKey = name + '@' + routeKey;
-    if (name && routeKey && seenPair[pairKey]) {
-      errs.push('与第 ' + seenPair[pairKey] + ' 行重复（同公司同线路）');
-    }
-
-    if (errs.length) {
-      invalid.push({ lineNo: lineNo, row: row, errors: errs });
-      return;
-    }
-
-    if (!seenPair[pairKey]) seenPair[pairKey] = lineNo;
-    if (!seenCompany[name]) seenCompany[name] = lineNo;
-    valid.push({ lineNo: lineNo, row: row, routeKey: routeKey });
-  });
-
-  return {
-    valid: valid,
-    invalid: invalid,
-    summary: {
-      total: list.length,
-      validCount: valid.length,
-      invalidCount: invalid.length,
-      newCompanies: Object.keys(seenCompany).filter((n) => !T.companies.some((c) => c.name === n)).length,
-      existingCompanies: Object.keys(seenCompany).filter((n) => T.companies.some((c) => c.name === n)).length,
-      newRoutes: valid.filter((v) => !T.routes.some((r) => r.routeKey === v.routeKey)).length
-    }
-  };
+  // 委托 shared/import.js —— 与云函数 adminApi 的导入预览同一份实现，
+  // 否则「电脑能导入、手机报错」这种漂移最难查。
+  return importShared.validateImportRows(rows, { companies: T.companies, routes: T.routes });
 }
 
 /**
