@@ -142,16 +142,21 @@ const PHONE_SPLIT = /[,，、;；/\s]+/;
  */
 function splitPhones(v) {
   if (!v) return [];
-  const raw = Array.isArray(v) ? v : String(v).split(PHONE_SPLIT);
-  const seen = new Set();
-  const out = [];
-  for (const x of raw) {
-    const t = String(x || '').trim();
-    if (!t || seen.has(t)) continue;
-    seen.add(t);
-    out.push(t);
-  }
-  return out;
+    const raw = Array.isArray(v) ? v : String(v).split(PHONE_SPLIT);
+    const seen = new Set();
+    const out = [];
+    /*
+     * ★ 不用 `for (const x of raw)`：小程序端开了「增强编译」走 SWC，
+     *   for...of 可能编译成对 @swc/runtime 辅助模块的 require，
+     *   本环境没装 ⇒ 直接报错白屏。用下标循环最稳（见 pages/index/index.js 的注释）。
+     */
+    for (let i = 0; i < raw.length; i++) {
+      const t = String(raw[i] || '').trim();
+      if (!t || seen.has(t)) continue;
+      seen.add(t);
+      out.push(t);
+    }
+    return out;
 }
 
 /** 号码是否像电话号码（纯数字/加号/横杠/括号，且位数够） */

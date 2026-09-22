@@ -13,6 +13,7 @@
  *   8. require —— 所有相对 require 路径必须真实存在（跳过注释）
  *   9. 测试    —— 测试套件与统一入口存在
  *  10. 脚本    —— 工程脚本存在
+ *  11. SWC     —— 小程序端不得用需 @swc/runtime 的语法（数组解构/展开/for...of）
  * 用法：node scripts/check-project.js
  */
 
@@ -387,6 +388,64 @@ function checkScripts() {
 }
 
 /* ============================================================
+ * 11. 小程序端不得使用需要 @swc/runtime 辅助函数的语法
+ *
+ * 事故（2026-09-22）：project.config.json 开了「增强编译」（enhance:true），
+ *   开发者工具用 SWC 编译到 ES5。遇到**数组解构**会生成
+ *     require('@swc/runtime/_array_with_holes.js')
+ *   而项目是零依赖（无 node_modules、未开 packNpmManually），这个包不存在
+ *   ⇒ 页面加载即抛 `module ... is not defined`，**整页白屏**，
+ *   并连带报 `Component is not found in path "wx://not-found"`（页面没起来，
+ *   自定义组件自然也找不到 —— 那个报错是结果不是原因）。
+ *
+ * 规避：小程序端只用「不需要编译辅助函数」的写法。
+ *   数组解构 const [a,b]=x   → 用下标 x[0] / x[1]
+ *   对象展开 { ...x }        → 用 Object.assign({}, x)
+ *   数组/调用展开 ...        → 用 concat / apply / 循环 push
+ *   for...of                 → 用下标 for 循环
+ *
+ * 范围：只查小程序端（pages/ utils/ components/ data/ shared/）。
+ *   admin/ 与 test/ 跑在 Node 里，不经小程序编译器，不受此限。
+ * ============================================================ */
+function checkSwcRuntimeSyntax() {
+  checks++;
+  const DIRS = ['pages', 'utils', 'components', 'data', 'shared'];
+  const PATTERNS = [
+    { name: '数组解构', re: /(?:const|let|var)\s*\[[^\]]*\]\s*=/g, tip: '改用下标取值，如 res[0] / res[1]' },
+    { name: '对象展开', re: /\{\s*\.\.\./g, tip: '改用 Object.assign({}, x)' },
+    { name: '数组或调用展开', re: /\.\.\.[A-Za-z_$[(]/g, tip: '改用 concat / apply / 循环 push' },
+    { name: 'for...of', re: /\bfor\s*\([^)]*\s+of\s+/g, tip: '改用下标 for 循环' }
+  ];
+
+  const bad = [];
+  DIRS.forEach((dir) => {
+    const base = path.join(ROOT, dir);
+    if (!fs.existsSync(base)) return;
+    const walkDir = (d) => {
+      fs.readdirSync(d, { withFileTypes: true }).forEach((e) => {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) { walkDir(p); return; }
+        if (path.extname(e.name) !== '.js') return;
+        // 必须剥注释：注释里常写「不要这样写 const [a,b] = ...」的示例
+        const src = stripComments(fs.readFileSync(p, 'utf8'));
+        PATTERNS.forEach(({ name, re, tip }) => {
+          re.lastIndex = 0;
+          let m;
+          while ((m = re.exec(src))) {
+            const line = src.slice(0, m.index).split('\n').length;
+            bad.push(rel(p) + ':' + line + '  [' + name + '] → ' + tip);
+          }
+        });
+      });
+    };
+    walkDir(base);
+  });
+
+  bad.forEach((x) => fail('[SWC] ' + x + '（会 require @swc/runtime，小程序端无此包 ⇒ 白屏）'));
+  if (!bad.length) console.log('小程序端未使用需要 @swc/runtime 的语法（数组解构/展开/for...of）');
+}
+
+/* ============================================================
  * 主流程
  * ============================================================ */
 function main() {
@@ -402,6 +461,7 @@ function main() {
   checkRequires(files);
   checkTests();
   checkScripts();
+  checkSwcRuntimeSyntax();
 
   const counts = {    total: files.length,
     js: files.filter((f) => path.extname(f) === '.js').length,

@@ -228,7 +228,20 @@ async function listCompanyRoutes(companyId) {
   if (!r.ok || !r.data.length) return [];
 
   const links = r.data;
-  const keys = [...new Set(links.map((x) => x.routeKey).filter(Boolean))];
+
+  /*
+   * ★ 不写 `[...new Set(...)]`：数组展开在小程序端（增强编译 → SWC）
+   *   可能被编译成对 @swc/runtime 辅助模块的 require，本环境没装 ⇒ 报错白屏。
+   *   这里用「Set 去重 + push」，行为等价且不需要任何编译辅助函数。
+   */
+  const seenKey = new Set();
+  const keys = [];
+  links.forEach((x) => {
+    if (x.routeKey && !seenKey.has(x.routeKey)) {
+      seenKey.add(x.routeKey);
+      keys.push(x.routeKey);
+    }
+  });
   if (!keys.length) return [];
 
   const rRes = await listData(

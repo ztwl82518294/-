@@ -58,16 +58,23 @@ Page({
   async loadAll() {
     this.setData({ loading: true, loadError: false });
 
-    let routes = [];
-    let companies = [];
     let okCount = 0;
 
-    const [r1, r2] = await Promise.all([
+    /*
+     * ★★ 不要写成数组解构 `const [r1, r2] = await Promise.all([...])`。
+     *   开发者工具开了「增强编译」（project.config.json 的 enhance:true）时用 SWC 编译，
+     *   数组解构会被编译成对 @swc/runtime 的 require：
+     *     module '@swc/runtime/_array_with_holes.js' is not defined
+     *   而本环境没装这个包 ⇒ **整个页面直接白屏**。（2026-09-22 真机踩过）
+     *   ⇒ 小程序端一律用下标取值，别用数组解构 / 对象展开 / 数组展开 / for...of。
+     */
+    const res = await Promise.all([
       db.listHotRoutes(HOT_LIMIT).then((x) => { okCount++; return x; }).catch(() => null),
       db.listRecentCompanies(RECENT_LIMIT).then((x) => { okCount++; return x; }).catch(() => null)
     ]);
-    routes = r1 || [];
-    companies = r2 || [];
+
+    const routes = res[0] || [];
+    const companies = res[1] || [];
 
     if (okCount === 0) {
       this.setData({ loading: false, loadError: true });
