@@ -18,6 +18,12 @@
 
 const common = require('../../utils/common');
 const schema = require('../../shared/schema');
+/**
+ * ★ 字段校验一律走 shared/validate.js —— 与云函数 adminApi 同一份实现。
+ *   以前校验写在本文件里，小程序端后台一旦各写一份，两边迟早会漂
+ *   （一边拦得住一边拦不住），脏数据就从小程序端进来了。
+ */
+const validate = require('../../shared/validate');
 
 /* 集合名 → 我们的文件/内存键名（与 shared/schema 的 COLLECTIONS 对应） */
 const FILE_COMPANIES = schema.COLLECTIONS.COMPANIES;
@@ -232,23 +238,7 @@ function normalizeStations(v) {
 
 /** 校验公司数据（返回错误字段列表，空数组 = 通过） */
 function validateCompany(c) {
-  const errs = [];
-  if (!c.name) errs.push({ field: 'name', message: '公司全称必填' });
-  if (!c.city) errs.push({ field: 'city', message: '所在城市必填' });
-  if (!c.phone) errs.push({ field: 'phone', message: '主电话必填' });
-  else if (!common.isPhoneLike(c.phone)) {
-    errs.push({ field: 'phone', message: '主电话格式不正确' });
-  }
-  if (c.backupPhone && !common.isPhoneLike(c.backupPhone)) {
-    errs.push({ field: 'backupPhone', message: '备用电话格式不正确' });
-  }
-  if (schema.SCALE_OPTIONS.map((o) => o.value).indexOf(c.scale) < 0) {
-    errs.push({ field: 'scale', message: '规模取值不合法' });
-  }
-  if (T.companies.some((x) => x._id !== c._id && x.name === c.name)) {
-    errs.push({ field: 'name', message: '已存在同名公司' });
-  }
-  return errs;
+  return validate.validateCompany(c, { companies: T.companies });
 }
 
 function listCompanies(kw, page, pageSize) {
@@ -315,17 +305,8 @@ function deleteCompany(id) {
  * 线路：增删改查
  * ============================================================ */
 
-function validateRoute(r) {
-  const errs = [];
-  if (!r.fromCity) errs.push({ field: 'fromCity', message: '出发城市必填' });
-  if (!r.toCity) errs.push({ field: 'toCity', message: '到达城市必填' });
-  if (r.fromCity && r.toCity && r.routeKey === '') {
-    errs.push({ field: 'toCity', message: '城市名归一后为空，请检查输入' });
-  }
-  if (r.fromCity && r.toCity && normCity(r.fromCity) === normCity(r.toCity)) {
-    errs.push({ field: 'toCity', message: '出发与到达不能是同一城市' });
-  }
-  return errs;
+function validateRoute(r, ignoreId) {
+  return validate.validateRoute(r, { routes: T.routes, ignoreId: ignoreId || null });
 }
 
 function listRoutes(kw, page, pageSize) {
@@ -358,11 +339,9 @@ function getRoute(id) {
 
 function createRoute(input) {
   const r = normalizeRoute(input);
+  // 唯一性校验已含在 validateRoute 里（ctx.routes）—— 不在这里另写一遍，防止两边口径漂移
   const errs = validateRoute(r);
   if (errs.length) return { ok: false, errors: errs };
-  if (T.routes.some((x) => x.routeKey === r.routeKey)) {
-    return { ok: false, errors: [{ field: 'toCity', message: '该线路已存在（' + r.routeKey + '）' }] };
-  }
   T.routes.push(r);
   return { ok: true, route: r };
 }
@@ -373,11 +352,8 @@ function updateRoute(id, input) {
   const old = T.routes[idx];
   const merged = normalizeRoute(Object.assign({}, old, input, { _id: id }));
   merged.createdAt = old.createdAt;
-  const errs = validateRoute(merged);
+  const errs = validateRoute(merged, id);
   if (errs.length) return { ok: false, errors: errs };
-  if (T.routes.some((x) => x._id !== id && x.routeKey === merged.routeKey)) {
-    return { ok: false, errors: [{ field: 'toCity', message: '该线路已存在（' + merged.routeKey + '）' }] };
-  }
   T.routes[idx] = merged;
 
   // ★ 改城市会换 routeKey，必须同步所有关联的 routeId / routeKey，
@@ -442,27 +418,11 @@ function normalizeLink(input) {
 }
 
 function validateLink(l) {
-  const errs = [];
-  if (!l.routeId) errs.push({ field: 'routeId', message: '必须选择线路' });
-  else if (!T.routes.some((r) => r._id === l.routeId)) {
-    errs.push({ field: 'routeId', message: '线路不存在' });
-  }
-  if (!l.companyId) errs.push({ field: 'companyId', message: '必须选择公司' });
-  else if (!T.companies.some((c) => c._id === l.companyId)) {
-    errs.push({ field: 'companyId', message: '公司不存在' });
-  }
-  if (l.transitDays != null) {
-    if (!isFinite(l.transitDays) || l.transitDays < 0) {
-      errs.push({ field: 'transitDays', message: '时效必须是非负数字（留空表示未知）' });
-    } else if (l.transitDays > 60) {
-      errs.push({ field: 'transitDays', message: '时效最多 60 天' });
-    }
-  }
-  if (!l.frequency) errs.push({ field: 'frequency', message: '请选择发车频率' });
-  if (T.route_companies.some((x) => x._id !== l._id && x.routeId === l.routeId && x.companyId === l.companyId)) {
-    errs.push({ field: 'companyId', message: '该公司已挂在这条线路上，请直接编辑原记录' });
-  }
-  return errs;
+  return validate.validateLink(l, {
+    routes: T.routes,
+    companies: T.companies,
+    links: T.route_companies
+  });
 }
 
 /** 列表：支持按公司名 / 线路关键字搜索 */
@@ -632,7 +592,7 @@ function mergeCorrections(rows) {
  *   3. 同一条线路只能有一个推广位 —— 否则首页会并排出现两张一样的卡。
  * ============================================================ */
 
-const ANNOUNCEMENT_LEVEL_VALUES = schema.ANNOUNCEMENT_LEVELS.map((o) => o.value);
+const ANNOUNCEMENT_LEVEL_VALUES = validate.LEVEL_VALUES;
 
 /** 排序：sortOrder 升序（越小越靠前），同序按更新时间倒序 */
 function sortByOrder(list) {
@@ -653,30 +613,7 @@ function getAnnouncement(id) {
 }
 
 function validateAnnouncement(input) {
-  const errors = [];
-  const title = String((input && input.title) || '').trim();
-  const content = String((input && input.content) || '').trim();
-  const level = String((input && input.level) || 'info').trim();
-  const link = String((input && input.link) || '').trim();
-  const startAt = Number((input && input.startAt) || 0);
-  const endAt = Number((input && input.endAt) || 0);
-
-  if (!title) errors.push({ field: 'title', message: '公告标题不能为空' });
-  else if (title.length > 40) errors.push({ field: 'title', message: '标题请控制在 40 字以内（公告栏一行要显示完）' });
-
-  // 正文不能空：公告栏只显示标题，点开必须看到东西，否则用户会觉得「点了没反应」
-  if (!content) errors.push({ field: 'content', message: '公告正文不能为空（点开后要能看到内容）' });
-
-  if (ANNOUNCEMENT_LEVEL_VALUES.indexOf(level) < 0) {
-    errors.push({ field: 'level', message: '公告级别不合法（可选：' + ANNOUNCEMENT_LEVEL_VALUES.join(' / ') + '）' });
-  }
-  if (link && link.charAt(0) !== '/') {
-    errors.push({ field: 'link', message: '跳转路径必须是 /pages/... 形式；外链在小程序里点了没反应，不要填' });
-  }
-  if (startAt && endAt && startAt > endAt) {
-    errors.push({ field: 'endAt', message: '失效时间不能早于生效时间' });
-  }
-  return errors;
+  return validate.validateAnnouncement(input);
 }
 
 function createAnnouncement(input) {
@@ -737,40 +674,11 @@ function getFeatured(id) {
 }
 
 function validateFeatured(input, ignoreId) {
-  const errors = [];
-  const fromCity = String((input && input.fromCity) || '').trim();
-  const toCity = String((input && input.toCity) || '').trim();
-  const routeKey = common.buildRouteKey(fromCity, toCity);
-  const tag = String((input && input.tag) || '').trim();
-  const reason = String((input && input.reason) || '').trim();
-
-  if (!fromCity) errors.push({ field: 'fromCity', message: '出发城市不能为空' });
-  if (!toCity) errors.push({ field: 'toCity', message: '到达城市不能为空' });
-  if (fromCity && toCity && !routeKey) {
-    errors.push({ field: 'toCity', message: '出发与到达是同一城市' });
-  }
-
-  /*
-   * ★ 指向的线路必须真实存在。
-   *   推广位卡片点进去就是线路详情，若线路不存在，用户看到的是一个空页 ——
-   *   比首页少一张卡更伤信任。所以宁可在后台拦下来，也不让它上线。
-   */
-  if (routeKey && !T.routes.some((r) => r.routeKey === routeKey)) {
-    errors.push({ field: 'toCity', message: '线路库里还没有「' + routeKey + '」，请先到线路管理里添加' });
-  }
-
-  // 同一线路只能推广一次，否则首页会并排出现两张一模一样的卡
-  if (routeKey && T.featured_routes.some((x) => x.routeKey === routeKey && x._id !== ignoreId)) {
-    errors.push({ field: 'routeKey', message: '这条线路已经在推广位里了' });
-  }
-
-  // 角标是卡片的识别点，空了就只剩一个数字，看着像没填完
-  if (!tag) errors.push({ field: 'tag', message: '角标不能为空，例如「天天发车」「直达」' });
-  else if (tag.length > 8) errors.push({ field: 'tag', message: '角标请控制在 8 字以内' });
-
-  if (reason.length > 60) errors.push({ field: 'reason', message: '推荐理由请控制在 60 字以内' });
-
-  return errors;
+  return validate.validateFeatured(input, {
+    routes: T.routes,
+    featured: T.featured_routes,
+    ignoreId: ignoreId || null
+  });
 }
 
 function createFeatured(input) {
