@@ -625,6 +625,16 @@ async function main() {
 
     r = await req('GET', '/static/admin.css');
     t('正常静态资源可访问', r.status === 200 && /--brand/.test(r.text));
+    /*
+     * ★ 静态资源必须 no-store：否则浏览器按启发式规则缓存 admin.js / admin.css，
+     *   表现为「代码明明改好了，刷新页面却还是旧行为」——极难自查的幽灵 bug。
+     */
+    t('静态资源禁止缓存（改完刷新就能生效）',
+      /no-store/.test((r.headers.get('cache-control') || '').toLowerCase()),
+      'cache-control=' + r.headers.get('cache-control'));
+    r = await req('GET', '/static/admin.js');
+    t('admin.js 同样禁止缓存',
+      /no-store/.test((r.headers.get('cache-control') || '').toLowerCase()));
 
     /* 服务器只监听回环地址 */
     const listeningOnAll = await new Promise((resolve) => {

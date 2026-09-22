@@ -123,7 +123,17 @@ function serveStatic(res, relPath) {
     return true;
   }
   if (!fs.existsSync(full) || !fs.statSync(full).isFile()) return false;
-  res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream' });
+  /*
+   * ★ 静态资源**必须 no-store**。
+   *   后台的 CSS / JS 会随迭代频繁改动，而默认不带 Cache-Control 时，
+   *   浏览器会按启发式规则缓存 —— 结果「改了 admin.js，刷新页面却还是旧的」，
+   *   表现为「明明修好了，点了还是没反应」。这类幽灵 bug 极难自查，
+   *   后台是单机自用，少这点缓存毫无损失。
+   */
+  res.writeHead(200, {
+    'Content-Type': MIME[path.extname(full)] || 'application/octet-stream',
+    'Cache-Control': 'no-store'
+  });
   res.end(fs.readFileSync(full));
   return true;
 }

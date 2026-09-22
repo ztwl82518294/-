@@ -98,7 +98,19 @@ function banner(already) {
 async function main() {
   /* 已经在跑：不重复启动，直接打开 */
   if (await probe()) {
+    /*
+     * ★ 这里必须**明说**，不能只轻描淡写一句「已在运行」：
+     *   正在跑的那个进程是**启动时**把 views.js 等模块读进内存的，
+     *   改了代码也不会自己加载新版本。用户以为「我重新双击了 = 重启了」，
+     *   实际连的还是旧进程 —— 于是「改好了却还是不行」。
+     */
     banner(true);
+    console.log('  ⚠ 这个后台是之前启动的进程，跑的还是旧代码。');
+    console.log('    如果你刚改过后台，请：');
+    console.log('      1) 关掉原来那个「正在运行后台」的黑窗口（Ctrl+C 或直接关）');
+    console.log('      2) 再双击一次 start-admin.bat');
+    console.log('      3) 浏览器按 Ctrl + F5 硬刷新');
+    console.log('');
     openBrowser(URL);
     return;
   }
