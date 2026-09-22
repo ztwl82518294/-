@@ -119,10 +119,18 @@ exports.main = async (event) => {
   try {
     // 关 2：类型白名单反查（不信任前端的 typeLabel）
     const typeKey = clip(event.type, 40);
-    const typeLabel = TYPE_MAP[typeKey];
-    if (!typeLabel) {
+    /*
+     * ★★ 必须 hasOwnProperty，不能只判 `TYPE_MAP[typeKey]` 的真假：
+     *   'constructor' / '__proto__' / 'toString' 这些键**不在表里**，
+     *   但 `TYPE_MAP['constructor']` 会顺着原型链取到 Object 构造函数（真值）
+     *   ⇒ 白名单形同虚设，伪造类型能写进库（typeLabel 会变成一段函数）。
+     *   这条由 submitCorrection.test.js 的「未知 type → BAD_TYPE」守着，
+     *   但只有框架修好异步统计后才真的跑得到。
+     */
+    if (!Object.prototype.hasOwnProperty.call(TYPE_MAP, typeKey)) {
       return bad('BAD_TYPE', '请选择问题类型');
     }
+    const typeLabel = TYPE_MAP[typeKey];
 
     // 关 3：目标类型
     const targetType = clip(event.targetType, 40);

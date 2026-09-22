@@ -88,7 +88,7 @@ const main = fn.main;
  * 2. 测试
  * ============================================================ */
 
-const { describe, test, eq, ok, deepEq, summary } = require('../framework');
+const { describe, test, eq, ok, deepEq, summary, settle } = require('../framework');
 
 /** 构造一个合法请求 */
 function validEvent(over) {
@@ -138,7 +138,12 @@ describe('关 2：action 白名单', () => {
 
   test('未知 action → BAD_ACTION', async () => {
     fresh();
-    for (const a of ['delete', 'list', 'approve', '__proto__', 'SUBMIT', '']) {
+    /*
+     * ★ action 为空串等价于「没传」，按缺省 submit 处理（上一条用例就是这么约定的），
+     *   所以这里**不能**把 '' 列进非法值 —— 把 '' 当非法会让「只传业务字段」的
+     *   老调用方式直接失效。
+     */
+    for (const a of ['delete', 'list', 'approve', 'constructor', 'toString', '__proto__', 'SUBMIT']) {
       const r = await main(validEvent({ action: a }));
       eq(r.ok, false, 'action=' + a + ' 不应通过');
       eq(r.code, 'BAD_ACTION');
@@ -398,4 +403,10 @@ describe('关 6（异常）：不抛穿、不暴露内部信息', () => {
  * 3. 汇总
  * ============================================================ */
 
-process.exit(summary('submitCorrection') ? 0 : 1);
+/*
+ * ★ 必须 await settle() 再 summary()：本套件的用例全是 async，
+ *   直接 summary 的话异步断言还没跑完就退出，失败会被漏掉（框架已修，这里跟着改）。
+ */
+settle().then(() => {
+  process.exit(summary('submitCorrection') ? 0 : 1);
+});
