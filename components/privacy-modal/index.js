@@ -45,8 +45,16 @@ Component({
       this.triggerEvent('agree');
     },
 
-    /** 拒绝：不落存储，抛事件（宿主可决定是否限制功能） */
+    /**
+     * 拒绝：**必须 setData 关掉弹窗**，否则整屏遮罩留在 DOM 里，
+     * 会把宿主页面所有按钮的点击全部吃掉 —— 表现为「点哪都没反应」（真实踩过）。
+     *
+     * 合规上「拒绝」不等于「可以继续用」：这里关掉弹窗只是让用户能看到页面，
+     * 不写同意标记，下次进入仍会再弹；真正的功能限制由宿主页面按需决定。
+     * 遮罩本身「点一下即拒」也是合规常见做法（用户已知晓并选择不同意）。
+     */
     onReject() {
+      this.setData({ visible: false });
       this.triggerEvent('reject');
       wx.showToast({ title: '需同意后才能使用查询功能', icon: 'none', duration: 2000 });
     },
@@ -56,7 +64,7 @@ Component({
       wx.navigateTo({ url: '/pages/privacy/index' });
     },
 
-    /** 吞掉遮罩点击，防穿透 */
+    /** 吞掉遮罩点击，防穿透（遮罩点击走 onReject，这里保留给面板内空白区） */
     noop() {}
   }
 });

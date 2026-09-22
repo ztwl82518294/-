@@ -1,5 +1,21 @@
 /* 隐私协议弹窗 —— 扁平风格，全站唯一保留中等投影的地方 */
 
+/*
+ * ★★ 为什么遮罩样式必须写在这里，不能靠 app.wxss 的全局 .mask：
+ *   本组件是 styleIsolation: "isolated"（见 index.json），
+ *   **全局样式默认进不来**。以前这里漏写了 .mask，
+ *   导致遮罩元素零尺寸、零背景 —— 视觉上看不见，
+ *   但 .pm-root 仍是 position:fixed; inset:0 的整屏块，
+ *   会把下面首页所有按钮的点击全部吃掉，
+ *   表现为「首页所有按钮点击没反应」（踩过这个坑）。
+ *   ⇒ 组件内的遮罩/弹层样式一律在组件 wxss 里自备，不要依赖全局类。
+ */
+.mask {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 15, 15, 0.6);
+}
+
 .pm-root {
   position: fixed;
   inset: 0;

@@ -1,6 +1,7 @@
 <!-- 隐私协议弹窗 -->
 <view wx:if="{{visible}}" class="pm-root">
-  <view class="mask" bindtap="noop"></view>
+  <!-- 遮罩点一下等同「不同意」：保证用户任何情况下都能关掉弹窗、不会卡死 -->
+  <view class="mask" bindtap="onReject"></view>
   <view class="pm-panel">
     <view class="pm-title">{{title}}</view>
 

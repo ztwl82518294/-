@@ -1,5 +1,16 @@
 /* 城市选择器 —— 半屏弹层，扁平风格 */
 
+/*
+ * ★★ 与 privacy-modal 同样的坑：组件是 styleIsolation: "isolated"，
+ *   app.wxss 的全局 .mask 进不来，必须在这里自备，
+ *   否则遮罩零尺寸——看不见却仍会吃掉底层点击。
+ */
+.mask {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 15, 15, 0.6);
+}
+
 .cp-root {
   position: fixed;
   inset: 0;
