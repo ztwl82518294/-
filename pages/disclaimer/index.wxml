@@ -1,0 +1,44 @@
+<!-- 免责声明 -->
+<view class="page">
+  <view class="page-body">
+
+    <view class="doc-head">
+      <view class="doc-title">{{title}}</view>
+      <view class="doc-meta">更新日期：{{updatedAt}}　运营方：{{operator}}（{{subjectType}}）</view>
+    </view>
+
+    <view class="card">
+      <view class="card-body">
+        <view wx:for="{{paragraphs}}" wx:key="name" class="doc-sec">
+          <view class="doc-sec-title">{{item.name}}</view>
+          <view class="doc-sec-body">{{item.desc}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">联系方式</text>
+      </view>
+      <view class="card-body">
+        <view class="ct-row">
+          <text class="ct-key">电话</text>
+          <text class="ct-val" bindtap="onCall">{{phone}}</text>
+        </view>
+        <view class="ct-row">
+          <text class="ct-key">微信</text>
+          <text class="ct-val" bindtap="onCopyWechat">{{wechat}}（点击复制）</text>
+        </view>
+        <view class="ct-note">{{note}}</view>
+      </view>
+    </view>
+
+    <view class="dis-action" bindtap="goCorrection">发现信息有误？点这里反馈</view>
+
+    <view class="doc-foot">
+      本声明的最终解释权归运营方所有。使用本小程序即表示你已阅读并理解上述内容。
+    </view>
+
+  </view>
+</view>

@@ -1,0 +1,117 @@
+<!-- 线路详情 / 线路公司列表 -->
+<view class="page">
+
+  <!-- 头部：线路名 + 公司总数（本页最重的信息，置顶不随滚动消失于视野之外） -->
+  <view class="rd-head">
+    <view class="rd-head-main">
+      <text class="rd-title">{{routeTitle}}</text>
+      <text wx:if="{{totalCount}}" class="rd-count">共 {{totalCount}} 家公司</text>
+    </view>
+    <view class="rd-head-actions">
+      <text wx:if="{{rows.length > 0}}" class="rd-head-btn" bindtap="onCopyPhones">复制电话</text>
+      <text wx:if="{{routeKey}}" class="rd-head-btn" bindtap="onReverse">反向查</text>
+    </view>
+  </view>
+
+  <view class="page-body">
+
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="loading">加载中…</view>
+
+    <!-- 线路不存在 -->
+    <view wx:elif="{{notFound}}" class="empty">
+      <view class="empty-title">没有找到这条线路</view>
+      <view class="empty-desc">该线路可能尚未收录，或链接已失效</view>
+    </view>
+
+    <block wx:else>
+      <!-- 排序 -->
+      <view class="sort-bar">
+        <view
+          wx:for="{{sortOptions}}"
+          wx:key="value"
+          class="sort-item {{sort === item.value ? 'sort-item--on' : ''}}"
+          data-sort="{{item.value}}"
+          bindtap="onSortChange"
+        >{{item.label}}</view>
+      </view>
+
+      <!-- 过滤 -->
+      <view class="filter-bar">
+        <view class="filter-chip {{directOnly ? 'filter-chip--on' : ''}}" bindtap="onToggleDirect">只看直达</view>
+        <view class="filter-chip {{dailyOnly ? 'filter-chip--on' : ''}}" bindtap="onToggleDaily">只看天天发车</view>
+        <view wx:if="{{directOnly || dailyOnly}}" class="filter-reset" bindtap="onResetFilter">重置</view>
+      </view>
+
+      <view wx:if="{{filteredCount !== totalCount}}" class="rd-filtered">
+        筛选后 {{filteredCount}} 家
+      </view>
+
+      <!-- ★ 列表：字段横向对齐，保证可扫读 -->
+      <view wx:if="{{rows.length > 0}}" class="list">
+        <!-- 表头（暗示下方各列的含义） -->
+        <view class="list-head">
+          <text class="col-company">公司</text>
+          <text class="col-transit">时效</text>
+          <text class="col-updated">更新</text>
+        </view>
+
+        <view
+          wx:for="{{rows}}"
+          wx:key="id"
+          class="list-row"
+          data-id="{{item.id}}"
+          bindtap="onCompanyTap"
+        >
+          <!-- 第一行：公司名 + 标签 -->
+          <view class="lr-line1">
+            <view class="lr-name-wrap">
+              <text class="lr-name">{{item.displayName}}</text>
+              <text wx:if="{{item.verified}}" class="lr-verified">已核实</text>
+            </view>
+            <text class="lr-price" wx:if="{{item.priceNote}}">{{item.priceNote}}</text>
+          </view>
+
+          <!-- 第二行：字段横向对齐（固定列宽） -->
+          <view class="lr-line2">
+            <text class="col-company lr-sub">{{item.scaleText}}</text>
+            <text class="col-transit lr-sub">{{item.transitText || '—'}}</text>
+            <text class="col-updated lr-sub">{{item.updatedText || '—'}}</text>
+          </view>
+
+          <!-- 第三行：标签 + 操作 -->
+          <view class="lr-line3">
+            <view class="lr-tags">
+              <text wx:if="{{item.isDirect}}" class="tag tag--green">直达</text>
+              <text wx:if="{{item.frequencyText}}" class="tag">{{item.frequencyText}}</text>
+            </view>
+            <view class="lr-actions">
+              <view
+                wx:if="{{item.hasPhone}}"
+                class="lr-call"
+                data-phone="{{item.phone}}"
+                catchtap="onCall"
+              >{{item.phone}}</view>
+              <view wx:else class="lr-call lr-call--disabled">暂无电话</view>
+              <text
+                class="lr-report"
+                data-name="{{item.displayName}}"
+                catchtap="onReport"
+              >报错</text>
+            </view>
+          </view>
+
+          <view wx:if="{{item.remark}}" class="lr-remark">{{item.remark}}</view>
+        </view>
+      </view>
+
+      <!-- 筛选后为空 -->
+      <view wx:else class="empty">
+        <view class="empty-title">没有符合条件的公司</view>
+        <view class="empty-desc">试试取消筛选条件，或查看该线路的全部公司</view>
+        <view class="empty-action" bindtap="onResetFilter">显示全部</view>
+      </view>
+    </block>
+
+  </view>
+</view>

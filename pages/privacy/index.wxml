@@ -1,0 +1,58 @@
+<!-- 用户信息处理规则 -->
+<view class="page">
+  <view class="page-body">
+
+    <view class="doc-head">
+      <view class="doc-title">{{title}}</view>
+      <view class="doc-meta">更新日期：{{updatedAt}}　运营方：{{operator}}（{{subjectType}}）</view>
+    </view>
+
+    <view class="doc-intro">{{intro}}</view>
+
+    <!-- 逐条 -->
+    <view class="card">
+      <view class="card-body">
+        <view wx:for="{{items}}" wx:key="name" class="doc-sec">
+          <view class="doc-sec-title">{{item.name}}</view>
+          <view class="doc-sec-body">{{item.desc}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 接口清单（在人能看懂的地方写明每个接口的用途） -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">本小程序使用的接口</text>
+      </view>
+      <view class="card-body">
+        <view wx:for="{{apis}}" wx:key="api" class="api-item">
+          <view class="api-name">{{item.api}}</view>
+          <view class="api-purpose">{{item.purpose}}</view>
+        </view>
+        <view class="api-note">
+          本小程序不使用定位、通讯录、摄像头之外的任何设备权限，也不读取你的位置信息。
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">联系我们</text>
+      </view>
+      <view class="card-body">
+        <view class="ct-row">
+          <text class="ct-key">电话</text>
+          <text class="ct-val" bindtap="onCall">{{phone}}</text>
+        </view>
+        <view class="ct-row">
+          <text class="ct-key">微信</text>
+          <text class="ct-val" bindtap="onCopyWechat">{{wechat}}（点击复制）</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="doc-foot">{{footer}}</view>
+
+  </view>
+</view>

@@ -1,0 +1,119 @@
+/* 隐私协议弹窗 —— 扁平风格，全站唯一保留中等投影的地方 */
+
+.pm-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.pm-panel {
+  position: absolute;
+  left: 60rpx;
+  right: 60rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 32rpx rgba(15, 15, 15, 0.16);
+  overflow: hidden;
+}
+
+.pm-title {
+  flex-shrink: 0;
+  padding: 36rpx 32rpx 20rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #37352F;
+  text-align: center;
+}
+
+.pm-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 0 32rpx;
+}
+
+.pm-intro {
+  font-size: 27rpx;
+  line-height: 1.75;
+  color: #6B6B6B;
+  margin-bottom: 24rpx;
+}
+
+.pm-list {
+  border: 1rpx solid rgba(55, 53, 47, 0.09);
+  border-radius: 14rpx;
+  overflow: hidden;
+}
+
+.pm-item {
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid rgba(55, 53, 47, 0.09);
+}
+
+.pm-item:last-child {
+  border-bottom: none;
+}
+
+.pm-item-name {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #37352F;
+  margin-bottom: 4rpx;
+}
+
+.pm-item-desc {
+  font-size: 25rpx;
+  line-height: 1.6;
+  color: #6B6B6B;
+}
+
+.pm-footer {
+  margin-top: 24rpx;
+  font-size: 25rpx;
+  line-height: 1.7;
+  color: #9B9A97;
+}
+
+.pm-link {
+  margin: 20rpx 0 28rpx;
+  font-size: 27rpx;
+  color: #0B6E99;
+}
+
+.pm-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx 32rpx 32rpx;
+  border-top: 1rpx solid rgba(55, 53, 47, 0.09);
+  background-color: #FFFFFF;
+}
+
+.pm-btn {
+  flex: 1;
+  height: 84rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  font-size: 29rpx;
+}
+
+.pm-btn--ghost {
+  background-color: #FFFFFF;
+  color: #6B6B6B;
+  border: 1rpx solid rgba(55, 53, 47, 0.16);
+}
+
+.pm-btn--primary {
+  background-color: #0B6E99;
+  color: #FFFFFF;
+}
+
+.pm-btn--primary:active {
+  background-color: #085577;
+}

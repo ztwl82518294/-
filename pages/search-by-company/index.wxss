@@ -1,0 +1,143 @@
+/* 按公司查线路 */
+
+.search-bar {
+  height: 92rpx;
+}
+
+.sc-clear {
+  flex-shrink: 0;
+  padding: 8rpx 12rpx;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}
+
+.sc-btn {
+  flex-shrink: 0;
+  padding: 0 28rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 27rpx;
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.sc-btn:active {
+  background-color: var(--color-primary-dark);
+}
+
+.sec-title {
+  margin: var(--gap-md) 4rpx var(--gap-sm);
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.result-count {
+  padding: var(--gap-md) 4rpx var(--gap-sm);
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 公司卡 */
+.co-card {
+  padding: var(--gap-md);
+}
+
+.co-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-sm);
+}
+
+.co-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  min-width: 0;
+}
+
+.co-name {
+  font-size: 31rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.co-arrow {
+  flex-shrink: 0;
+  font-size: 32rpx;
+  color: var(--color-text-tertiary);
+}
+
+.co-full {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+}
+
+.co-meta {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+}
+
+.co-meta-item {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+}
+
+.co-intro {
+  margin-top: 12rpx;
+  font-size: 25rpx;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.co-foot {
+  margin-top: var(--gap-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.co-call {
+  padding: 14rpx 28rpx;
+  font-size: 26rpx;
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.co-call:active {
+  background-color: var(--color-primary-dark);
+}
+
+.co-report {
+  padding: 8rpx;
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+}
+
+.sc-tip {
+  padding: var(--gap-md) 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+}
+
+.empty-action {
+  display: inline-flex;
+  margin-top: var(--gap-lg);
+  padding: 16rpx 40rpx;
+  font-size: 27rpx;
+  color: var(--color-primary);
+  border: 1rpx solid var(--edge-blue);
+  border-radius: var(--radius-md);
+}

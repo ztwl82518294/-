@@ -1,0 +1,113 @@
+<!-- 数据纠错 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 上下文提示条（自动携带，用户不需要重新描述是哪条记录） -->
+    <view wx:if="{{targetSummary}}" class="cx-target">
+      <text class="cx-target-key">你要反馈的信息</text>
+      <text class="cx-target-val">{{targetSummary}}</text>
+    </view>
+
+    <!-- 问题类型 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">问题类型</text>
+      </view>
+      <view class="card-body">
+        <view class="cx-chips">
+          <view
+            wx:for="{{types}}"
+            wx:key="value"
+            class="cx-chip {{typeIndex === index ? 'cx-chip--on' : ''}}"
+            data-index="{{index}}"
+            bindtap="onPickType"
+          >{{item.label}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 具体说明 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">具体说明</text>
+        <text class="cx-count">{{detailLen}}/{{detailMax}}</text>
+      </view>
+      <view class="card-body">
+        <textarea
+          class="cx-textarea"
+          value="{{detail}}"
+          maxlength="{{detailMax}}"
+          placeholder="请描述你发现的问题，例如「电话已停机，新号码是 138xxxx」"
+          placeholder-class="cx-placeholder"
+          bindinput="onInputDetail"
+        />
+      </view>
+    </view>
+
+    <!-- 上传凭证 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">上传凭证（选填，最多 {{imageMax}} 张）</text>
+        <text class="cx-note" bindtap="onImageNote">用途说明</text>
+      </view>
+      <view class="card-body">
+        <view class="cx-uploads">
+          <view
+            wx:for="{{images}}"
+            wx:key="*this"
+            class="cx-thumb"
+          >
+            <image
+              class="cx-thumb-img"
+              src="{{item}}"
+              mode="aspectFill"
+              data-index="{{index}}"
+              bindtap="onPreviewImage"
+            />
+            <view class="cx-thumb-del" data-index="{{index}}" catchtap="onRemoveImage">✕</view>
+          </view>
+
+          <view
+            wx:if="{{images.length < imageMax}}"
+            class="cx-add {{uploading ? 'cx-add--busy' : ''}}"
+            bindtap="onAddImage"
+          >
+            <text class="cx-add-icon">+</text>
+            <text class="cx-add-text">{{uploading ? '上传中' : '添加图片'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">联系方式（选填）</text>
+      </view>
+      <view class="card-body">
+        <input
+          class="cx-input"
+          value="{{contact}}"
+          maxlength="{{contactMax}}"
+          placeholder="留下电话或微信，便于核实后告知你结果"
+          placeholder-class="cx-placeholder"
+          bindinput="onInputContact"
+        />
+      </view>
+    </view>
+
+    <!-- 说明条 -->
+    <view class="cx-tip">
+      我们会在核实后统一更新数据，信息不会立即生效。感谢你的帮助。
+    </view>
+
+  </view>
+
+  <!-- 底部提交栏 -->
+  <view class="cx-bar">
+    <view
+      class="cx-submit {{submitting ? 'cx-submit--busy' : ''}}"
+      bindtap="onSubmit"
+    >{{submitting ? '提交中…' : '提交反馈'}}</view>
+  </view>
+</view>

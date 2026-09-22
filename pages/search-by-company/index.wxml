@@ -1,0 +1,106 @@
+<!-- 按公司查线路 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 搜索框 -->
+    <view class="search-bar">
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="输入公司名或简称，如 鲁通 / 齐鲁快运"
+        placeholder-class="field-placeholder"
+        confirm-type="search"
+        bindinput="onInput"
+        bindconfirm="doSearch"
+      />
+      <text wx:if="{{keyword}}" class="sc-clear" bindtap="onClear">✕</text>
+      <view class="sc-btn" bindtap="doSearch">搜索</view>
+    </view>
+
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="loading">搜索中…</view>
+
+    <!-- 搜索结果 -->
+    <block wx:elif="{{searched}}">
+      <view wx:if="{{results.length > 0}}" class="result-count">找到 {{results.length}} 家公司</view>
+
+      <view
+        wx:for="{{results}}"
+        wx:key="_id"
+        class="card co-card"
+        data-id="{{item._id}}"
+        bindtap="onCompanyTap"
+      >
+        <view class="co-head">
+          <view class="co-name-wrap">
+            <text class="co-name">{{item.displayName}}</text>
+            <text wx:if="{{item.verified}}" class="badge-verified">已核实</text>
+          </view>
+          <text class="co-arrow">›</text>
+        </view>
+        <view wx:if="{{item.fullName !== item.displayName}}" class="co-full">{{item.fullName}}</view>
+        <view class="co-meta">
+          <text wx:if="{{item.cityText}}" class="co-meta-item">{{item.cityText}}</text>
+          <text wx:if="{{item.scaleText}}" class="co-meta-item">{{item.scaleText}}</text>
+          <text wx:if="{{item.updatedText}}" class="co-meta-item">{{item.updatedText}}</text>
+        </view>
+        <view wx:if="{{item.intro}}" class="co-intro">{{item.intro}}</view>
+
+        <view class="co-foot">
+          <view
+            wx:if="{{item.phone}}"
+            class="co-call"
+            data-phone="{{item.phone}}"
+            catchtap="onCall"
+          >拨打 {{item.phone}}</view>
+          <view
+            class="co-report"
+            data-id="{{item._id}}"
+            data-name="{{item.displayName}}"
+            catchtap="onReport"
+          >信息有误</view>
+        </view>
+      </view>
+
+      <view wx:if="{{truncated}}" class="sc-tip">结果较多，请输入更具体的公司名</view>
+
+      <!-- 无结果 -->
+      <view wx:if="{{results.length === 0}}" class="empty">
+        <view class="empty-title">没有找到「{{keyword}}」</view>
+        <view class="empty-desc">试试用公司简称搜索，例如「鲁通」而不是「济南鲁通物流有限公司」</view>
+        <view class="empty-action" bindtap="onReportMissing">这家公司还没收录？告诉我们</view>
+      </view>
+    </block>
+
+    <!-- 未搜索：推荐公司 -->
+    <block wx:else>
+      <view class="sec-title">常用公司</view>
+      <view
+        wx:for="{{recommend}}"
+        wx:key="_id"
+        class="card co-card"
+        data-id="{{item._id}}"
+        bindtap="onCompanyTap"
+      >
+        <view class="co-head">
+          <view class="co-name-wrap">
+            <text class="co-name">{{item.displayName}}</text>
+            <text wx:if="{{item.verified}}" class="badge-verified">已核实</text>
+          </view>
+          <text class="co-arrow">›</text>
+        </view>
+        <view class="co-meta">
+          <text wx:if="{{item.cityText}}" class="co-meta-item">{{item.cityText}}</text>
+          <text wx:if="{{item.scaleText}}" class="co-meta-item">{{item.scaleText}}</text>
+          <text wx:if="{{item.updatedText}}" class="co-meta-item">{{item.updatedText}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{recommend.length === 0}}" class="empty">
+        <view class="empty-title">暂无公司数据</view>
+        <view class="empty-desc">数据正在整理中，请稍后再来看看</view>
+      </view>
+    </block>
+
+  </view>
+</view>

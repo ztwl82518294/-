@@ -1,0 +1,107 @@
+<!-- 首页总览 -->
+<view class="page">
+  <!-- 隐私协议弹窗（首次进入） -->
+  <privacy-modal />
+
+  <view class="page-body">
+
+    <!-- 品牌区 -->
+    <view class="hero">
+      <view class="hero-title">物流专线查询</view>
+      <view class="hero-sub">查哪家公司跑你要的线路，直接打电话</view>
+    </view>
+
+    <!-- 区块 1：搜索框 -->
+    <view class="search-bar home-search">
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="输入城市或公司名，如 济南 / 鲁通物流"
+        placeholder-class="field-placeholder"
+        confirm-type="search"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+      />
+      <view class="home-search-btn" bindtap="onSearchConfirm">查询</view>
+    </view>
+
+    <!-- 区块 2：快捷入口 -->
+    <view class="entry-row">
+      <view class="entry-card tint-blue" bindtap="goShip">
+        <view class="entry-name">我要发货</view>
+        <view class="entry-desc">选出发地和目的地，查谁跑这条线</view>
+      </view>
+      <view class="entry-card tint-teal" bindtap="goCompany">
+        <view class="entry-name">我知道公司名</view>
+        <view class="entry-desc">输入公司名，看它跑哪些线路</view>
+      </view>
+    </view>
+
+    <!-- 区块 3：热门专线 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">热门专线</text>
+        <text class="card-more" bindtap="goShip">更多 ›</text>
+      </view>
+      <view class="card-body">
+        <view wx:if="{{loading}}" class="loading">加载中…</view>
+        <block wx:elif="{{hotRoutes.length > 0}}">
+          <view
+            wx:for="{{hotRoutes}}"
+            wx:key="routeKey"
+            class="hot-item"
+            data-key="{{item.routeKey}}"
+            bindtap="onHotTap"
+          >
+            <view class="hot-main">
+              <text class="hot-title">{{item.title}}</text>
+              <text class="hot-count">{{item.companyText}}</text>
+            </view>
+            <text class="hot-arrow">›</text>
+          </view>
+        </block>
+        <view wx:else class="empty-inline">暂无线路数据</view>
+      </view>
+    </view>
+
+    <!-- 区块 4：最近更新 -->
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">最近更新</text>
+        <text class="card-more" bindtap="goCompany">更多 ›</text>
+      </view>
+      <view class="card-body">
+        <view wx:if="{{loading}}" class="loading">加载中…</view>
+        <block wx:elif="{{recentCompanies.length > 0}}">
+          <view
+            wx:for="{{recentCompanies}}"
+            wx:key="_id"
+            class="recent-item"
+            data-id="{{item._id}}"
+            bindtap="onRecentTap"
+          >
+            <view class="recent-main">
+              <text class="recent-name">{{item.displayName}}</text>
+              <text wx:if="{{item.verified}}" class="badge-verified">已核实</text>
+            </view>
+            <text class="recent-time">{{item.updatedText}}</text>
+          </view>
+        </block>
+        <view wx:else class="empty-inline">暂无数据</view>
+      </view>
+    </view>
+
+    <!-- 区块 5：底部公示（合规必需，不可省略） -->
+    <view class="foot">
+      <view class="foot-updated">{{dataUpdatedText}}</view>
+      <view class="foot-brief">{{disclaimerBrief}}</view>
+      <view class="foot-links">
+        <text class="foot-link" bindtap="goDisclaimer">免责声明</text>
+        <text class="foot-sep">·</text>
+        <text class="foot-link" bindtap="goPrivacy">用户信息处理规则</text>
+      </view>
+      <view class="foot-operator">运营方：{{operator}}（个人开发者）</view>
+    </view>
+
+  </view>
+</view>

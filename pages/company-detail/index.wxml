@@ -1,0 +1,112 @@
+<!-- 公司详情页：档案型，纵向展开 -->
+<view class="page">
+  <view class="page-body">
+
+    <view wx:if="{{loading}}" class="loading">加载中…</view>
+
+    <view wx:elif="{{notFound}}" class="empty">
+      <view class="empty-title">没有找到这家公司</view>
+      <view class="empty-desc">该公司可能已下架，或链接已失效</view>
+    </view>
+
+    <block wx:else>
+      <!-- 档案头卡：公司名 + 核实 + 元信息 -->
+      <view class="card cd-head">
+        <view class="cd-name-wrap">
+          <text class="cd-name">{{info.displayName}}</text>
+          <text wx:if="{{info.verified}}" class="badge-verified">已核实</text>
+        </view>
+        <view wx:if="{{info.fullName !== info.displayName}}" class="cd-full">{{info.fullName}}</view>
+
+        <view class="cd-meta">
+          <text wx:if="{{info.cityText}}" class="cd-meta-item">{{info.cityText}}</text>
+          <text wx:if="{{info.scaleText}}" class="cd-meta-item">{{info.scaleText}}</text>
+          <text wx:if="{{info.updatedText}}" class="cd-meta-item">{{info.updatedText}}</text>
+        </view>
+
+        <!-- 电话区：逐号渲染，点哪个拨哪个 -->
+        <view wx:if="{{info.phones.length > 0}}" class="cd-phones">
+          <text
+            wx:for="{{info.phones}}"
+            wx:key="*this"
+            class="cd-phone"
+            data-phone="{{item}}"
+            bindtap="onCall"
+          >{{item}}</text>
+        </view>
+        <view wx:else class="cd-nophone">暂无联系电话，可通过下方纠错入口补充</view>
+
+        <!-- 地址 -->
+        <view wx:if="{{info.address}}" class="cd-addr" bindtap="onCopyAddress">
+          <text class="cd-addr-key">总部地址</text>
+          <text class="cd-addr-val">{{info.address}}</text>
+        </view>
+
+        <!-- 简介 -->
+        <view wx:if="{{info.intro}}" class="cd-intro">{{info.intro}}</view>
+
+        <view class="cd-actions">
+          <view wx:if="{{info.phones.length > 1}}" class="cd-btn" bindtap="onCopyPhones">复制全部电话</view>
+          <view class="cd-btn" bindtap="onReport">信息有误</view>
+        </view>
+      </view>
+
+      <!-- 覆盖线路：按出发城市分组 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">覆盖线路（{{routeCount}} 条）</text>
+        </view>
+
+        <view wx:if="{{groups.length === 0}}" class="empty-inline">
+          暂未录入该公司的线路信息
+        </view>
+
+        <block wx:else>
+          <view wx:for="{{groups}}" wx:key="city" class="cd-group">
+            <!-- 分组头 -->
+            <view class="cd-group-head" data-city="{{item.city}}" bindtap="onToggleGroup">
+              <view class="cd-group-title">
+                <text class="cd-group-city">从{{item.city}}出发</text>
+                <text class="cd-group-count">{{item.count}} 条</text>
+              </view>
+              <text class="cd-group-toggle">{{item.collapsed ? '展开' : '收起'}}</text>
+            </view>
+
+            <!-- 分组内线路 -->
+            <block wx:if="{{!item.collapsed}}">
+              <view
+                wx:for="{{item.routes}}"
+                wx:for-item="r"
+                wx:key="routeKey"
+                class="cd-route"
+                data-key="{{r.routeKey}}"
+                bindtap="onRouteTap"
+              >
+                <view class="cd-route-main">
+                  <text class="cd-route-title">{{r.title}}</text>
+                  <text class="cd-route-count">{{r.companyCount}} 家在跑</text>
+                </view>
+                <view class="cd-route-tags">
+                  <text wx:if="{{r.transitText}}" class="tag">{{r.transitText}}</text>
+                  <text wx:if="{{r.isDirect}}" class="tag tag--green">直达</text>
+                  <text wx:if="{{r.frequencyText}}" class="tag">{{r.frequencyText}}</text>
+                </view>
+                <view wx:if="{{r.priceNote || r.remark}}" class="cd-route-note">
+                  <text wx:if="{{r.priceNote}}">{{r.priceNote}}</text>
+                  <text wx:if="{{r.priceNote && r.remark}}" class="cd-route-sep">·</text>
+                  <text wx:if="{{r.remark}}">{{r.remark}}</text>
+                </view>
+              </view>
+            </block>
+          </view>
+        </block>
+      </view>
+
+      <!-- 底部合规提示 -->
+      <view class="cd-foot">
+        信息由运营方整理，仅供参考，请自行核实。
+      </view>
+    </block>
+
+  </view>
+</view>

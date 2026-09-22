@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "查专线",
+  "usingComponents": {
+    "city-picker": "/components/city-picker/index"
+  }
+}

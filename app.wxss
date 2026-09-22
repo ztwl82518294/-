@@ -1,0 +1,415 @@
+/**
+ * 全局样式与设计令牌
+ *
+ * 设计宽度：750rpx（iPhone6 基准）
+ *
+ * ============ 视觉语言：Notion 浅色主题 ============
+ *
+ * 参考 Notion 官方浅色主题的取色与质感：
+ *   1. 页面底 #F7F6F3（暖调米白），卡片纯白 —— 靠"底色/卡片"明度差分层，不靠阴影
+ *   2. 边框 1rpx 极细、低对比（rgba(55,53,47,0.09)），是分层的唯一显式手段
+ *   3. 文字用暖灰阶而非纯黑：主 #37352F / 次 #6B6B6B / 弱 #9B9A97
+ *   4. 强调色克制：链接与选中态统一深蓝 #0B6E99，其余靠 Notion 标签色点缀
+ *   5. 无渐变、无光斑、无半透明叠层 —— 完全扁平（flat），与 Notion 一致
+ *
+ * ★★ 四条铁律（改动任何样式前先读这四条）：
+ *   1. 无渐变     —— 主按钮是纯色，:active 用 --color-primary-dark，不用 linear-gradient
+ *   2. 无光斑     —— 全局不得出现 radial-gradient，页面底是纯色
+ *   3. 无半透明染色 —— 所有 --tint-* 是全实色（#XXXXXX），不是 rgba
+ *   4. 无高光内阴影 —— 全局不得出现 inset 0 0 0 1rpx
+ *   这四条由 test/suites/notion-theme.test.js 数据驱动遍历全部 wxml/wxss 强制校验，
+ *   新增页面自动纳入覆盖。
+ *
+ * 分层只有两层：
+ *   1. page 元素：页面底色（纯色 #F7F6F3）
+ *   2. .card：纯白卡片 + 1rpx 细边框
+ */
+
+/* ============================================================
+ * 色板
+ * ============================================================ */
+page {
+  /* —— 强调色（Notion 深蓝）—— */
+  --color-primary: #0B6E99;
+  --color-primary-light: rgba(11, 110, 153, 0.1);
+  --color-primary-dark: #085577;
+
+  /* —— 文字（Notion 暖灰阶）—— */
+  --color-text-primary: #37352F;
+  --color-text-secondary: #6B6B6B;
+  --color-text-tertiary: #9B9A97;
+  --color-text-inverse: #FFFFFF;
+
+  /* —— 底色与卡片（扁平：全实色）—— */
+  --color-bg-page: #F7F6F3;
+  --color-bg-card: #FFFFFF;
+  --color-bg-input: #FFFFFF;
+  --color-bg-hover: #F1F1EF;
+  --color-bg-sunken: #F1F1EF;
+
+  /* 细边框：Notion 的层次全靠它 */
+  --color-border: rgba(55, 53, 47, 0.09);
+  --color-border-strong: rgba(55, 53, 47, 0.16);
+
+  /* —— 语义色 —— */
+  --color-success: #448361;
+  --color-success-bg: #EDF3EC;
+  --color-warning: #CB912F;
+  --color-warning-bg: #FBF3DB;
+  --color-danger: #D44C47;
+  --color-danger-bg: #FDEBEC;
+
+  --color-tag-bg: #F1F1EF;
+  --color-tag-text: #6B6B6B;
+
+  /* 已核实徽章 */
+  --color-badge-verified-bg: rgba(68, 131, 97, 0.14);
+  --color-badge-verified-text: #448361;
+
+  /* ============ 主题色（板块差异化）============
+   * 每个主题 = 一组四件套：
+   *   --tint-{x}   淡彩底色（Notion 标签色的浅色版）
+   *   --edge-{x}   同色描边（只用于 border-color）
+   *   --ink-{x}    该主题的文字/图标色
+   *   --orb-{x}    占位（扁平风格下背景不发光斑，保留令牌以免旧引用断裂）
+   */
+  /* 蓝 · 专线查询主色系 */
+  --tint-blue: #E7F3F8;
+  --edge-blue: rgba(35, 131, 226, 0.35);
+  --ink-blue: #0B6E99;
+  --orb-blue: rgba(35, 131, 226, 0);
+
+  /* 青 · 公司/企业 */
+  --tint-teal: #E7F3F1;
+  --edge-teal: rgba(45, 159, 133, 0.35);
+  --ink-teal: #0F7B6C;
+  --orb-teal: rgba(45, 159, 133, 0);
+
+  /* 橙 · 发货/出发（暖，与到达配对成「从 A 到 B」） */
+  --tint-peach: #FBECDD;
+  --edge-peach: rgba(217, 115, 13, 0.35);
+  --ink-peach: #C77D48;
+  --orb-peach: rgba(217, 115, 13, 0);
+
+  /* 紫 · 线路详情 */
+  --tint-violet: #F4F0F7;
+  --edge-violet: rgba(144, 101, 176, 0.35);
+  --ink-violet: #6940A5;
+  --orb-violet: rgba(144, 101, 176, 0);
+
+  /* 黄 · 纠错/提示 */
+  --tint-amber: #FBF3DB;
+  --edge-amber: rgba(203, 145, 47, 0.35);
+  --ink-amber: #9F6B14;
+  --orb-amber: rgba(203, 145, 47, 0);
+
+  /* 绿 · 已核实/成功 */
+  --tint-green: #EDF3EC;
+  --edge-green: rgba(68, 131, 97, 0.35);
+  --ink-green: #448361;
+  --orb-green: rgba(68, 131, 97, 0);
+
+  /* ============ 圆角与间距 ============ */
+  --radius-sm: 8rpx;
+  --radius-md: 14rpx;
+  --radius-lg: 20rpx;
+  --radius-pill: 999rpx;
+
+  --gap-xs: 8rpx;
+  --gap-sm: 16rpx;
+  --gap-md: 24rpx;
+  --gap-lg: 32rpx;
+  --gap-xl: 48rpx;
+
+  /* ============ 阴影（阈值级，Notion 几乎不用阴影）============ */
+  --shadow-card: 0 1rpx 2rpx rgba(15, 15, 15, 0.06);
+  --shadow-button: none;
+  /* 弹出层是全站唯一保留中等投影的地方 */
+  --shadow-float: 0 8rpx 32rpx rgba(15, 15, 15, 0.16);
+
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-size: 28rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+ * 布局基础
+ * ============================================================ */
+
+.page {
+  min-height: 100vh;
+  background-color: var(--color-bg-page);
+  /* 页面根节点铺底色：子元素用 .card 的白底 + 细边框分层 */
+}
+
+.page-body {
+  padding: var(--gap-md);
+  padding-bottom: calc(var(--gap-xl) + env(safe-area-inset-bottom));
+}
+
+/* ============================================================
+ * 卡片
+ * ============================================================ */
+
+.card {
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.card + .card {
+  margin-top: var(--gap-md);
+}
+
+.card-body {
+  padding: var(--gap-md);
+}
+
+/* 卡片头：标题 + 右侧动作 */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-sm) var(--gap-md);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.card-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.card-more {
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* ============================================================
+ * 主题色工具类（扁平两件套：实色底 + 同色描边）
+ * ============================================================ */
+
+.tint-blue { background-color: var(--tint-blue); border: 1rpx solid var(--edge-blue); }
+.tint-teal { background-color: var(--tint-teal); border: 1rpx solid var(--edge-teal); }
+.tint-peach { background-color: var(--tint-peach); border: 1rpx solid var(--edge-peach); }
+.tint-violet { background-color: var(--tint-violet); border: 1rpx solid var(--edge-violet); }
+.tint-amber { background-color: var(--tint-amber); border: 1rpx solid var(--edge-amber); }
+.tint-green { background-color: var(--tint-green); border: 1rpx solid var(--edge-green); }
+
+.text--blue { color: var(--ink-blue); }
+.text--teal { color: var(--ink-teal); }
+.text--peach { color: var(--ink-peach); }
+.text--violet { color: var(--ink-violet); }
+.text--amber { color: var(--ink-amber); }
+.text--green { color: var(--ink-green); }
+
+/* ============================================================
+ * 按钮
+ * ============================================================ */
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  border-radius: var(--radius-md);
+  font-size: 30rpx;
+  /* ★ 铁律 1：纯色，无渐变 */
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: none;
+  line-height: 1;
+}
+
+.btn:active {
+  background-color: var(--color-primary-dark);
+}
+
+.btn--ghost {
+  background-color: var(--color-bg-card);
+  color: var(--color-primary);
+  border: 1rpx solid var(--edge-blue);
+}
+
+.btn--ghost:active {
+  background-color: var(--color-bg-hover);
+}
+
+.btn--disabled {
+  background-color: var(--color-bg-sunken);
+  color: var(--color-text-tertiary);
+}
+
+/* 小按钮（卡片内操作） */
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--gap-md);
+  height: 60rpx;
+  border-radius: var(--radius-sm);
+  font-size: 26rpx;
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.btn-sm:active { background-color: var(--color-primary-dark); }
+
+/* ============================================================
+ * 标签 / 徽章
+ * ============================================================ */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  line-height: 1.5;
+  background-color: var(--color-tag-bg);
+  color: var(--color-tag-text);
+  border: 1rpx solid transparent;
+}
+
+.tag--blue { background-color: var(--tint-blue); color: var(--ink-blue); border-color: var(--edge-blue); }
+.tag--teal { background-color: var(--tint-teal); color: var(--ink-teal); border-color: var(--edge-teal); }
+.tag--peach { background-color: var(--tint-peach); color: var(--ink-peach); border-color: var(--edge-peach); }
+.tag--violet { background-color: var(--tint-violet); color: var(--ink-violet); border-color: var(--edge-violet); }
+.tag--amber { background-color: var(--tint-amber); color: var(--ink-amber); border-color: var(--edge-amber); }
+.tag--green { background-color: var(--tint-green); color: var(--ink-green); border-color: var(--edge-green); }
+
+/* 已核实徽章 */
+.badge-verified {
+  display: inline-flex;
+  align-items: center;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  background-color: var(--color-badge-verified-bg);
+  color: var(--color-badge-verified-text);
+}
+
+/* ============================================================
+ * 表单项
+ * ============================================================ */
+
+.field {
+  display: flex;
+  align-items: center;
+  min-height: 96rpx;
+  padding: 0 var(--gap-md);
+  background-color: var(--color-bg-card);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.field-label {
+  width: 180rpx;
+  flex-shrink: 0;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
+}
+
+.field-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+}
+
+.field-placeholder { color: var(--color-text-tertiary); }
+
+/* 搜索框 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 0 var(--gap-md);
+  height: 80rpx;
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+}
+
+/* ============================================================
+ * 空状态 / 加载 / 分隔
+ * ============================================================ */
+
+.empty {
+  padding: 120rpx var(--gap-lg);
+  text-align: center;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--gap-xs);
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+  line-height: 1.7;
+}
+
+.loading {
+  padding: 80rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}
+
+.divider {
+  height: 1rpx;
+  background-color: var(--color-border);
+}
+
+/* ============================================================
+ * 文字工具类
+ * ============================================================ */
+
+.t-primary { color: var(--color-text-primary); }
+.t-secondary { color: var(--color-text-secondary); }
+.t-tertiary { color: var(--color-text-tertiary); }
+.t-lg { font-size: 34rpx; }
+.t-md { font-size: 28rpx; }
+.t-sm { font-size: 24rpx; }
+.t-xs { font-size: 22rpx; }
+.t-bold { font-weight: 600; }
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+ * 弹出层（全站唯一保留中等投影）
+ * ============================================================ */
+
+.mask {
+  position: fixed;
+  inset: 0;
+  /* 弹窗遮罩统一 rgba(15,15,15,0.6) */
+  background-color: rgba(15, 15, 15, 0.6);
+  z-index: 900;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-card);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-float);
+  z-index: 901;
+  padding-bottom: env(safe-area-inset-bottom);
+}

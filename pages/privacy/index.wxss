@@ -1,0 +1,115 @@
+/* 文档类页面（隐私 / 免责）：只给左色条 + 标题着色，不整卡染色 —— 长文本需中性底 */
+
+.doc-head {
+  padding: var(--gap-md) 4rpx var(--gap-lg);
+}
+
+.doc-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.doc-meta {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+.doc-intro {
+  padding: 0 4rpx var(--gap-md);
+  font-size: 26rpx;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+
+/* 条款小节：左侧 4rpx 实色条 */
+.doc-sec {
+  padding-left: var(--gap-sm);
+  border-left: 4rpx solid var(--color-primary);
+  margin-bottom: var(--gap-lg);
+}
+
+.doc-sec:last-child {
+  margin-bottom: 0;
+}
+
+.doc-sec-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 10rpx;
+}
+
+.doc-sec-body {
+  font-size: 26rpx;
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+
+/* 接口清单 */
+.api-item {
+  padding: var(--gap-sm) 0;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.api-item:last-child {
+  border-bottom: none;
+}
+
+.api-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: monospace;
+}
+
+.api-purpose {
+  margin-top: 6rpx;
+  font-size: 25rpx;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.api-note {
+  margin-top: var(--gap-sm);
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: var(--color-text-tertiary);
+}
+
+/* 联系方式 */
+.ct-row {
+  display: flex;
+  align-items: baseline;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.ct-row:last-child {
+  border-bottom: none;
+}
+
+.ct-key {
+  width: 120rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}
+
+.ct-val {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--color-primary);
+}
+
+.doc-foot {
+  margin: var(--gap-lg) 4rpx 0;
+  padding: var(--gap-md);
+  font-size: 23rpx;
+  line-height: 1.75;
+  color: var(--color-text-tertiary);
+  background-color: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}

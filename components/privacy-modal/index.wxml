@@ -1,0 +1,27 @@
+<!-- 隐私协议弹窗 -->
+<view wx:if="{{visible}}" class="pm-root">
+  <view class="mask" bindtap="noop"></view>
+  <view class="pm-panel">
+    <view class="pm-title">{{title}}</view>
+
+    <scroll-view class="pm-scroll" scroll-y>
+      <view class="pm-intro">{{intro}}</view>
+
+      <view class="pm-list">
+        <view class="pm-item" wx:for="{{items}}" wx:key="name">
+          <view class="pm-item-name">{{item.name}}</view>
+          <view class="pm-item-desc">{{item.desc}}</view>
+        </view>
+      </view>
+
+      <view class="pm-footer">{{footer}}</view>
+
+      <view class="pm-link" bindtap="onOpenDetail">查看完整的《用户信息处理规则》›</view>
+    </scroll-view>
+
+    <view class="pm-actions">
+      <view class="pm-btn pm-btn--ghost" bindtap="onReject">不同意</view>
+      <view class="pm-btn pm-btn--primary" bindtap="onAgree">同意并继续</view>
+    </view>
+  </view>
+</view>

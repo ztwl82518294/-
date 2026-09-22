@@ -1,0 +1,70 @@
+<!-- 城市选择器 -->
+<view wx:if="{{visible}}" class="cp-root">
+  <view class="mask" bindtap="onClose"></view>
+
+  <view class="cp-sheet">
+    <view class="cp-head">
+      <text class="cp-title">{{title}}</text>
+      <text class="cp-close" bindtap="onClose">✕</text>
+    </view>
+
+    <view class="cp-search">
+      <input
+        class="cp-input"
+        value="{{keyword}}"
+        placeholder="输入城市名或拼音，如 济南 / jinan"
+        placeholder-class="cp-placeholder"
+        confirm-type="search"
+        bindinput="onInput"
+      />
+      <text wx:if="{{keyword}}" class="cp-clear" bindtap="onClear">✕</text>
+    </view>
+
+    <scroll-view class="cp-body" scroll-y>
+      <!-- 搜索结果模式 -->
+      <block wx:if="{{searching}}">
+        <view wx:if="{{results.length === 0}}" class="cp-empty">
+          没有找到匹配的城市
+        </view>
+        <view
+          wx:for="{{results}}"
+          wx:key="name"
+          class="cp-item {{item.name === current ? 'cp-item--on' : ''}}"
+          data-name="{{item.name}}"
+          bindtap="onPick"
+        >
+          <text class="cp-item-name">{{item.name}}</text>
+          <text class="cp-item-prov">{{item.province}}</text>
+        </view>
+      </block>
+
+      <!-- 默认模式：热门 + 分组 -->
+      <block wx:else>
+        <view class="cp-sec-title">热门城市</view>
+        <view class="cp-hot">
+          <view
+            wx:for="{{hotCities}}"
+            wx:key="name"
+            class="cp-hot-item {{item.name === current ? 'cp-hot-item--on' : ''}}"
+            data-name="{{item.name}}"
+            bindtap="onPick"
+          >{{item.name}}</view>
+        </view>
+
+        <view wx:for="{{groups}}" wx:key="province" class="cp-group">
+          <view class="cp-sec-title">{{item.province}}</view>
+          <view class="cp-grid">
+            <view
+              wx:for="{{item.cities}}"
+              wx:for-item="city"
+              wx:key="name"
+              class="cp-cell {{city.name === current ? 'cp-cell--on' : ''}}"
+              data-name="{{city.name}}"
+              bindtap="onPick"
+            >{{city.name}}</view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+  </view>
+</view>

@@ -1,0 +1,203 @@
+/* 公司详情页：档案型 */
+
+/* 档案头卡 */
+.cd-head {
+  padding: var(--gap-lg) var(--gap-md) var(--gap-md);
+}
+
+.cd-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  flex-wrap: wrap;
+}
+
+.cd-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.cd-full {
+  margin-top: 8rpx;
+  font-size: 25rpx;
+  color: var(--color-text-tertiary);
+}
+
+.cd-meta {
+  margin-top: var(--gap-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+}
+
+.cd-meta-item {
+  font-size: 25rpx;
+  color: var(--color-text-secondary);
+}
+
+/* 电话区（逐号渲染，点哪个拨哪个） */
+.cd-phones {
+  margin-top: var(--gap-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+}
+
+.cd-phone {
+  padding: 14rpx 26rpx;
+  font-size: 28rpx;
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.cd-phone:active {
+  background-color: var(--color-primary-dark);
+}
+
+.cd-nophone {
+  margin-top: var(--gap-md);
+  font-size: 25rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 地址 */
+.cd-addr {
+  margin-top: var(--gap-md);
+  padding: var(--gap-sm) var(--gap-md);
+  background-color: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.cd-addr-key {
+  display: block;
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+  margin-bottom: 4rpx;
+}
+
+.cd-addr-val {
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+
+.cd-intro {
+  margin-top: var(--gap-md);
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.cd-actions {
+  margin-top: var(--gap-lg);
+  display: flex;
+  gap: var(--gap-sm);
+}
+
+.cd-btn {
+  padding: 14rpx 28rpx;
+  font-size: 26rpx;
+  color: var(--color-primary);
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--edge-blue);
+  border-radius: var(--radius-sm);
+}
+
+.cd-btn:active {
+  background-color: var(--color-bg-hover);
+}
+
+/* 分组 */
+.cd-group:first-child .cd-group-head {
+  border-top: none;
+}
+
+.cd-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-md);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.cd-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+
+.cd-group-city {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.cd-group-count {
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+.cd-group-toggle {
+  font-size: 24rpx;
+  color: var(--color-primary);
+}
+
+/* 分组内线路 */
+.cd-route {
+  padding: var(--gap-sm) var(--gap-md) var(--gap-md);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.cd-route-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-sm);
+}
+
+.cd-route-title {
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+}
+
+.cd-route-count {
+  flex-shrink: 0;
+  font-size: 23rpx;
+  color: var(--ink-blue);
+}
+
+.cd-route-tags {
+  margin-top: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.cd-route-note {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.cd-route-sep {
+  padding: 0 8rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 底部合规提示 */
+.cd-foot {
+  margin: var(--gap-lg) 4rpx 0;
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: var(--color-text-tertiary);
+}
+
+.empty-inline {
+  padding: 60rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}

@@ -1,0 +1,156 @@
+<!-- 按地址查专线 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 出发地 / 目的地 双卡 + 一键反向 -->
+    <view class="addr-card">
+      <view class="addr-row" bindtap="onPickFrom">
+        <view class="addr-key addr-key--from">发</view>
+        <view class="addr-val">
+          <text wx:if="{{fromCity}}" class="addr-city">{{fromCity}}</text>
+          <text wx:else class="addr-holder">选择出发地</text>
+        </view>
+        <text wx:if="{{fromCity}}" class="addr-clear" catchtap="onClearFrom">✕</text>
+      </view>
+
+      <view class="addr-divider">
+        <view class="addr-swap" bindtap="onSwap">
+          <text class="addr-swap-icon">⇅</text>
+          <text class="addr-swap-text">反向查</text>
+        </view>
+      </view>
+
+      <view class="addr-row" bindtap="onPickTo">
+        <view class="addr-key addr-key--to">到</view>
+        <view class="addr-val">
+          <text wx:if="{{toCity}}" class="addr-city">{{toCity}}</text>
+          <text wx:else class="addr-holder">选择目的地</text>
+        </view>
+        <text wx:if="{{toCity}}" class="addr-clear" catchtap="onClearTo">✕</text>
+      </view>
+
+      <view class="addr-search" bindtap="doSearch">查询专线</view>
+    </view>
+
+    <!-- 筛选条 -->
+    <view wx:if="{{searched}}" class="filter-bar">
+      <view class="filter-chip {{directOnly ? 'filter-chip--on' : ''}}" bindtap="onToggleDirect">只看直达</view>
+      <view class="filter-chip {{dailyOnly ? 'filter-chip--on' : ''}}" bindtap="onToggleDaily">天天发车</view>
+      <picker class="filter-picker" range="{{dayOptions}}" range-key="label" value="{{dayIndex}}" bindchange="onDayChange">
+        <view class="filter-chip {{maxDays ? 'filter-chip--on' : ''}}">{{dayOptions[dayIndex].label}}</view>
+      </picker>
+      <view wx:if="{{directOnly || dailyOnly || maxDays}}" class="filter-reset" bindtap="onResetFilter">重置</view>
+    </view>
+
+    <!-- 结果统计 -->
+    <view wx:if="{{searched && total > 0}}" class="result-count">
+      共 {{total}} 家公司
+    </view>
+
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="loading">查询中…</view>
+
+    <!-- 结果列表 -->
+    <block wx:elif="{{rows.length > 0}}">
+      <view
+        wx:for="{{rows}}"
+        wx:key="companyId"
+        class="card row-card"
+        data-id="{{item.companyId}}"
+        bindtap="onRowTap"
+      >
+        <view class="row-head">
+          <view class="row-name-wrap">
+            <text class="row-name">{{item.displayName}}</text>
+            <text wx:if="{{item.verified}}" class="badge-verified">已核实</text>
+          </view>
+          <text class="row-tag {{item.isDirect ? 'tag--green' : 'tag--amber'}}">{{item.directText}}</text>
+        </view>
+
+        <view class="row-meta">
+          <text wx:if="{{item.transitText}}" class="row-meta-item">{{item.transitText}}</text>
+          <text wx:if="{{item.frequencyText}}" class="row-meta-item">{{item.frequencyText}}</text>
+          <text wx:if="{{item.scaleText}}" class="row-meta-item">{{item.scaleText}}</text>
+        </view>
+
+        <!-- 展开区：价格、备注、发站、更新时间 -->
+        <view wx:if="{{expandId === item.companyId}}" class="row-extra">
+          <view wx:if="{{item.priceNote}}" class="row-extra-line">
+            <text class="row-extra-key">参考价</text>
+            <text class="row-extra-val">{{item.priceNote}}</text>
+          </view>
+          <view wx:if="{{item.remark}}" class="row-extra-line">
+            <text class="row-extra-key">备注</text>
+            <text class="row-extra-val">{{item.remark}}</text>
+          </view>
+          <view wx:if="{{item.stations.length > 0}}" class="row-extra-line">
+            <text class="row-extra-key">发站</text>
+            <view class="row-extra-stations">
+              <view wx:for="{{item.stations}}" wx:for-item="st" wx:key="address" class="row-station">
+                <text wx:if="{{st.address}}" class="row-station-addr">{{st.address}}</text>
+                <view class="row-station-phones">
+                  <text
+                    wx:for="{{st.phone}}"
+                    wx:for-item="p"
+                    wx:key="*this"
+                    class="row-station-phone"
+                  >{{p}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view wx:if="{{item.updatedText}}" class="row-extra-time">{{item.updatedText}}</view>
+        </view>
+
+        <view class="row-foot">
+          <view class="row-actions">
+            <view
+              wx:if="{{item.hasPhone}}"
+              class="row-call"
+              data-phone="{{item.phone}}"
+              catchtap="onCall"
+            >立即拨打 {{item.phone}}</view>
+            <view
+              wx:else
+              class="row-call row-call--disabled"
+            >暂无电话</view>
+            <view
+              class="row-detail"
+              data-id="{{item.companyId}}"
+              catchtap="onCompanyTap"
+            >公司详情</view>
+          </view>
+          <view
+            class="row-report"
+            data-key="{{item.link.routeKey}}"
+            data-name="{{item.displayName}}"
+            catchtap="onReport"
+          >信息有误</view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 空结果引导 -->
+    <view wx:elif="{{searched && !loading}}" class="empty">
+      <view class="empty-title">没有找到这条线路</view>
+      <view class="empty-desc">{{emptyHint}}</view>
+      <view class="empty-action" bindtap="onEmptyReport">反馈这条线路</view>
+    </view>
+
+    <!-- 未查询时的引导 -->
+    <view wx:else class="empty">
+      <view class="empty-title">选择出发地和目的地</view>
+      <view class="empty-desc">例如：济南 → 广州，看看有哪些公司在跑这条线</view>
+    </view>
+
+  </view>
+</view>
+
+<!-- 城市选择器 -->
+<city-picker
+  visible="{{pickerVisible}}"
+  title="{{pickerTitle}}"
+  current="{{pickerTarget === 'from' ? fromCity : toCity}}"
+  bind:select="onCitySelected"
+  bind:close="onPickerClose"
+/>

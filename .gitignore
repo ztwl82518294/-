@@ -12,6 +12,24 @@ project.private.config.json
 tmp/
 _temp/
 
+# ===== 运营数据（绝不入版本库）=====
+# .data/ 存放从 seed-data.js 导出的 .jsonl 导入文件，
+# 内含公司电话与地址。虽然是虚构样板数据，但一旦接入真实数据即为敏感信息，
+# 从第一天起就排除，避免日后误提交。
+.data/
+*.jsonl
+*.db
+*.sqlite
+
+# ===== 管理后台的工作副本（绝不入版本库）=====
+# admin/data/*.json 是后台**运行时**读写的工作副本，初值由 scripts/export-seed.js
+# 从 data/seed-data.js（唯一数据源）生成。它承担的是「云端之前的待发布数据」，
+# 一旦后台接上真实运营，这里面就是真实公司电话与地址。
+# 另外它会被后台的增删改随时改写 —— 入库只会制造无意义的 diff 与冲突。
+#   重建方式：node scripts/export-seed.js
+admin/data/
+.tmp-smoke-backup/
+
 # ===== 系统/编辑器文件 =====
 .DS_Store
 Thumbs.db

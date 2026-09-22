@@ -1,0 +1,188 @@
+/* 数据纠错 */
+
+.page-body {
+  padding-bottom: 200rpx;
+}
+
+/* 上下文提示条（琥珀色，提示性质） */
+.cx-target {
+  margin-bottom: var(--gap-md);
+  padding: var(--gap-md);
+  background-color: var(--tint-amber);
+  border: 1rpx solid var(--edge-amber);
+  border-radius: var(--radius-md);
+}
+
+.cx-target-key {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-amber);
+  margin-bottom: 6rpx;
+}
+
+.cx-target-val {
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+/* 类型 chips */
+.cx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+}
+
+.cx-chip {
+  padding: 14rpx 30rpx;
+  font-size: 27rpx;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-sunken);
+  border: 1rpx solid transparent;
+  border-radius: var(--radius-pill);
+}
+
+.cx-chip--on {
+  color: var(--ink-blue);
+  background-color: var(--tint-blue);
+  border-color: var(--edge-blue);
+}
+
+/* 说明字数 */
+.cx-count {
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 文本域 */
+.cx-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+}
+
+.cx-placeholder {
+  color: var(--color-text-tertiary);
+  font-size: 27rpx;
+}
+
+/* 上传 */
+.cx-uploads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+}
+
+.cx-thumb {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1rpx solid var(--color-border);
+}
+
+.cx-thumb-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cx-thumb-del {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #FFFFFF;
+  background-color: rgba(15, 15, 15, 0.6);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.cx-add {
+  width: 160rpx;
+  height: 160rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  border: 2rpx dashed var(--edge-blue);
+  border-radius: var(--radius-sm);
+}
+
+.cx-add--busy {
+  opacity: 0.6;
+}
+
+.cx-add-icon {
+  font-size: 44rpx;
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+.cx-add-text {
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 用途说明链接 */
+.cx-note {
+  font-size: 23rpx;
+  color: var(--color-primary);
+}
+
+/* 输入框 */
+.cx-input {
+  height: 72rpx;
+  font-size: 28rpx;
+  color: var(--color-text-primary);
+}
+
+/* 说明条 */
+.cx-tip {
+  margin-top: var(--gap-md);
+  padding: 0 4rpx;
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: var(--color-text-tertiary);
+}
+
+/* 底部提交栏 */
+.cx-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--gap-md);
+  padding-bottom: calc(var(--gap-md) + env(safe-area-inset-bottom));
+  background-color: var(--color-bg-card);
+  border-top: 1rpx solid var(--color-border);
+  z-index: 800;
+}
+
+.cx-submit {
+  height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 31rpx;
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.cx-submit:active {
+  background-color: var(--color-primary-dark);
+}
+
+.cx-submit--busy {
+  opacity: 0.7;
+}

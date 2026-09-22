@@ -1,71 +1,45 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/line-query/index",
-    "pages/company-list/index",
+    "pages/search-by-address/index",
+    "pages/search-by-company/index",
+    "pages/route-detail/index",
     "pages/company-detail/index",
-    "pages/line-list/index",
-    "pages/line-detail/index",
-    "pages/favorite/index",
-    "pages/user/index",
-    "pages/report/index",
-    "pages/agreement/index",
-    "pages/contact/index"
-  ],
-  "subPackages": [
-    {
-      "root": "pages/admin",
-      "name": "admin",
-      "pages": [
-        "index",
-        "lines/index",
-        "line-edit/index",
-        "ads/index",
-        "ad-edit/index",
-        "notice/index",
-        "stats/index"
-      ]
-    }
+    "pages/correction/index",
+    "pages/privacy/index",
+    "pages/disclaimer/index"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#4f92dd",
-    "navigationBarTextStyle": "white",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F7F6F3",
     "navigationBarTitleText": "物流专线查询",
-    "backgroundColor": "#e8f0fa"
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7F6F3"
   },
   "tabBar": {
-    "color": "#8a93a3",
-    "selectedColor": "#2383e2",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "white",
+    "color": "#9B9A97",
+    "selectedColor": "#0B6E99",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "assets/tabbar/home.png",
-        "selectedIconPath": "assets/tabbar/home-active.png"
+        "text": "首页"
       },
       {
-        "pagePath": "pages/line-query/index",
-        "text": "查专线",
-        "iconPath": "assets/tabbar/route.png",
-        "selectedIconPath": "assets/tabbar/route-active.png"
+        "pagePath": "pages/search-by-address/index",
+        "text": "查专线"
       },
       {
-        "pagePath": "pages/company-list/index",
-        "text": "查公司",
-        "iconPath": "assets/tabbar/company.png",
-        "selectedIconPath": "assets/tabbar/company-active.png"
+        "pagePath": "pages/search-by-company/index",
+        "text": "查公司"
       }
     ]
   },
-  "requiredPrivateInfos": ["chooseLocation"],
-  "permission": {
-    "scope.userLocation": {
-      "desc": "用于选择和展示物流专线发货点位置，便于地图导航到发货点"
-    }
-  },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {
+    "privacy-modal": "/components/privacy-modal/index"
+  }
 }

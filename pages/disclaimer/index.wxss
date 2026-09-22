@@ -1,0 +1,99 @@
+/* 免责声明页：复用隐私页的文档样式，补充本页专属部分 */
+
+.doc-head {
+  padding: var(--gap-md) 4rpx var(--gap-lg);
+}
+
+.doc-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.doc-meta {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+.doc-sec {
+  padding-left: var(--gap-sm);
+  border-left: 4rpx solid var(--color-primary);
+  margin-bottom: var(--gap-lg);
+}
+
+.doc-sec:last-child {
+  margin-bottom: 0;
+}
+
+.doc-sec-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 10rpx;
+}
+
+.doc-sec-body {
+  font-size: 26rpx;
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+
+.ct-row {
+  display: flex;
+  align-items: baseline;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.ct-row:last-of-type {
+  border-bottom: none;
+}
+
+.ct-key {
+  width: 120rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+}
+
+.ct-val {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--color-primary);
+}
+
+.ct-note {
+  margin-top: var(--gap-sm);
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: var(--color-text-tertiary);
+}
+
+.dis-action {
+  margin-top: var(--gap-md);
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: var(--color-primary);
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--edge-blue);
+  border-radius: var(--radius-md);
+}
+
+.dis-action:active {
+  background-color: var(--color-bg-hover);
+}
+
+.doc-foot {
+  margin: var(--gap-lg) 4rpx 0;
+  padding: var(--gap-md);
+  font-size: 23rpx;
+  line-height: 1.75;
+  color: var(--color-text-tertiary);
+  background-color: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}

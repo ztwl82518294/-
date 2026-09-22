@@ -1,0 +1,9 @@
+{
+  "name": "submitCorrection",
+  "version": "1.0.0",
+  "description": "提交信息纠错（唯一对外写接口，含类型白名单/长度截断/频控）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

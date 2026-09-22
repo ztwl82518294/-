@@ -1,0 +1,9 @@
+{
+  "name": "trackCompanyView",
+  "version": "1.0.0",
+  "description": "公司浏览量统计（静默失败，不影响详情页打开）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
