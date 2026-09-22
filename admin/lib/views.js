@@ -232,16 +232,35 @@ PAGES['company-edit'] = function (d) {
   };
   const isNew = !d.company;
 
+  /*
+   * 发站 / 到站网点块。
+   *
+   * ★ 交互契约（admin.js 的 initStationBlocks 依赖这些标记，别只改一半）：
+   *   - 行容器带 data-station-row，输入框带 data-station-field（address|phone）
+   *     —— 增删行后由前端按 0..n 重新编号 name，后端 parseStationsFromForm
+   *        按索引 0..9 收集，空行自动跳过
+   *   - data-add-station = prefix 的按钮加行；data-del-station 删行
+   *   - 在网点行里按 Enter = 换行（最后一行则新增一行），绝不触发表单提交
+   *     —— 之前这里是纯 input，用户按 Enter 想换行，结果把整张表单提交掉跳走了
+   */
   const stationBlock = (prefix, title, list) => {
     const rows = (list && list.length ? list : [{ address: '', phone: '' }]).map((s, i) =>
-      '<div class="station">' +
-      '<input class="input" name="' + prefix + '_address_' + i + '" value="' + esc(s.address) + '" placeholder="地址">' +
-      '<input class="input mono" name="' + prefix + '_phone_' + i + '" value="' + esc(s.phone) + '" placeholder="电话">' +
+      '<div class="station" data-station-row>' +
+      '<input class="input" name="' + prefix + '_address_' + i + '" data-station-field="address"' +
+      ' value="' + esc(s.address) + '" placeholder="地址">' +
+      '<input class="input mono" name="' + prefix + '_phone_' + i + '" data-station-field="phone"' +
+      ' value="' + esc(s.phone) + '" placeholder="电话">' +
+      '<button class="btn btn--ghost station__del" type="button" data-del-station title="删除这一行">×</button>' +
       '</div>'
     ).join('');
-    return '<div class="fieldset"><div class="fieldset__title">' + title +
-      '<span class="hint">地址与电话一一对应；一行一个网点，最多 10 个</span></div>' +
-      rows + '</div>';
+    return '<div class="fieldset" data-station-block="' + prefix + '">' +
+      '<div class="fieldset__title">' + title +
+      '<span class="hint">一行一个网点，最多 10 个；在地址框按 Enter 直接换到下一行</span></div>' +
+      rows +
+      '<div class="station__actions">' +
+      '<button class="btn btn--ghost" type="button" data-add-station="' + prefix + '">＋ 添加网点</button>' +
+      '</div>' +
+      '</div>';
   };
 
   return '<div class="page">' +

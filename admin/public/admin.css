@@ -300,7 +300,9 @@ select.input { cursor: pointer; }
 .check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .check input { margin: 0; cursor: pointer; }
 
-.station { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px; }
+.station { display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px; margin-bottom: 8px; }
+.station__del { padding: 6px 12px; line-height: 1.2; }
+.station__actions { margin-top: 2px; }
 .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .searchbar {
@@ -473,7 +475,9 @@ select.input { cursor: pointer; }
  * ============================================================ */
 @media (max-width: 900px) {
   .grid--2, .grid--3 { grid-template-columns: 1fr; }
-  .station { grid-template-columns: 1fr; }
+  .station { grid-template-columns: 1fr auto; }
+  /* 窄屏：地址占满一行，电话与删除按钮挤第二行 */
+  .station .input[data-station-field="address"] { grid-column: 1 / -1; }
   .qrow { grid-template-columns: 1fr; gap: 4px; }
   .nav { overflow-x: auto; }
   .top { gap: 12px; }

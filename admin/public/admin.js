@@ -475,11 +475,125 @@
   }
 
   /* ============================================================
+   * 发站 / 到站：网点行的增删与「Enter 换行」
+   * ============================================================
+   * ★ 模板（views.js 的 stationBlock）里有对应标记，两边要一起改：
+   *   行容器 data-station-row；输入框 data-station-field（address|phone）；
+   *   区块容器 data-station-block = prefix（departure / arrival）。
+   *
+   * ★ 为什么必须在 keydown 上 preventDefault：
+   *   表单里有 type=submit 按钮，在 input 里按回车的浏览器默认行为是
+   *   **提交整张表单** —— 用户本来只是想换行，结果页面直接保存跳走了。
+   *   这就是「红框里怎么按回车都不对」的根因。
+   *
+   * ★ 增删行之后必须 renumber：后端 parseStationsFromForm 按
+   *   departure_address_0..9 的**索引**收集，删除中间行会留下索引洞，
+   *   虽然空索引会被跳过，但行数一多编号就会越过 9 丢数据 —— 重排最稳。
+   */
+  function initStationBlocks() {
+    var form = $('#company-form');
+    if (!form) return;
+    var MAX_STATIONS = 10;
+
+    function rowsOf(prefix) {
+      return $$('[data-station-block="' + prefix + '"] [data-station-row]');
+    }
+
+    function renumber(prefix) {
+      rowsOf(prefix).forEach(function (row, i) {
+        $$('input', row).forEach(function (inp) {
+          var f = inp.getAttribute('data-station-field');
+          if (f) inp.name = prefix + '_' + f + '_' + i;
+        });
+      });
+    }
+
+    function firstInput(row, field) {
+      return row.querySelector('input[data-station-field="' + field + '"]');
+    }
+
+    function rowIsEmpty(row) {
+      return !firstInput(row, 'address').value.trim() && !firstInput(row, 'phone').value.trim();
+    }
+
+    function addRow(prefix, focus) {
+      var rows = rowsOf(prefix);
+      if (rows.length >= MAX_STATIONS) {
+        alert('每个方向最多 ' + MAX_STATIONS + ' 个网点');
+        return null;
+      }
+      var row = document.createElement('div');
+      row.className = 'station';
+      row.setAttribute('data-station-row', '');
+      var addr = document.createElement('input');
+      addr.className = 'input';
+      addr.setAttribute('data-station-field', 'address');
+      addr.placeholder = '地址';
+      var phone = document.createElement('input');
+      phone.className = 'input mono';
+      phone.setAttribute('data-station-field', 'phone');
+      phone.placeholder = '电话';
+      var del = document.createElement('button');
+      del.className = 'btn btn--ghost station__del';
+      del.type = 'button';
+      del.title = '删除这一行';
+      del.setAttribute('data-del-station', '');
+      del.textContent = '×';
+      row.appendChild(addr);
+      row.appendChild(phone);
+      row.appendChild(del);
+      rows[rows.length - 1].parentNode.insertBefore(row, rows[rows.length - 1].nextSibling);
+      renumber(prefix);
+      if (focus) addr.focus();
+      return row;
+    }
+
+    form.addEventListener('click', function (e) {
+      var add = e.target.closest ? e.target.closest('[data-add-station]') : null;
+      if (add) {
+        addRow(add.getAttribute('data-add-station'), true);
+        return;
+      }
+      var del = e.target.closest ? e.target.closest('[data-del-station]') : null;
+      if (del) {
+        var row = del.closest('[data-station-row]');
+        var prefix = del.closest('[data-station-block]').getAttribute('data-station-block');
+        /* 至少留一行：删最后一行 = 清空，避免区块里一行都不剩 */
+        if (rowsOf(prefix).length <= 1) {
+          $$('input', row).forEach(function (i) { i.value = ''; });
+        } else {
+          row.parentNode.removeChild(row);
+          renumber(prefix);
+        }
+      }
+    });
+
+    form.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      if (!e.target.closest || !e.target.closest('[data-station-row]')) return;
+      e.preventDefault(); // ★ 先拦掉「回车提交表单」，下面才是真正的换行
+      var row = e.target.closest('[data-station-row]');
+      var prefix = e.target.closest('[data-station-block]').getAttribute('data-station-block');
+      var rows = rowsOf(prefix);
+      var idx = rows.indexOf(row);
+      if (idx < rows.length - 1) {
+        // 不是最后一行：像文本域一样换到下一行的地址框
+        firstInput(rows[idx + 1], 'address').focus();
+      } else if (!rowIsEmpty(row)) {
+        // 最后一行且这行有内容：新增一行
+        addRow(prefix, true);
+      }
+      // 最后一行且是空行：什么都不做，避免连出无数空行
+    });
+  }
+
+  /* ============================================================
    * 启动
    * ============================================================ */
 
   document.addEventListener('DOMContentLoaded', function () {
     bindEntityForm('#company-form', '/api/company/save', '/companies');
+    initStationBlocks();
     bindEntityForm('#route-form', '/api/route/save', '/routes');
     bindEntityForm('#link-form', '/api/link/save', '/links');
     bindEntityForm('#announcement-form', '/api/announcement/save', '/announcements');

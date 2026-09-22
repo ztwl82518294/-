@@ -323,6 +323,12 @@ async function main() {
 
     r = await req('GET', '/companies/edit?id=comp_001');
     t('公司编辑页（带数据）', r.status === 200 && /鲁通/.test(r.text));
+    /* 网点行交互契约：加行按钮 / 行标记 / 输入框字段标记都要在（admin.js 依赖） */
+    t('公司编辑页有「添加网点」与换行提示（网点行可增删）',
+      /data-add-station="departure"/.test(r.text) &&
+      /data-add-station="arrival"/.test(r.text) &&
+      /data-station-row/.test(r.text) &&
+      /data-station-field="address"/.test(r.text));
 
     r = await req('GET', '/companies/edit');
     t('公司编辑页（新建态）', r.status === 200 && /新建公司/.test(r.text));

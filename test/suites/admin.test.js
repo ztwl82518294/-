@@ -1303,6 +1303,24 @@ describe('页面渲染冒烟', () => {
     ok(views.renderPage('notfound', {}).indexOf('404') >= 0);
   });
 
+  test('公司编辑页：网点块带增删标记与「添加网点」入口', () => {
+    /*
+     * ★ 回归的是一次真实反馈：网点行只有「地址 + 电话」两个输入框，
+     *   既没有加行按钮，在框里按回车还会提交整张表单 ——
+     *   用户问「红框内如何换行」才暴露出来。
+     *   现在的行为契约（admin.js 的 initStationBlocks 依赖这些标记）：
+     *   行 data-station-row / 输入框 data-station-field / 区块 data-station-block /
+     *   加行按钮 data-add-station / 删行按钮 data-del-station。
+     */
+    const h = views.renderPage('company-edit', { company: null, id: '', user });
+    ['data-station-row', 'data-station-field="address"', 'data-station-field="phone"',
+      'data-station-block="departure"', 'data-station-block="arrival"',
+      'data-add-station="departure"', 'data-add-station="arrival"',
+      'data-del-station', '按 Enter 直接换到下一行'].forEach((mark) => {
+      ok(h.indexOf(mark) >= 0, '编辑页应含 ' + mark);
+    });
+  });
+
   test('未知视图名不抛错', () => {
     const h = views.renderPage('no_such_view', {});
     ok(h.indexOf('未知页面') >= 0);
