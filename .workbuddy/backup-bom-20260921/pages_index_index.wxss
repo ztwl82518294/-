@@ -1,0 +1,151 @@
+﻿/* 页面底色由 app.wxss 的天空渐变提供，此处不再覆盖 */
+.page{min-height:100vh;background:transparent;}
+
+/* ===== 标题区（macOS 天气：渐变色天空 + 白色大字，无分割线） ===== */
+.hero{
+  padding:56rpx 32rpx 112rpx;
+  background:linear-gradient(158deg, #3d7fd4 0%, #5b9ce4 42%, #8dbcee 78%, #a8cdf2 100%);
+  border-radius:0 0 40rpx 40rpx;
+  position:relative;
+  overflow:hidden;
+}
+/* 顶部柔光，模拟天空高光 */
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-40%; left:-10%;
+  width:80%; height:120%;
+  background:radial-gradient(ellipse at center, rgba(255,255,255,.42) 0%, transparent 68%);
+  pointer-events:none;
+}
+.hero-title{color:#fff;font-size:48rpx;font-weight:600;letter-spacing:-.5rpx;line-height:1.25;position:relative;text-shadow:0 2rpx 12rpx rgba(30,60,110,.18);}
+.hero-sub{color:rgba(255,255,255,.92);font-size:26rpx;margin-top:10rpx;line-height:1.5;position:relative;text-shadow:0 1rpx 8rpx rgba(30,60,110,.14);}
+
+/* 主内容区：上移叠到渐变上，形成 macOS 天气的层次 */
+.main{padding:0 28rpx 60rpx;margin-top:-72rpx;position:relative;z-index:2;}
+
+/* 公告（磨砂浅黄 callout） */
+.notice-bar{
+  display:flex;align-items:center;
+  background:rgba(255,248,232,.86);
+  -webkit-backdrop-filter:blur(16rpx) saturate(150%);
+  backdrop-filter:blur(16rpx) saturate(150%);
+  border:1rpx solid rgba(255,255,255,.85);
+  border-radius:18rpx;padding:18rpx 20rpx;margin-bottom:20rpx;
+  box-shadow:var(--shadow-card);
+}
+.notice-icon{font-size:28rpx;margin-right:12rpx;flex-shrink:0;}
+.notice-scroll{flex:1;overflow:hidden;}
+.notice-text{display:inline-block;font-size:24rpx;color:#8a6a1f;white-space:nowrap;padding-left:100%;animation:notice-marquee 12s linear infinite;}
+@keyframes notice-marquee{from{transform:translateX(0);}to{transform:translateX(-100%);}}
+
+/* ===== 查询卡片（核心磨砂玻璃卡：半透明白 + 模糊 + 大圆角 + 柔和投影） ===== */
+.query-card{
+  padding:40rpx 28rpx 36rpx;
+  border-radius:28rpx;
+  background:rgba(255,255,255,.88);
+  -webkit-backdrop-filter:blur(16rpx) saturate(150%);
+  backdrop-filter:blur(16rpx) saturate(150%);
+  border:1rpx solid rgba(255,255,255,.96);
+  box-shadow:0 4rpx 12rpx rgba(20,40,70,.06), 0 20rpx 48rpx rgba(20,40,70,.1);
+}
+.qc-row{display:flex;align-items:center;}
+.qc-city{flex:1;text-align:center;}
+.qc-label{font-size:22rpx;color:var(--ink-muted);margin-bottom:12rpx;letter-spacing:.4rpx;}
+.qc-value{font-size:42rpx;font-weight:600;color:var(--ink-title);letter-spacing:-.4rpx;}
+.qc-value.placeholder{color:#b9c4d2;font-weight:400;}
+/* 交换按钮：磨砂圆形 + 淡蓝底 */
+.qc-swap{
+  width:68rpx;height:68rpx;border-radius:50%;
+  background:rgba(35,131,226,.1);
+  border:1rpx solid rgba(255,255,255,.9);
+  color:var(--brand);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32rpx;margin:0 16rpx;
+  box-shadow:0 2rpx 8rpx rgba(35,131,226,.1);
+}
+.qc-swap:active{background:rgba(35,131,226,.18);}
+
+/* 查询按钮（macOS 饱满圆角 + 蓝色柔光投影） */
+.query-btn{
+  margin-top:30rpx;height:92rpx;line-height:92rpx;text-align:center;
+  border-radius:22rpx;
+  background:linear-gradient(135deg, #3f96ea 0%, #2383e2 100%);
+  color:#fff;font-size:30rpx;font-weight:600;
+  box-shadow:0 8rpx 22rpx rgba(35,131,226,.32);
+}
+.query-btn:active{opacity:.9;}
+
+/* ===== 广告位 ===== */
+.ad-section{margin-top:40rpx;}
+.ad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16rpx;padding:0 4rpx;}
+.ad-header-title{font-size:28rpx;font-weight:600;color:var(--ink-title);}
+.ad-header-sub{font-size:22rpx;color:var(--ink-muted);}
+.ad-grid{display:flex;flex-wrap:wrap;justify-content:space-between;}
+/* 广告卡：磨砂玻璃 + 天气色氛围 */
+.ad-card{
+  width:48.5%;
+  background:rgba(255,255,255,.76);
+  -webkit-backdrop-filter:blur(16rpx) saturate(150%);
+  backdrop-filter:blur(16rpx) saturate(150%);
+  border:1rpx solid rgba(255,255,255,.92);
+  border-radius:22rpx;
+  display:flex;align-items:center;padding:18rpx;
+  margin-bottom:18rpx;box-sizing:border-box;
+  box-shadow:var(--shadow-card);
+}
+.ad-card:active{background:rgba(255,255,255,.9);}
+/* 广告 logo：macOS 圆润方块 + 柔和渐变 */
+.ad-logo{
+  width:64rpx;height:64rpx;border-radius:16rpx;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:30rpx;font-weight:600;margin-right:16rpx;
+  box-shadow:0 4rpx 12rpx rgba(20,40,70,.16);
+}
+.ad-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.ad-company{font-size:24rpx;font-weight:600;color:var(--ink-title);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ad-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6rpx;}
+.ad-region{font-size:20rpx;color:var(--ink-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.ad-number{font-size:22rpx;color:var(--sky-amber-ink);font-weight:600;margin-left:8rpx;flex-shrink:0;}
+/* 8 色循环：macOS 天气感的柔和渐变色 */
+.c1{background:linear-gradient(135deg,#6aa9e9,#4a86d6);}
+.c2{background:linear-gradient(135deg,#f0a86a,#dc8449);}
+.c3{background:linear-gradient(135deg,#f3c964,#dfa739);}
+.c4{background:linear-gradient(135deg,#6fc9a8,#48a888);}
+.c5{background:linear-gradient(135deg,#6cc4c4,#48a3a3);}
+.c6{background:linear-gradient(135deg,#a596e0,#8371cd);}
+.c7{background:linear-gradient(135deg,#ef93b6,#d96b96);}
+.c8{background:linear-gradient(135deg,#7bb4de,#5595c8);}
+
+/* 显示所选县区 */
+.qc-district{font-size:22rpx;color:var(--brand);margin-top:8rpx;}
+/* 市/区县 切换小按钮 */
+.qc-toggle{font-size:22rpx;color:var(--brand);background:rgba(35,131,226,.1);padding:4rpx 16rpx;border-radius:10rpx;margin-top:8rpx;display:inline-block;}
+.qc-chips{display:flex;justify-content:center;gap:12rpx;margin-top:12rpx;}
+/* chip：磨砂小胶囊 */
+.chip{
+  font-size:22rpx;color:var(--ink-muted);
+  background:rgba(255,255,255,.7);
+  border:1rpx solid rgba(255,255,255,.9);
+  padding:6rpx 20rpx;border-radius:12rpx;
+}
+.chip.active{
+  color:#fff;
+  background:linear-gradient(135deg,#3f96ea,#2383e2);
+  border-color:transparent;
+  box-shadow:0 4rpx 12rpx rgba(35,131,226,.26);
+}
+.qc-input-wrap{display:flex;align-items:center;gap:10rpx;margin-top:12rpx;}
+.qc-input{
+  flex:1;
+  background:rgba(255,255,255,.9);
+  border:1rpx solid rgba(255,255,255,.96);
+  border-radius:14rpx;padding:14rpx 16rpx;
+  font-size:26rpx;color:var(--ink-title);
+}
+.pick-btn{
+  font-size:22rpx;color:var(--brand);
+  background:rgba(35,131,226,.1);
+  border:1rpx solid rgba(255,255,255,.9);
+  padding:12rpx 20rpx;border-radius:14rpx;
+}

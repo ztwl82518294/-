@@ -1,0 +1,118 @@
+<!-- pages/report/index.wxml
+  结构完全对照参考图：
+  ① 你要反馈的信息（琥珀提示条，拿不到对象时整块隐藏）
+  ② 问题类型（chips 单选，必填）
+  ③ 具体说明（textarea + 右下角 0/200 计数，必填）
+  ④ 上传凭证（选填，最多 3 张，虚线添加框）
+  ⑤ 联系方式（选填）
+  ⑥ 提示条（提交后人工核实，不会立即生效）
+  ⑦ 固定底栏「提交反馈」
+-->
+<view class="rp-page">
+  <view class="rp-main">
+
+    <!-- ① 你要反馈的信息：明确告诉用户"这条反馈挂在哪个对象上" -->
+    <view class="rp-target" wx:if="{{targetName}}">
+      <view class="rp-target-label">你要反馈的信息</view>
+      <view class="rp-target-name">{{targetName}}</view>
+    </view>
+
+    <!-- ② 问题类型（单选 chips） -->
+    <view class="rp-block">
+      <view class="rp-label">
+        <text class="rp-label-text">问题类型</text>
+        <text class="rp-req">*</text>
+      </view>
+      <view class="rp-chips">
+        <view
+          class="rp-chip {{typeKey === item.key ? 'is-on' : ''}}"
+          wx:for="{{types}}"
+          wx:key="key"
+          bindtap="onPickType"
+          data-key="{{item.key}}"
+        >{{item.label}}</view>
+      </view>
+    </view>
+
+    <!-- ③ 具体说明（必填 + 字数计数） -->
+    <view class="rp-block">
+      <view class="rp-label">
+        <text class="rp-label-text">具体说明</text>
+        <text class="rp-req">*</text>
+        <text class="rp-counter">{{detailLen}}/{{detailMax}}</text>
+      </view>
+      <textarea
+        class="rp-textarea"
+        value="{{detail}}"
+        maxlength="{{detailMax}}"
+        placeholder="请描述你发现的问题，比如：这个电话是空号，正确的应该是…"
+        placeholder-class="rp-ph"
+        bindinput="onInputDetail"
+        auto-height="{{false}}"
+      />
+    </view>
+
+    <!-- ④ 上传凭证（选填，最多 3 张） -->
+    <view class="rp-block">
+      <view class="rp-label">
+        <text class="rp-label-text">上传凭证</text>
+        <text class="rp-opt">选填，最多 {{imageMax}} 张</text>
+      </view>
+      <view class="rp-uploads">
+        <!-- 已上传的图：点击预览、右上角删除 -->
+        <view class="rp-thumb" wx:for="{{images}}" wx:key="*this">
+          <image
+            class="rp-thumb-img"
+            src="{{item}}"
+            mode="aspectFill"
+            bindtap="onPreviewImage"
+            data-index="{{index}}"
+          />
+          <view
+            class="rp-thumb-del"
+            catchtap="onRemoveImage"
+            data-index="{{index}}"
+          >×</view>
+        </view>
+        <!-- 添加框：满 3 张后不再显示 -->
+        <view
+          class="rp-add"
+          wx:if="{{images.length < imageMax}}"
+          bindtap="onAddImage"
+        >
+          <text class="rp-add-plus">+</text>
+          <text class="rp-add-text">添加</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ⑤ 联系方式（选填） -->
+    <view class="rp-block">
+      <view class="rp-label">
+        <text class="rp-label-text">联系方式</text>
+        <text class="rp-opt">选填，便于我们核实后回复你</text>
+      </view>
+      <input
+        class="rp-input"
+        value="{{contact}}"
+        maxlength="{{contactMax}}"
+        placeholder="手机号 / 微信号 / 公司名"
+        placeholder-class="rp-ph"
+        bindinput="onInputContact"
+      />
+    </view>
+
+    <!-- ⑥ 流程说明：先说明"不会立即生效"，避免提交后期待落空 -->
+    <view class="rp-note">提交后我们会人工核实，核实通过后才会修改信息，不会立即生效。</view>
+
+    <view class="rp-bar-space"></view>
+  </view>
+
+  <!-- ⑦ 固定底栏 -->
+  <view class="rp-bar">
+    <view
+      class="rp-submit {{submitting ? 'is-busy' : ''}}"
+      bindtap="submit"
+    >{{submitting ? '提交中...' : '提交反馈'}}</view>
+  </view>
+</view>

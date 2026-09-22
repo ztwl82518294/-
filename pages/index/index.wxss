@@ -1,62 +1,180 @@
-/* 页面底色 */
-.page{min-height:100vh;background:var(--bg-page);}
+/* 页面底色由 app.wxss 的天空渐变提供，此处不再覆盖 */
+.page{min-height:100vh;background:transparent;}
 
-/* 渐变头图 */
-.hero{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light) 100%);padding:50rpx 30rpx 60rpx;border-radius:0 0 44rpx 44rpx;}
-.hero-title{color:#fff;font-size:46rpx;font-weight:bold;letter-spacing:2rpx;}
-.hero-sub{color:rgba(255,255,255,.85);font-size:26rpx;margin-top:10rpx;}
+/* ===== 标题区（macOS 天气：渐变色天空 + 白色大字，无分割线） ===== */
+.hero{
+  padding:56rpx 32rpx 104rpx;
+  background:linear-gradient(158deg, #3d7fd4 0%, #5b9ce4 42%, #8dbcee 78%, #a8cdf2 100%);
+  border-radius:0 0 40rpx 40rpx;
+  position:relative;
+  overflow:hidden;
+}
+/* 顶部柔光，模拟天空高光 */
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-40%; left:-10%;
+  width:80%; height:120%;
+  background:radial-gradient(ellipse at center, rgba(255,255,255,.96) 0%, transparent 68%);
+  pointer-events:none;
+}
+.hero-title{color:#fff;font-size:48rpx;font-weight:600;letter-spacing:-.5rpx;line-height:1.25;position:relative;text-shadow:0 2rpx 12rpx rgba(30,60,110,.18);}
+.hero-sub{color:#ffffff;font-size:26rpx;margin-top:10rpx;line-height:1.5;position:relative;text-shadow:0 1rpx 8rpx rgba(30,60,110,.14);}
 
-/* 主内容区 */
-.main{padding:24rpx 24rpx 40rpx;}
+/* ===== 搜索框（白色胶囊，浮在渐变上） ===== */
+.search-bar{
+  position:relative;
+  display:flex;align-items:center;
+  margin-top:30rpx;
+  height:92rpx;padding:0 24rpx;
+  border-radius:20rpx;
+  background:rgba(255,255,255,.96);
+  border:1rpx solid rgba(255,255,255,.96);
+  box-shadow:0 6rpx 18rpx rgba(30,60,110,.16);
+}
+.search-icon{font-size:28rpx;margin-right:14rpx;flex-shrink:0;opacity:.85;}
+.search-input{
+  flex:1;min-width:0;
+  height:100%;
+  font-size:28rpx;color:#2b3a4d;
+}
+.search-ph{color:rgba(43,58,77,.5);}
+.search-clear{
+  width:48rpx;height:48rpx;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26rpx;color:#8a93a3;
+  background:rgba(240,244,249,.96);
+}
+.search-clear:active{background:#e6edf6;}
+/* 输入后的语义提示：输入框内容按公司名解读 */
+.search-tip{
+  position:relative;
+  margin-top:16rpx;
+  font-size:23rpx;color:#ffffff;
+  text-shadow:0 1rpx 8rpx rgba(30,60,110,.14);
+}
 
-/* 公告 */
-.notice-bar{display:flex;align-items:center;background:#fff7ed;border:1rpx solid #ffedd5;border-radius:16rpx;padding:16rpx 20rpx;margin-bottom:20rpx;}
+/* 主内容区：上移叠到渐变上，形成 macOS 天气的层次 */
+.main{padding:0 28rpx 60rpx;margin-top:-64rpx;position:relative;z-index:2;}
+
+/* ===== 两个业务入口卡（左右并排，场景色区分） ===== */
+.entry-row{display:flex;justify-content:space-between;gap:20rpx;}
+.entry-card{
+  flex:1;min-width:0;
+  display:flex;align-items:center;gap:18rpx;
+  padding:26rpx 22rpx;
+  border-radius:24rpx;
+  border:1rpx solid #ffffff;
+  box-shadow:var(--shadow-card);
+  transition:transform .12s ease;
+}
+.entry-card:active{transform:scale(.975);}
+/* 橙：发货（暖色＝行动/出发） */
+.entry-orange{background:rgba(255,243,232,.92);}
+/* 蓝：公司（主色＝信息/查询） */
+.entry-blue{background:rgba(232,244,255,.92);}
+
+.entry-badge{
+  width:60rpx;height:60rpx;border-radius:18rpx;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:28rpx;font-weight:600;
+}
+.badge-orange{background:linear-gradient(135deg,#f3a15f,#e0803a);box-shadow:0 6rpx 14rpx rgba(224,128,58,.28);}
+.badge-blue{background:linear-gradient(135deg,#4f9ee8,#2383e2);box-shadow:0 6rpx 14rpx rgba(35,131,226,.26);}
+
+.entry-body{flex:1;min-width:0;}
+.entry-title{font-size:28rpx;font-weight:600;color:var(--ink-title);line-height:1.3;}
+.entry-desc{
+  font-size:21rpx;color:var(--ink-muted);margin-top:6rpx;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* 公告（浅黄 callout） */
+.notice-bar{
+  display:flex;align-items:center;
+  background:rgba(255,248,232,.86);
+  border:1rpx solid rgba(255,255,255,.98);
+  border-radius:18rpx;padding:18rpx 20rpx;margin-top:24rpx;
+  box-shadow:var(--shadow-card);
+}
 .notice-icon{font-size:28rpx;margin-right:12rpx;flex-shrink:0;}
 .notice-scroll{flex:1;overflow:hidden;}
-.notice-text{display:inline-block;font-size:24rpx;color:#ea580c;white-space:nowrap;padding-left:100%;animation:notice-marquee 12s linear infinite;}
+.notice-text{display:inline-block;font-size:24rpx;color:#8a6a1f;white-space:nowrap;padding-left:100%;animation:notice-marquee 12s linear infinite;}
 @keyframes notice-marquee{from{transform:translateX(0);}to{transform:translateX(-100%);}}
 
-/* 查询卡片 */
-.query-card{padding:40rpx 24rpx;border-radius:24rpx;box-shadow:0 8rpx 24rpx rgba(31,45,61,.08);}
-.qc-row{display:flex;align-items:center;}
-.qc-city{flex:1;text-align:center;}
-.qc-label{font-size:22rpx;color:var(--ink-muted);margin-bottom:12rpx;}
-.qc-value{font-size:38rpx;font-weight:bold;color:var(--ink-title);}
-.qc-value.placeholder{color:#cbd5e1;font-weight:normal;}
-.qc-swap{width:64rpx;height:64rpx;border-radius:50%;background:var(--brand-wash);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:32rpx;margin:0 16rpx;}
-.qc-swap:active{background:var(--brand-wash);}
-
-/* 查询按钮（渐变胶囊） */
-.query-btn{margin-top:28rpx;height:92rpx;line-height:92rpx;text-align:center;border-radius:46rpx;background:linear-gradient(135deg,var(--brand),var(--brand-light));color:#fff;font-size:30rpx;font-weight:bold;box-shadow:0 10rpx 24rpx rgba(37,99,235,.35);}
-.query-btn:active{opacity:.9;}
-
-/* 广告位 */
-.ad-section{margin-top:40rpx;}
-.ad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx;}
-.ad-header-title{font-size:30rpx;font-weight:bold;color:var(--ink-title);}
+/* ===== 广告位：双列推荐卡 ===== */
+.ad-section{margin-top:44rpx;}
+.ad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx;padding:0 4rpx;}
+.ad-header-left{display:flex;align-items:center;gap:12rpx;}
+/* 主色竖条：给"推荐"区一个视觉锚点 */
+.ad-header-bar{width:6rpx;height:26rpx;border-radius:3rpx;background:linear-gradient(180deg,#5b9ce4,#3d7fd4);}
+.ad-header-title{font-size:28rpx;font-weight:600;color:var(--ink-title);}
 .ad-header-sub{font-size:22rpx;color:var(--ink-muted);}
 .ad-grid{display:flex;flex-wrap:wrap;justify-content:space-between;}
-.ad-card{width:48.5%;background:#fff;border-radius:16rpx;display:flex;align-items:center;padding:16rpx;margin-bottom:20rpx;box-shadow:0 4rpx 12rpx rgba(0,0,0,.08);box-sizing:border-box;}
-.ad-logo{width:64rpx;height:64rpx;border-radius:12rpx;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32rpx;font-weight:bold;margin-right:16rpx;}
-.ad-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
-.ad-company{font-size:24rpx;font-weight:bold;color:var(--ink-title);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ad-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8rpx;}
-.ad-region{font-size:20rpx;color:var(--ink-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
-.ad-number{font-size:22rpx;color:#f59e0b;font-weight:bold;margin-left:8rpx;flex-shrink:0;}
-.c1{background:linear-gradient(135deg,#5B8CFF,#8A6CFF);}
-.c2{background:linear-gradient(135deg,#FF9A3D,#FF6A3D);}
-.c3{background:linear-gradient(135deg,#FFC93D,#FFA63D);}
-.c4{background:linear-gradient(135deg,#34D399,#10B981);}
-.c5{background:linear-gradient(135deg,#2DD4BF,#0EA5E9);}
-.c6{background:linear-gradient(135deg,#A78BFA,#8B5CF6);}
-.c7{background:linear-gradient(135deg,#F472B6,#EC4899);}
-.c8{background:linear-gradient(135deg,#60A5FA,var(--brand-light));}
-/* 显示所选县区 */
-.qc-district{font-size:22rpx;color:var(--brand);margin-top:8rpx;}/* 市/区县 切换小按钮 */
-.qc-toggle{font-size:22rpx;color:var(--brand);background:var(--brand-wash);padding:4rpx 16rpx;border-radius:16rpx;margin-top:8rpx;display:inline-block;}/* 市/区县 两个可点标签 */
-.qc-chips{display:flex;justify-content:center;gap:12rpx;margin-top:12rpx;}
-.chip{font-size:22rpx;color:#64748b;background:#f1f5f9;padding:6rpx 20rpx;border-radius:20rpx;}
-.chip.active{color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-light));}/* 输入框 + 选择按钮 */
-.qc-input-wrap{display:flex;align-items:center;gap:10rpx;margin-top:12rpx;}
-.qc-input{flex:1;background:#f1f5f9;border-radius:12rpx;padding:14rpx 16rpx;font-size:26rpx;color:var(--ink-title);}
-.pick-btn{font-size:22rpx;color:var(--brand);background:var(--brand-wash);padding:12rpx 20rpx;border-radius:12rpx;}
+
+/* 广告卡：白底 + 天气色 Logo + 底部"查看专线"引导 */
+.ad-card{
+  width:48.5%;
+  background:#ffffff;
+  border:1rpx solid #ffffff;
+  border-radius:22rpx;
+  padding:20rpx;
+  margin-bottom:18rpx;
+  box-sizing:border-box;
+  box-shadow:var(--shadow-card);
+  display:flex;flex-direction:column;
+  transition:transform .12s ease;
+}
+.ad-card:active{transform:scale(.975);}
+
+/* 第一行：Logo + 公司名 */
+.ad-top{display:flex;align-items:center;gap:16rpx;}
+.ad-logo{
+  width:64rpx;height:64rpx;border-radius:18rpx;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:30rpx;font-weight:600;
+  box-shadow:0 4rpx 12rpx rgba(20,40,70,.16);
+}
+.ad-company{
+  flex:1;min-width:0;
+  font-size:25rpx;font-weight:600;color:var(--ink-title);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* 第二行：区域 + 数字 */
+.ad-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:16rpx;gap:8rpx;}
+.ad-region{
+  flex:1;min-width:0;
+  font-size:21rpx;color:var(--ink-muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ad-number{
+  font-size:22rpx;color:var(--sky-amber-ink);font-weight:600;flex-shrink:0;
+}
+
+/* 第三行：跳转引导（仅已关联专线时出现） */
+.ad-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:14rpx;padding-top:14rpx;
+  border-top:1rpx solid rgba(120,140,170,.14);
+}
+.ad-foot-text{font-size:21rpx;color:var(--brand);font-weight:500;}
+.ad-foot-arrow{font-size:24rpx;color:var(--brand);line-height:1;}
+
+/* 8 色循环：macOS 天气感的柔和渐变色 */
+.c1{background:linear-gradient(135deg,#6aa9e9,#4a86d6);}
+.c2{background:linear-gradient(135deg,#f0a86a,#dc8449);}
+.c3{background:linear-gradient(135deg,#f3c964,#dfa739);}
+.c4{background:linear-gradient(135deg,#6fc9a8,#48a888);}
+.c5{background:linear-gradient(135deg,#6cc4c4,#48a3a3);}
+.c6{background:linear-gradient(135deg,#a596e0,#8371cd);}
+.c7{background:linear-gradient(135deg,#ef93b6,#d96b96);}
+.c8{background:linear-gradient(135deg,#7bb4de,#5595c8);}
+
+/* ===== 页脚：法律文本入口 + 数据来源声明 ===== */
+.footer{margin-top:56rpx;padding:0 8rpx;text-align:center;}
+.footer-links{display:flex;align-items:center;justify-content:center;gap:18rpx;}
+.footer-link{font-size:24rpx;color:var(--brand);}
+.footer-link:active{opacity:.65;}
+.footer-sep{font-size:22rpx;color:var(--border-strong);}
+.footer-note{font-size:21rpx;color:var(--ink-muted);margin-top:14rpx;line-height:1.5;}

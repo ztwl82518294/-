@@ -1,0 +1,7 @@
+WXML 事件绑定: 9 个唯一处理器, 缺失: 无
+WXML 用到但 WXSS 缺失的类: 无
+WXML 残留旧类: 无
+WXSS 残留旧样式: pair-no=false, pair-row=false, pair-body=false, contact-value=false, phone-text=false, stats-card=false, btn-share=false
+WXSS 花括号配平: 通过
+onCallGroup 定义: true
+onCallOne/onCopyText/onCopyAllAddr 保留: true/true/true

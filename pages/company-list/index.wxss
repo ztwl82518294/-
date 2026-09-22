@@ -1,0 +1,143 @@
+/* 页面底色由 app.wxss 的天空渐变提供，此处不再覆盖 */
+.page{min-height:100vh;background:transparent;}
+
+/* ===== 头图：标题 + 搜索框 + 搜索按钮 ===== */
+.hero{
+  padding:48rpx 32rpx 92rpx;
+  background:linear-gradient(158deg, #3d7fd4 0%, #5b9ce4 42%, #8dbcee 78%, #a8cdf2 100%);
+  border-radius:0 0 40rpx 40rpx;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-40%;left:-10%;width:80%;height:120%;
+  background:radial-gradient(ellipse at center, rgba(255,255,255,.96) 0%, transparent 68%);
+  pointer-events:none;
+}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;position:relative;gap:20rpx;}
+.hero-head{flex:1;min-width:0;}
+.hero-title{color:#fff;font-size:42rpx;font-weight:600;letter-spacing:-.4rpx;line-height:1.25;position:relative;text-shadow:0 2rpx 12rpx rgba(30,60,110,.18);}
+.hero-sub{color:#ffffff;font-size:25rpx;margin-top:10rpx;line-height:1.5;position:relative;text-shadow:0 1rpx 8rpx rgba(30,60,110,.14);}
+/* 「我的」按钮：白底蓝字小胶囊，不抢搜索框的视觉焦点 */
+.me-btn{
+  flex-shrink:0;
+  padding:12rpx 26rpx;
+  border-radius:16rpx;
+  background:rgba(255,255,255,.96);
+  border:1rpx solid rgba(255,255,255,.96);
+  color:#2b6cb0;font-size:25rpx;font-weight:500;
+  margin-top:6rpx;
+}
+.me-btn:active{background:#eef4fb;}
+
+.search-row{display:flex;align-items:center;gap:16rpx;margin-top:30rpx;position:relative;}
+.search-bar{
+  flex:1;min-width:0;
+  display:flex;align-items:center;
+  height:88rpx;padding:0 24rpx;
+  border-radius:20rpx;
+  background:rgba(255,255,255,.96);
+  border:1rpx solid rgba(255,255,255,.96);
+  box-shadow:0 6rpx 18rpx rgba(30,60,110,.16);
+}
+.search-icon{font-size:28rpx;margin-right:14rpx;flex-shrink:0;opacity:.85;}
+.search-input{flex:1;min-width:0;height:100%;font-size:28rpx;color:#2b3a4d;}
+.search-ph{color:rgba(43,58,77,.5);}
+.search-clear{
+  width:46rpx;height:46rpx;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:25rpx;color:#8a93a3;
+  background:rgba(240,244,249,.96);
+}
+.search-clear:active{background:#e6edf6;}
+/* 搜索按钮：实心白底蓝字，与输入框形成主次 */
+.search-btn{
+  flex-shrink:0;
+  height:88rpx;line-height:88rpx;
+  padding:0 34rpx;
+  border-radius:20rpx;
+  background:#fff;
+  color:var(--brand);
+  font-size:28rpx;font-weight:600;
+  box-shadow:0 6rpx 18rpx rgba(30,60,110,.18);
+}
+.search-btn:active{opacity:.85;}
+
+.main{padding:0 28rpx 60rpx;margin-top:-60rpx;position:relative;z-index:2;}
+
+/* ===== 结果计数 ===== */
+.result-head{padding:8rpx 4rpx 20rpx;}
+.result-count{font-size:26rpx;color:var(--ink-body);font-weight:500;}
+
+/* ===== 公司卡片 ===== */
+.company-card{
+  position:relative;
+  display:flex;align-items:center;gap:16rpx;
+  background:#ffffff;
+  border:1rpx solid var(--border);
+  border-radius:20rpx;
+  padding:24rpx;
+  margin-bottom:16rpx;
+  box-shadow:0 1rpx 3rpx rgba(20,30,50,.04);
+  transition:transform .12s ease;
+}
+.company-card:active{transform:scale(.985);background:rgba(0,0,0,.02);}
+.cc-body{flex:1;min-width:0;}
+.cc-head{display:flex;align-items:center;gap:14rpx;flex-wrap:wrap;}
+.cc-name{
+  font-size:32rpx;font-weight:600;color:var(--ink-title);
+  letter-spacing:-.2rpx;line-height:1.3;word-break:break-all;
+}
+/* 已核实徽章：绿底描边（与公司详情头卡、pc-* 系同一视觉语言） */
+.cc-cert{
+  flex-shrink:0;
+  font-size:20rpx;font-weight:600;
+  color:var(--sky-green-ink);
+  background:rgba(233,247,236,.9);
+  border:1rpx solid rgba(63,122,58,.22);
+  padding:4rpx 14rpx;border-radius:8rpx;
+}
+.cc-meta{display:flex;align-items:center;gap:8rpx;margin-top:12rpx;flex-wrap:wrap;}
+.cc-meta-item{font-size:23rpx;color:var(--ink-muted);}
+.cc-dot{font-size:22rpx;color:var(--ink-disabled);}
+.cc-arrow{
+  flex-shrink:0;
+  font-size:32rpx;color:var(--ink-disabled);line-height:1;
+}
+
+/* 骨架屏 */
+@keyframes shimmer{0%{background-position:-400rpx 0;}100%{background-position:400rpx 0;}}
+.skeleton-card{
+  background:rgba(255,255,255,.96);border-radius:24rpx;padding:26rpx;margin-bottom:18rpx;
+  border:1rpx solid #ffffff;box-shadow:var(--shadow-card);
+}
+.skeleton-line{
+  background:linear-gradient(90deg,rgba(230,235,242,.8) 25%,rgba(215,222,232,.9) 50%,rgba(230,235,242,.8) 75%);
+  background-size:800rpx 100%;animation:shimmer 1.2s infinite linear;border-radius:10rpx;margin-bottom:16rpx;
+}
+.skeleton-title{width:60%;height:36rpx;}
+.skeleton-text{width:90%;height:26rpx;}
+.skeleton-text.short{width:40%;}
+
+/* 空态 / 错误态 */
+.empty-card{
+  background:#ffffff;
+  border:1rpx solid #ffffff;
+  border-radius:24rpx;text-align:center;padding:60rpx 32rpx;
+  box-shadow:var(--shadow-card);
+}
+.empty-title{font-size:32rpx;font-weight:600;color:var(--ink-title);margin-bottom:14rpx;line-height:1.4;}
+.empty-title.error{color:#c4554d;}
+.empty-desc{font-size:25rpx;color:var(--ink-muted);line-height:1.7;}
+.retry-btn{
+  margin:32rpx auto 0;
+  width:260rpx;height:76rpx;line-height:76rpx;border-radius:20rpx;
+  background:linear-gradient(135deg,#3f96ea,#2383e2);
+  color:#fff;font-size:28rpx;font-weight:600;
+  box-shadow:0 8rpx 22rpx rgba(35,131,226,.3);
+}
+.retry-btn:active{opacity:.9;}
+
+.footer-note{
+  font-size:21rpx;color:var(--ink-muted);
+  text-align:center;margin-top:36rpx;line-height:1.5;
+}

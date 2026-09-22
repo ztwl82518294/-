@@ -1,0 +1,73 @@
+/* 地区选择半屏弹层 —— 与全局圆角/描边语言保持一致 */
+.rp-root{position:fixed;inset:0;z-index:900;}
+
+/* 遮罩：轻压暗，突出弹层但不夺主 */
+.rp-mask{
+  position:absolute;inset:0;
+  background:rgba(28,38,56,.34);
+  animation:rp-fade .18s ease;
+}
+@keyframes rp-fade{from{opacity:0;}to{opacity:1;}}
+
+/* 弹层本体：底部上滑，顶部大圆角，实心白 */
+.rp-sheet{
+  position:absolute;left:0;right:0;bottom:0;
+  max-height:78vh;
+  display:flex;flex-direction:column;
+  background:#ffffff;
+  border-radius:28rpx 28rpx 0 0;
+  border-top:1rpx solid #ffffff;
+  box-shadow:0 -8rpx 32rpx rgba(20,40,70,.14);
+  animation:rp-slide .24s cubic-bezier(.22,.61,.36,1);
+  /* 适配全面屏底部安全区 */
+  padding-bottom:env(safe-area-inset-bottom);
+}
+@keyframes rp-slide{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+/* 标题行 */
+.rp-head{
+  display:flex;align-items:center;
+  padding:26rpx 28rpx 18rpx;
+  flex-shrink:0;
+}
+.rp-head-btn{font-size:28rpx;padding:8rpx 4rpx;min-width:96rpx;}
+.rp-cancel{color:var(--ink-muted);text-align:left;}
+.rp-confirm{color:var(--brand);font-weight:600;text-align:right;}
+.rp-confirm:active,.rp-cancel:active{opacity:.6;}
+.rp-title{
+  flex:1;text-align:center;
+  font-size:30rpx;font-weight:600;color:var(--ink-title);
+}
+
+/* 面包屑：当前层级蓝色加粗，上级可回退 */
+.rp-crumbs{
+  display:flex;align-items:center;flex-wrap:wrap;gap:10rpx;
+  padding:0 28rpx 16rpx;
+  flex-shrink:0;
+  border-bottom:1rpx solid rgba(120,140,170,.12);
+}
+.rp-crumb{font-size:26rpx;color:var(--brand);padding:4rpx 2rpx;}
+.rp-crumb:active{opacity:.6;}
+.rp-crumb-active{color:var(--ink-title);font-weight:600;}
+.rp-crumb-sep{font-size:24rpx;color:var(--ink-disabled);}
+
+/* 列表 */
+.rp-list{flex:1;min-height:0;max-height:56vh;}
+.rp-item{
+  display:flex;align-items:center;
+  padding:28rpx 28rpx;
+  border-bottom:1rpx solid rgba(120,140,170,.08);
+}
+.rp-item:active{background:rgba(35,131,226,.06);}
+.rp-item-text{flex:1;font-size:29rpx;color:var(--ink-body);}
+.rp-item-check{font-size:30rpx;color:var(--brand);font-weight:600;}
+.rp-item-arrow{font-size:28rpx;color:var(--ink-disabled);}
+.rp-item-on .rp-item-text{color:var(--brand);font-weight:600;}
+
+/* 底部语义提示 */
+.rp-tip{
+  flex-shrink:0;
+  padding:22rpx 28rpx 26rpx;
+  font-size:23rpx;color:var(--ink-muted);
+  text-align:center;line-height:1.5;
+}

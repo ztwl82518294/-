@@ -446,4 +446,12 @@ function getCityLevel(name) {
   return parents.length > 0 ? parents[0] : n;
 }
 
-module.exports = { parentsOf, allParentsOf, norm, isPrefecture, getCityLevel };
+// 说明：MUNICIPALITIES / PROVINCE_CITIES / CITY_COUNTIES 一并导出，
+//   供前端地区选择弹层（components/region-picker）复用同一份行政区划数据，
+//   避免前端另建副本后与查询侧口径漂移（搜索匹配与展示必须是同一套数据）。
+//   前端不能直接 require 云函数目录，实际使用的是 utils/region-data.js，
+//   该文件由 .workbuddy/scripts/sync-region-data.js 从本文件自动生成，改这里后务必重跑同步。
+module.exports = {
+  parentsOf, allParentsOf, norm, isPrefecture, getCityLevel,
+  MUNICIPALITIES, PROVINCE_CITIES, CITY_COUNTIES
+};

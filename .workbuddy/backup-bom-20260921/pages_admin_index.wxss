@@ -1,0 +1,58 @@
+﻿/* pages/admin/index.wxss */
+
+/* 数据统计行 */
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+/* 统计卡片：磨砂玻璃 */
+.stat-card {
+  flex: 1;
+  background: rgba(255,255,255,.88);
+  -webkit-backdrop-filter: blur(16rpx) saturate(150%);
+  backdrop-filter: blur(16rpx) saturate(150%);
+  border: 1rpx solid rgba(255,255,255,.96);
+  border-radius: 24rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.stat-card.warn {
+  background: linear-gradient(135deg, rgba(253, 243, 227, .92) 0%, rgba(249, 233, 210, .92) 100%);
+  border-color: rgba(255, 255, 255, .9);
+}
+
+.stat-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--ink-title);
+  margin-bottom: 8rpx;
+  letter-spacing: -.5rpx;
+}
+
+.stat-card.warn .stat-num {
+  color: var(--sky-amber-ink);
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--ink-muted);
+}
+
+/* 功能入口项 */
+.admin-item {
+  padding: 30rpx 24rpx;
+}
+.admin-item-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink-title);
+  margin-bottom: 8rpx;
+}
+.admin-item-desc {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+}

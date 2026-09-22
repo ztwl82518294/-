@@ -1,10 +1,14 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/favorite/index",
-    "pages/user/index",
+    "pages/line-query/index",
+    "pages/company-list/index",
+    "pages/company-detail/index",
     "pages/line-list/index",
     "pages/line-detail/index",
+    "pages/favorite/index",
+    "pages/user/index",
+    "pages/report/index",
     "pages/agreement/index",
     "pages/contact/index"
   ],
@@ -24,16 +28,16 @@
     }
   ],
   "window": {
-    "navigationBarBackgroundColor": "#2563eb",
+    "navigationBarBackgroundColor": "#4f92dd",
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "物流专线查询",
-    "backgroundColor": "#f5f7fb"
+    "backgroundColor": "#e8f0fa"
   },
   "tabBar": {
-    "color": "#64748b",
-    "selectedColor": "#2563eb",
+    "color": "#8a93a3",
+    "selectedColor": "#2383e2",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
@@ -42,16 +46,16 @@
         "selectedIconPath": "assets/tabbar/home-active.png"
       },
       {
-        "pagePath": "pages/favorite/index",
-        "text": "收藏",
-        "iconPath": "assets/tabbar/star.png",
-        "selectedIconPath": "assets/tabbar/star-active.png"
+        "pagePath": "pages/line-query/index",
+        "text": "查专线",
+        "iconPath": "assets/tabbar/route.png",
+        "selectedIconPath": "assets/tabbar/route-active.png"
       },
       {
-        "pagePath": "pages/user/index",
-        "text": "我的",
-        "iconPath": "assets/tabbar/user.png",
-        "selectedIconPath": "assets/tabbar/user-active.png"
+        "pagePath": "pages/company-list/index",
+        "text": "查公司",
+        "iconPath": "assets/tabbar/company.png",
+        "selectedIconPath": "assets/tabbar/company-active.png"
       }
     ]
   },

@@ -10,9 +10,16 @@ Page({
   data: {
     lineInfo: null, isFav: false, phoneList: [],
     fromPhones: [], toPhones: [], fromAddrs: [], toAddrs: [],
-    // 网点分组：第 n 组 = 第 n 个地址 + 第 n 个电话（一一配对编号展示）
+    // 网点分组：第 n 组 = 第 n 个地址 + 挂在该地址下的全部电话（一一配对编号展示）。
+    // 【v6.2】纯电话行不再各自成组，统一并入第一个地址组（见 buildOutlets）。
     fromPairs: [], toPairs: [],
-    reduceAnimation: false, loadError: ''
+    // 统计卡口径：只算"有地址的组"（fromPairs.length 会把纯电话组也算进去，数字虚高）
+    fromAddrCount: 0, toAddrCount: 0,
+    // 覆盖区域（toAreas 归一后的数组，74% 线路有值，是用户判断"能不能到我这"的依据）
+    toAreas: [],
+    // 运营信息是否有任意一项有值：全空时整卡隐藏，不留空标题
+    hasSpecs: false,
+    loadError: ''
   },
 
   onLoad(options) {
@@ -36,13 +43,9 @@ Page({
     wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) });
   },
 
-  onUnload() {
-    if (this._animationTimer) clearTimeout(this._animationTimer);
-  },
-
-  // 兼容多个号码：按中英文逗号、顿号、分号、斜杠、空白分隔，
-  // 再去重 + 升序排序（"0"开头的座机自然排在前、"1"开始的手机号在后，
-  // 组内各自升序，展示与拨打面板顺序一致）
+  // 兼容多个号码：按中英文逗号、顿号、分号、斜杠、空白分隔，再去重。
+  // 【v6.2】不再排序：号码是"按业务重要性录入"的（第 1 个常是主号），
+  // 排序会打乱运营录入的原始顺序，用户会觉得"号码被乱排了"。
   splitPhones(phone) {
     const out = [];
     const seen = new Set();
@@ -50,11 +53,11 @@ Page({
       p = p.trim();
       if (p && !seen.has(p)) { seen.add(p); out.push(p); }
     });
-    return out.sort();
+    return out;
   },
 
-  // 多个地址：按换行/分号/竖线拆分为独立地址（逗号不拆——地址内部常含逗号），
-  // 去重 + 升序排序：相同前缀（同一园区/同一路段）的地址排序后自然相邻
+  // 多个地址：按换行/分号/竖线拆分为独立地址（逗号不拆——地址内部常含逗号），去重。
+  // 【v6.2】不再排序：保留录入顺序（第 1 个常是主发货点）。
   splitAddrs(addr) {
     const out = [];
     const seen = new Set();
@@ -62,33 +65,66 @@ Page({
       a = a.trim();
       if (a && !seen.has(a)) { seen.add(a); out.push(a); }
     });
-    return out.sort();
+    return out;
   },
 
   // 网点分组：优先用导入时写入的 fromOutlets/toOutlets（"地址|电话" 精确配对）；
   // 老数据没有该字段时回退为"第 n 个地址 + 第 n 个电话"按下标对位。
-  // 一个网点可挂多个电话（phones 数组），数量不等时多出的单独成组，信息不丢。
+  //
+  // 【v6.2 修复】直灌数据的网点是"1 个地址行 + N 个纯电话行"（见 outlets.js 形态②），
+  // 逐行成组会渲染成「① 地址 / ② 地址未填写 / ③ 地址未填写」，看起来像凭空多出
+  // 两个没填地址的网点。而 R-13 明确要求"单地址多电话保持 1 网点挂多号"。
+  // 因此：**纯电话行不再各自成组**，而是并入同一侧的地址组；没有地址时单独成一组。
+  //
+  // 分组规则：
+  //   - 地址行（含地址）→ 各自成组，地址按录入顺序排列；
+  //   - 无地址的电话行 → 全部并入**第一个**地址组；若该侧没有任何地址，则整体成 1 组。
+  // 返回 [ { idx, addr, phones: [] } ]，phoneTail 为"无地址电话"的总数（供展示层判断）。
   buildOutlets(outlets, addrs, phones) {
     const src = Array.isArray(outlets) ? outlets : [];
-    let pairs = [];
+    let raw = [];
     if (src.length) {
       src.forEach(o => {
         const addr = (o && (o.addr || o.address)) || '';
         const ps = this.splitPhones((o && (o.phone || o.tel)) || '');
         if (!addr && ps.length === 0) return;
-        pairs.push({ idx: pairs.length + 1, addr, phones: ps });
+        raw.push({ addr, phones: ps });
       });
     }
-    if (!pairs.length) {
+    // 无网点字段：按下标对位（老字段形态）
+    if (!raw.length) {
       const n = Math.max(addrs.length, phones.length);
       for (let i = 0; i < n; i++) {
         const addr = addrs[i] || '';
-        const ps = phones[i] ? [phones[i]] : [];
-        if (!addr && ps.length === 0) continue;
-        pairs.push({ idx: pairs.length + 1, addr, phones: ps });
+        raw.push({ addr, phones: phones[i] ? [phones[i]] : [] });
       }
     }
-    return pairs;
+
+    const withAddr = raw.filter(r => r.addr);
+    const withoutAddr = raw.filter(r => !r.addr);
+    // 无地址的电话全部拍平成一个数组（保持录入顺序）
+    const tailPhones = [];
+    const tailSeen = new Set();
+    withoutAddr.forEach(r => r.phones.forEach(p => {
+      if (!tailSeen.has(p)) { tailSeen.add(p); tailPhones.push(p); }
+    }));
+
+    const groups = withAddr.map(r => ({ addr: r.addr, phones: r.phones.slice() }));
+    if (groups.length === 0) {
+      // 该侧完全没有地址：所有电话合成唯一一组，不造"地址未填写"的空行
+      groups.push({ addr: '', phones: tailPhones });
+    } else if (tailPhones.length) {
+      // 有地址：无地址的电话并入第一个地址组（"单地址多电话 1 网点挂多号"）。
+      // 合并时必须对第一个组**已有的号码**再去一次重——直灌数据里同一个号码
+      // 可能既写在地址行内、又单占一行（"1 个号写了两遍"），不去重会重复展示。
+      const head = groups[0];
+      const seenInHead = new Set(head.phones);
+      tailPhones.forEach(p => {
+        if (!seenInHead.has(p)) { seenInHead.add(p); head.phones.push(p); }
+      });
+    }
+
+    return groups.map((g, i) => ({ idx: i + 1, addr: g.addr, phones: g.phones }));
   },
 
   // 网点配对：第 n 组 = 第 n 个地址 + 第 n 个电话，一一对应编号展示。
@@ -136,19 +172,25 @@ Page({
       const toAddrs = this.splitAddrs(lineInfo.toAddress);
       const fromPairs = this.buildOutlets(lineInfo.fromOutlets, fromAddrs, fromPhones);
       const toPairs = this.buildOutlets(lineInfo.toOutlets, toAddrs, toPhones);
+      // 统计口径：区分"有地址的组"与"仅电话的组"，统计卡只算真实地址数，
+      // 否则会把"纯电话"也算成网点，数字虚高（截图中 1 个地址显示成 3）
+      const countAddr = ps => ps.filter(p => !!p.addr).length;
+      const fromAddrCount = countAddr(fromPairs);
+      const toAddrCount = countAddr(toPairs);
       // 底部"立即拨打"用合并列表，两端之间也去一次重
       const phoneList = Array.from(new Set(fromPhones.concat(toPhones)));
+      // 运营信息三项全空时整卡隐藏（时效 42% / 价格 43% / 方式 62%，
+      // 有相当比例线路一项都没有，留空标题卡会显得页面残缺）
+      const hasSpecs = !!(lineInfo.aging || lineInfo.priceDesc || lineInfo.lineType);
       // 收藏状态不阻塞正文渲染：先出内容，状态回填后再亮星标
       storage.isFavorite(lineInfo.id).then(isFav => this.setData({ isFav })).catch(() => {});
-      this.setData({ lineInfo, fromAddrs, toAddrs, fromPhones, toPhones, fromPairs, toPairs, phoneList });
+      this.setData({
+        lineInfo, fromAddrs, toAddrs, fromPhones, toPhones, fromPairs, toPairs, phoneList,
+        fromAddrCount, toAddrCount,
+        toAreas: lineInfo.toAreas, hasSpecs
+      });
       // 浏览埋点（专线成功打开记一次，PV 口径，不阻塞）
       stats.logView(lineInfo);
-      // 会员企业动效较密集，5秒后降频以减轻低端机渲染压力
-      if (lineInfo.isVip) {
-        this._animationTimer = setTimeout(() => {
-          this.setData({ reduceAnimation: true });
-        }, 5000);
-      }
     }).catch(() => this.setData({ loadError: '加载失败，请检查网络后重试' }));
   },
 
@@ -181,6 +223,21 @@ Page({
     }
   },
 
+  // 纠错：跳转到站内反馈表单（pages/report）。
+  // 【v6.4 改】原实现是"弹框说明 → ActionSheet 二选一（打电话 / 复制微信）"，
+  // 用户要跳出小程序切到电话或微信 App，摩擦太大、几乎没人真的反馈。
+  // 现改为站内表单：类型 chips + 文字说明 + 图片凭证，写完即提交，
+  // 平台后台集中核实（"核实通过后才会修改，不会立即生效"）。
+  // 带参只用于给表单一个"你要反馈的信息"提示与写入定位，不参与权限判断。
+  onReport() {
+    const line = this.data.lineInfo;
+    const name = line ? (line.companyName || line.title || '该专线') : '';
+    const ref = line ? lineKey.lineRef(line) : '';
+    wx.navigateTo({
+      url: `/pages/report/index?kind=line&key=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`
+    });
+  },
+
   // 拨打电话：data-station 指定发站/到站取号（老数据两端都回退到 phone），底部"立即拨打"用合并列表
   onCallPhone(e) {
     const station = e && e.currentTarget && e.currentTarget.dataset.station;
@@ -204,22 +261,6 @@ Page({
     const phone = e && e.currentTarget && e.currentTarget.dataset.phone;
     if (!phone) return;
     wx.makePhoneCall({ phoneNumber: phone });
-  },
-
-  // 网点右侧拨号按钮：组内 1 个号直接拨；2~6 个弹选择面板；
-  // 超过 6 个（ActionSheet itemList 上限）引导点具体号码（号码行已支持直拨）
-  onCallGroup(e) {
-    const station = e && e.currentTarget && e.currentTarget.dataset.station;
-    const index = Number(e && e.currentTarget && e.currentTarget.dataset.index);
-    const pairs = station === 'to' ? this.data.toPairs : this.data.fromPairs;
-    const phones = (pairs && pairs[index] && pairs[index].phones) || [];
-    if (phones.length === 0) return wx.showToast({ title: '暂无联系电话', icon: 'none' });
-    if (phones.length === 1) return wx.makePhoneCall({ phoneNumber: phones[0] });
-    if (phones.length > 6) return wx.showToast({ title: '号码较多，请点号码直拨', icon: 'none', duration: 2000 });
-    wx.showActionSheet({
-      itemList: phones,
-      success: (res) => wx.makePhoneCall({ phoneNumber: phones[res.tapIndex] })
-    });
   },
 
   // 复制整组地址：多地址一键复制全部（换行分隔），单地址与逐条复制等效

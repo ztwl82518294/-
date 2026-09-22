@@ -1,10 +1,47 @@
 <view class="page">
   <view class="hero">
-    <view class="hero-title">物流专线查询</view>
-    <view class="hero-sub">全国物流专线 · 一键直达</view>
+    <view class="hero-title">找专线 · 找物流公司</view>
+    <view class="hero-sub">覆盖山东及华东地区专线信息</view>
+
+    <!-- 搜索框：输入城市或公司名，回车即搜 -->
+    <view class="search-bar">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="输入城市或公司名，如 济南 / 鲁通物流"
+        placeholder-class="search-ph"
+        value="{{keyword}}"
+        confirm-type="search"
+        bindinput="onKeywordInput"
+        bindconfirm="onSearch"
+      />
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="clearKeyword">✕</view>
+    </view>
+
+    <view class="search-tip" wx:if="{{keyword}}">将按公司名查询其线路</view>
   </view>
 
   <view class="main">
+    <!-- 两个业务入口：发货找专线 / 找物流公司 -->
+    <view class="entry-row">
+      <view class="entry-card entry-orange" bindtap="goLineQuery">
+        <view class="entry-badge badge-orange">发</view>
+        <view class="entry-body">
+          <view class="entry-title">我要发货</view>
+          <view class="entry-desc">按出发地目的地查</view>
+        </view>
+      </view>
+
+      <view class="entry-card entry-blue" bindtap="goCompanyList">
+        <view class="entry-badge badge-blue">公</view>
+        <view class="entry-body">
+          <view class="entry-title">找物流公司</view>
+          <view class="entry-desc">按公司名查线路</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 公告（有配置才渲染，避免空块） -->
     <view class="notice-bar" wx:if="{{notice}}" bindtap="onNoticeTap">
       <text class="notice-icon">📢</text>
       <view class="notice-scroll">
@@ -12,55 +49,41 @@
       </view>
     </view>
 
-    <view class="card query-card">
-        <view class="qc-row">
-
-          <!-- 出发地：可输入 + 可选择 -->
-          <view class="qc-city">
-            <view class="qc-label">出发地</view>
-            <view class="qc-input-wrap">
-              <input class="qc-input" placeholder="输入或选择" value="{{fromText}}" bindinput="onFromInput"/>
-              <picker mode="region" bindchange="onFromChange">
-                <view class="pick-btn">选择</view>
-              </picker>
-            </view>
-          </view>
-
-          <view class="qc-swap" bindtap="swapCity">⇄</view>
-
-          <!-- 目的地：可输入 + 可选择 -->
-          <view class="qc-city">
-            <view class="qc-label">目的地</view>
-            <view class="qc-input-wrap">
-              <input class="qc-input" placeholder="输入或选择" value="{{toText}}" bindinput="onToInput"/>
-              <picker mode="region" bindchange="onToChange">
-                <view class="pick-btn">选择</view>
-              </picker>
-            </view>
-          </view>
-
-        </view>
-      </view>
-
-      <view class="query-btn" bindtap="onQuery">查询专线</view>
-
-      <view class="ad-section" wx:if="{{ads.length > 0}}">
-        <view class="ad-header">
+    <!-- 合作推荐（合规：只渲染已售广告位） -->
+    <view class="ad-section" wx:if="{{ads.length > 0}}">
+      <view class="ad-header">
+        <view class="ad-header-left">
+          <view class="ad-header-bar"></view>
           <text class="ad-header-title">优质推荐</text>
-          <text class="ad-header-sub">合作物流 · 广告</text>
         </view>
-        <view class="ad-grid">
-          <view class="ad-card" wx:for="{{ads}}" wx:key="id" bindtap="onAdTap" data-ad="{{item}}">
+        <text class="ad-header-sub">合作物流 · 广告</text>
+      </view>
+      <view class="ad-grid">
+        <view class="ad-card" wx:for="{{ads}}" wx:key="id" bindtap="onAdTap" data-ad="{{item}}">
+          <view class="ad-top">
             <view class="ad-logo c{{item.colorIdx}}">{{item.initial}}</view>
-            <view class="ad-body">
-              <text class="ad-company">{{item.companyName}}</text>
-              <view class="ad-bottom">
-                <text class="ad-region">{{item.region}}</text>
-                <text class="ad-number">{{item.number}}</text>
-              </view>
-            </view>
+            <text class="ad-company">{{item.companyName}}</text>
+          </view>
+          <view class="ad-bottom">
+            <text class="ad-region">{{item.region || '综合物流'}}</text>
+            <text class="ad-number" wx:if="{{item.number}}">{{item.number}}</text>
+          </view>
+          <view class="ad-foot" wx:if="{{item.lineId}}">
+            <text class="ad-foot-text">查看专线</text>
+            <text class="ad-foot-arrow">›</text>
           </view>
         </view>
       </view>
+    </view>
+
+    <!-- 页脚：法律文本入口 + 数据来源声明 -->
+    <view class="footer">
+      <view class="footer-links">
+        <text class="footer-link" bindtap="goAgreement" data-type="disclaimer">免责声明</text>
+        <text class="footer-sep">|</text>
+        <text class="footer-link" bindtap="goAgreement" data-type="privacy">隐私政策</text>
+      </view>
+      <view class="footer-note">信息由公开渠道整理，仅供参考，请自行核实</view>
+    </view>
   </view>
 </view>

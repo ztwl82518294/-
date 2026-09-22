@@ -14,17 +14,21 @@ const missing = uniq.filter(h => !new RegExp('\\b' + h + '\\s*\\(').test(js));
 R.push('WXML 事件绑定: ' + uniq.length + ' 个唯一处理器, 缺失: ' + (missing.join(',') || '无'));
 
 // 2. WXML 用到的关键类在 WXSS 均有定义
-const classes = ['pair-item', 'pair-main', 'pair-addr', 'pair-addr-text', 'pair-km', 'pair-icon',
-  'pair-phones', 'phone-chip', 'pair-call', 'pair-empty', 'station-block', 'station-head', 'station-act'];
+const classes = ['pair-item', 'pair-main', 'pair-addr', 'pair-addr-text', 'pair-km',
+  'pair-phones', 'phone-chip', 'pair-call', 'pair-empty', 'station-block', 'station-head', 'station-act',
+  // v2 重设新增：右上角分享/收藏浮层、站点标签、覆盖区域、运营信息
+  'hero-actions', 'icon-btn', 'station-tag', 'area-chip', 'areas-list', 'spec-list', 'spec-row', 'spec-label', 'spec-val'];
 const missCss = classes.filter(c => wxml.includes(c) && !new RegExp('\\.' + c + '\\s*\\{').test(wxss));
 R.push('WXML 用到但 WXSS 缺失的类: ' + (missCss.join(',') || '无'));
 
-// 3. 旧类残留
-const dead = ['pair-no', 'pair-row', 'pair-body', 'contact-value', 'phone-text'].filter(c => wxml.includes(c));
+// 3. 旧类残留（v2 重设已移除的：emoji 图标 / 三统计卡 / 旧底部分享按钮）
+const dead = ['pair-no', 'pair-row', 'pair-body', 'contact-value', 'phone-text',
+  'pair-icon', 'stats-card', 'stat-divider', 'btn-share', 'btn-primary-cta', 'loc-btn'].filter(c => wxml.includes(c));
 R.push('WXML 残留旧类: ' + (dead.join(',') || '无'));
 R.push('WXSS 残留旧样式: pair-no=' + wxss.includes('.pair-no') + ', pair-row=' + wxss.includes('.pair-row')
   + ', pair-body=' + wxss.includes('.pair-body') + ', contact-value=' + wxss.includes('.contact-value')
-  + ', phone-text=' + wxss.includes('.phone-text'));
+  + ', phone-text=' + wxss.includes('.phone-text') + ', stats-card=' + wxss.includes('.stats-card')
+  + ', btn-share=' + wxss.includes('.btn-share'));
 
 // 4. WXSS 花括号配平
 let bal = 0;

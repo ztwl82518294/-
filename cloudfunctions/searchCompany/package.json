@@ -1,0 +1,14 @@
+{
+  "name": "searchCompany",
+  "version": "1.0.0",
+  "description": "公司维度聚合查询（按公司名搜线路、公司详情）",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

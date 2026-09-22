@@ -1,14 +1,28 @@
 <view class="page">
   <view class="route-banner">
     <view class="route-text">{{fromCityName}} → {{toCityName}}</view>
-    <view class="route-count" wx:if="{{!loading && lineList.length > 0}}">共找到 {{lineList.length}} 条直达专线</view>
+    <view class="route-count" wx:if="{{!loading && lineList.length > 0}}">共找到 {{lineList.length}} 条直达专线{{filterActive ? '（已筛选）' : ''}}</view>
     <view class="route-count" wx:elif="{{!loading && transferList.length > 0}}">未找到直达，为您推荐 {{transferList.length}} 条中转方案</view>
     <view class="route-count" wx:elif="{{!loading && loadError}}">查询失败</view>
+    <view class="route-count" wx:elif="{{!loading && filterActive}}">没有符合筛选条件的专线</view>
     <view class="route-count" wx:elif="{{!loading}}">暂未找到相关专线</view>
     <view class="route-count" wx:else>正在为你查询...</view>
   </view>
 
   <view class="list-main">
+    <!-- 筛选条：仅在查询结束且确实有结果时出现，避免空态上还挂一排无用 chip -->
+    <view class="filter-bar" wx:if="{{!loading && !loadError && (rawDirect.length > 0 || rawTransfer.length > 0)}}">
+      <view class="fchip {{filters.direct ? 'fchip-on' : ''}}" bindtap="toggleDirect">
+        <text class="fchip-box">{{filters.direct ? '✓' : ''}}</text>
+        <text>只看直达</text>
+      </view>
+      <view class="fchip {{filters.daily ? 'fchip-on' : ''}}" bindtap="toggleDaily">
+        <text class="fchip-box">{{filters.daily ? '✓' : ''}}</text>
+        <text>天天发车</text>
+      </view>
+      <view class="fchip-clear" wx:if="{{filterActive}}" bindtap="clearFilters">清除筛选</view>
+    </view>
+
     <block wx:if="{{loading}}">
       <view class="skeleton-card" wx:for="{{[1,2,3]}}" wx:key="*this">
         <view class="skeleton-line skeleton-title"></view>

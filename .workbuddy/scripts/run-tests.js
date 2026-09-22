@@ -10,6 +10,17 @@ const files = fs.readdirSync(dir)
   .sort();
 
 let failed = [];
+
+// 先跑编码自检：BOM 会导致小程序编译直接失败，必须先拦
+process.stdout.write(`\n===== check-bom.js（编码自检） =====\n`);
+try {
+  const out = execFileSync(process.execPath, [path.join(dir, 'check-bom.js')], { encoding: 'utf8' });
+  process.stdout.write(out);
+} catch (e) {
+  process.stdout.write(String(e.stdout || '') + String(e.stderr || ''));
+  failed.push('check-bom.js');
+}
+
 files.forEach(f => {
   process.stdout.write(`\n===== ${f} =====\n`);
   try {
@@ -22,7 +33,7 @@ files.forEach(f => {
   }
 });
 
-console.log(`\n========== 汇总：${files.length} 个测试文件，${failed.length} 个失败 ==========`);
+console.log(`\n========== 汇总：编码自检 + ${files.length} 个测试文件，${failed.length} 个失败 ==========`);
 if (failed.length) {
   console.log('失败：' + failed.join(', '));
   process.exit(1);

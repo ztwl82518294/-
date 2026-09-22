@@ -67,12 +67,19 @@ Page({
     });
   },
 
+  // 收藏页已从 tabBar 移出（tabBar 让位给 首页/查专线/查公司），改为普通页面跳转
   goToFavorite() {
-    wx.switchTab({ url: '/pages/favorite/index' });
+    wx.navigateTo({ url: '/pages/favorite/index' });
   },
 
   goContact() {
     wx.navigateTo({ url: '/pages/contact/index' });
+  },
+
+  // 信息纠错：不带 kind/key/name 进入 → 表单的"你要反馈的信息"提示条整块隐藏。
+  // 用于用户不在具体线路/公司页、却想反馈问题时（如"某某公司已停业"）。
+  goReport() {
+    wx.navigateTo({ url: '/pages/report/index' });
   },
 
   // 查看用户服务协议 / 隐私政策

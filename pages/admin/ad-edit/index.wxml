@@ -1,34 +1,111 @@
-<view class="container">
-  <view class="page-title">编辑广告位 {{adId}}</view>
-
-  <view class="card form-card">
-    <view class="form-item"><text class="form-label">公司名称</text><input class="form-input" placeholder="如：江苏中超物流有限公司" value="{{form.companyName}}" bindinput="onInput" data-field="companyName"/></view>
-    <view class="form-item"><text class="form-label">覆盖区域</text><input class="form-input" placeholder="如：苏锡常镇江" value="{{form.region}}" bindinput="onInput" data-field="region"/></view>
-    <view class="form-item"><text class="form-label">展示数字</text><input class="form-input" placeholder="如：32967" value="{{form.number}}" bindinput="onInput" data-field="number"/></view>
-    <view class="form-item">
-      <text class="form-label">跳转专线</text>
-      <view class="form-input line-pick" bindtap="openLinePicker">
-        <text class="{{selectedTitle ? '' : 'placeholder-text'}}">{{selectedTitle || '不跳转（可选，点击搜索选择）'}}</text>
-        <text class="pick-clear" wx:if="{{form.lineId}}" catchtap="clearLine">✕</text>
-      </view>
+<!-- 广告位编辑：分区块表单 -->
+<view class="page">
+  <view class="hero">
+    <view class="hero-inner">
+      <view class="hero-badge">广告位 {{adId}}</view>
+      <view class="hero-title">{{form.companyName || '未填写公司名'}}</view>
+      <view class="hero-sub">{{form.companyName ? '该位次已售，将展示在首页' : '填写公司名后才会在首页展示'}}</view>
     </view>
   </view>
 
-  <view class="btn-primary" bindtap="save">保存</view>
+  <view class="main">
+    <!-- 公司信息 -->
+    <view class="form-card">
+      <view class="form-head">
+        <text class="form-head-title">公司信息</text>
+      </view>
+
+      <view class="field">
+        <text class="field-label">公司名称</text>
+        <input
+          class="field-input"
+          placeholder="如：江苏中超物流有限公司"
+          placeholder-class="field-ph"
+          value="{{form.companyName}}"
+          bindinput="onInput"
+          data-field="companyName"
+          maxlength="40"
+        />
+        <text class="field-tip">留空则视为空位，不在首页展示</text>
+      </view>
+
+      <view class="field">
+        <text class="field-label">覆盖区域</text>
+        <input
+          class="field-input"
+          placeholder="如：苏锡常镇江"
+          placeholder-class="field-ph"
+          value="{{form.region}}"
+          bindinput="onInput"
+          data-field="region"
+          maxlength="20"
+        />
+      </view>
+
+      <view class="field field-last">
+        <text class="field-label">展示数字</text>
+        <input
+          class="field-input field-input-num"
+          type="number"
+          placeholder="如：32967"
+          placeholder-class="field-ph"
+          value="{{form.number}}"
+          bindinput="onInput"
+          data-field="number"
+        />
+        <text class="field-tip">展示在卡片右下角，可用于车次 / 网点的规模提示</text>
+      </view>
+    </view>
+
+    <!-- 跳转设置 -->
+    <view class="form-card">
+      <view class="form-head">
+        <text class="form-head-title">点击跳转</text>
+        <text class="form-head-hint">可选</text>
+      </view>
+
+      <view class="line-pick" bindtap="openLinePicker">
+        <view class="line-pick-body">
+          <text class="line-pick-title {{selectedTitle ? '' : 'is-ph'}}">{{selectedTitle || '未关联专线'}}</text>
+          <text class="line-pick-sub">{{selectedTitle ? '点击卡片将跳转到该专线详情' : '不关联则点击广告卡片无响应'}}</text>
+        </view>
+        <text class="line-pick-action">{{selectedTitle ? '更换' : '选择'}}</text>
+      </view>
+
+      <view wx:if="{{form.lineId}}" class="line-clear" bindtap="clearLine">清除关联</view>
+    </view>
+
+    <view class="btn-primary save-btn" bindtap="save">保存广告位</view>
+
+    <view class="foot-note">保存后在开发者工具重新进入首页即可看到效果。</view>
+  </view>
 
   <!-- 跳转专线搜索弹层 -->
   <view class="picker-mask" wx:if="{{showLinePicker}}" bindtap="closeLinePicker">
     <view class="picker-panel" catchtap="">
       <view class="picker-header">
+        <view class="picker-grabber"></view>
         <text class="picker-title">选择跳转专线</text>
         <text class="picker-close" bindtap="closeLinePicker">✕</text>
       </view>
-      <input class="picker-search" placeholder="输入公司名 / 专线名 / 城市搜索" value="{{searchKeyword}}" bindinput="onSearchInput" focus="{{true}}" confirm-type="search"/>
+      <view class="picker-search-wrap">
+        <text class="picker-search-icon">🔍</text>
+        <input
+          class="picker-search"
+          placeholder="输入公司名 / 专线名 / 城市搜索"
+          placeholder-class="field-ph"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+          focus="{{true}}"
+          confirm-type="search"
+        />
+        <text wx:if="{{searchKeyword}}" class="picker-search-clear" bindtap="clearSearch">✕</text>
+      </view>
       <view class="picker-list">
         <view wx:if="{{searching}}" class="picker-tip">搜索中...</view>
         <view wx:elif="{{searchKeyword && searchResults.length === 0}}" class="picker-tip">没有匹配的专线</view>
         <view wx:elif="{{!searchKeyword}}" class="picker-tip">输入关键词后展示匹配结果（最多 20 条）</view>
-        <view wx:for="{{searchResults}}" wx:key="id" class="picker-item" bindtap="selectLine" data-idx="{{index}}">
+        <view wx:for="{{searchResults}}" wx:key="_id" class="picker-item" bindtap="selectLine" data-idx="{{index}}">
           <view class="picker-item-title">{{item.title}}</view>
           <view class="picker-item-sub">{{item.companyName}} · {{item.fromCityName}} → {{item.toCityName}}</view>
         </view>

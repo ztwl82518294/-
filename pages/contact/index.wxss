@@ -1,88 +1,98 @@
 /* pages/contact/index.wxss */
 .page {
   min-height: 100vh;
-  background: var(--bg-page);
-  padding: 24rpx;
+  background: transparent;
+  padding: 24rpx 28rpx 60rpx;
   box-sizing: border-box;
 }
 .header {
-  padding: 32rpx 16rpx 24rpx;
+  padding: 32rpx 4rpx 24rpx;
 }
 .header-title {
   font-size: 40rpx;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink-title);
+  letter-spacing: -.4rpx;
 }
 .header-sub {
   font-size: 26rpx;
   color: var(--ink-muted);
   margin-top: 12rpx;
+  line-height: 1.5;
 }
 
-/* 联系方式条目 */
+/* 联系方式条目：实心白 */
 .contact-item {
   display: flex;
   align-items: center;
-  background: #fff;
-  border-radius: 20rpx;
-  padding: 32rpx 28rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+  background: #ffffff;
+  border: 1rpx solid #ffffff;
+  border-radius: 24rpx;
+  padding: 30rpx 28rpx;
+  margin-bottom: 18rpx;
+  box-shadow: var(--shadow-card);
   text-align: left;
   line-height: normal;
 }
 .contact-item::after { border: none; }
+.contact-item:active { background: #ffffff; }
+/* 在线客服：主色块 */
 .online {
-  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+  background: linear-gradient(135deg, #3f96ea 0%, #2383e2 100%);
+  border-color: rgba(255,255,255,.96);
+  box-shadow: 0 8rpx 24rpx rgba(35, 131, 226, .3);
 }
 .online .ci-name { color: #fff; }
-.online .ci-desc { color: rgba(255, 255, 255, .85); }
+.online .ci-desc { color: #ffffff; }
 .online .ci-arrow { color: #fff; }
 .ci-icon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 18rpx;
-  background: #f1f5f9;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 20rpx;
+  background: rgba(35, 131, 226, .1);
+  border: 1rpx solid rgba(255,255,255,.98);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40rpx;
+  font-size: 38rpx;
   margin-right: 24rpx;
   flex-shrink: 0;
 }
-.online .ci-icon { background: rgba(255, 255, 255, .2); }
+.online .ci-icon { background: rgba(255,255,255,.96); border-color: rgba(255,255,255,.96); }
 .ci-main { flex: 1; min-width: 0; }
-.ci-name { font-size: 30rpx; font-weight: 700; color: var(--ink-title); }
+.ci-name { font-size: 30rpx; font-weight: 600; color: var(--ink-title); }
 .ci-desc { font-size: 24rpx; color: var(--ink-muted); margin-top: 8rpx; }
-.ci-arrow { font-size: 40rpx; color: #cbd5e1; }
+.ci-arrow { font-size: 36rpx; color: var(--ink-disabled); }
 .ci-action {
   font-size: 24rpx;
   color: var(--brand);
-  background: #eff6ff;
-  border-radius: 24rpx;
+  background: rgba(35, 131, 226, .1);
+  border: 1rpx solid rgba(255,255,255,.98);
+  border-radius: 12rpx;
   padding: 8rpx 24rpx;
   flex-shrink: 0;
 }
 
 /* 二维码卡片 */
 .qr-card {
-  background: #fff;
-  border-radius: 20rpx;
+  background: #ffffff;
+  border: 1rpx solid #ffffff;
+  border-radius: 24rpx;
   padding: 40rpx 28rpx;
   margin-top: 8rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+  box-shadow: var(--shadow-card);
 }
 .qr-img {
   width: 320rpx;
   height: 320rpx;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
 }
 .qr-tip {
   font-size: 26rpx;
-  color: #64748b;
+  color: var(--ink-muted);
   margin-top: 24rpx;
 }
 .footer-tip {
@@ -91,4 +101,5 @@
   color: var(--ink-muted);
   margin-top: 48rpx;
   padding: 0 40rpx;
+  line-height: 1.6;
 }

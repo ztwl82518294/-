@@ -1,107 +1,200 @@
-<view class="page">
+<view class="pf-page">
   <block wx:if="{{lineInfo}}">
-    <view class="hero">
-      <view class="fav-btn {{isFav ? 'active' : ''}}" bindtap="toggleFavorite">{{isFav ? '★ 已收藏' : '☆ 收藏'}}</view>
-      <view class="hero-route">{{lineInfo.fromCityName}} ⇀ {{lineInfo.toCityName}}</view>
-      <!-- 公司名（会员企业）放大置顶并挂金色特效；专线名称缩小置于下方 -->
-      <view class="hero-company {{lineInfo.isVip ? 'vip-name-shine' : ''}} {{reduceAnimation ? 'vip-slow' : ''}}" wx:if="{{lineInfo.companyName && lineInfo.companyName !== lineInfo.title}}">{{lineInfo.companyName}}</view>
-      <view class="hero-title">{{lineInfo.title}}</view>
-      <view class="detail-badges" wx:if="{{lineInfo.isVip || lineInfo.certified}}">
-        <view class="vip-badge-shine {{reduceAnimation ? 'vip-slow' : ''}}" wx:if="{{lineInfo.isVip}}"><text class="vip-icon-shine">👑</text><text>会员企业</text></view>
-        <view class="cert-badge" wx:if="{{lineInfo.certified}}">✓ 已认证</view>
+    <view class="pf-main line-main">
+      <!-- ===== 头卡：公司名 + 徽章 + 路线 + 元信息（白底描边，与公司详情同语言） ===== -->
+      <view class="pf-card pf-head-card">
+        <view class="pf-head-row">
+          <text class="pf-name">{{lineInfo.companyName || lineInfo.title}}</text>
+          <text class="pf-cert" wx:if="{{lineInfo.certified}}">已核实</text>
+          <text class="pf-vip" wx:if="{{lineInfo.isVip}}">👑 会员企业</text>
+        </view>
+        <view class="pf-meta">
+          <text class="pf-meta-item ld-route">{{lineInfo.fromCityName}}</text>
+          <text class="pf-meta-sep">→</text>
+          <text class="pf-meta-item ld-route">{{lineInfo.toCityName}}</text>
+          <block wx:if="{{lineInfo.lineType}}">
+            <text class="pf-meta-sep">·</text>
+            <text class="pf-meta-item">{{lineInfo.lineType}}</text>
+          </block>
+          <block wx:if="{{lineInfo.aging}}">
+            <text class="pf-meta-sep">·</text>
+            <text class="pf-meta-item">{{lineInfo.aging}}</text>
+          </block>
+        </view>
       </view>
+
+      <!-- ===== 发站信息（蓝卡，多网点编号展示）===== -->
+      <view class="pf-card pf-station pf-station-from" wx:if="{{fromPairs.length > 0}}">
+        <view class="pf-sc-head">
+          <text class="pf-sc-title">发站信息</text>
+          <text
+            class="pf-sc-act"
+            catchtap="onCopyAllAddr"
+            data-station="from"
+            wx:if="{{fromAddrs.length > 0}}"
+          >复制地址</text>
+        </view>
+        <view class="pf-st-item" wx:for="{{fromPairs}}" wx:key="idx">
+          <view class="pf-st-index">{{index + 1}}</view>
+          <view class="pf-st-body">
+            <view
+              class="pf-st-addr"
+              wx:if="{{item.addr}}"
+              catchtap="onCopyText"
+              data-text="{{item.addr}}"
+            >{{item.addr}}</view>
+            <view class="pf-st-phones" wx:if="{{item.phones.length > 0}}">
+              <text
+                class="pf-st-phone"
+                wx:for="{{item.phones}}"
+                wx:for-item="p"
+                wx:key="*this"
+                catchtap="onCallOne"
+                data-phone="{{p}}"
+              >
+                <text class="pf-st-phone-label">发站电话</text>
+                <text class="pf-st-phone-num">{{p}}</text>
+              </text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ===== 到站信息（橙卡）===== -->
+      <view class="pf-card pf-station pf-station-to" wx:if="{{toPairs.length > 0}}">
+        <view class="pf-sc-head">
+          <text class="pf-sc-title">到站信息</text>
+          <text
+            class="pf-sc-act"
+            catchtap="onCopyAllAddr"
+            data-station="to"
+            wx:if="{{toAddrs.length > 0}}"
+          >复制地址</text>
+        </view>
+        <view class="pf-st-item" wx:for="{{toPairs}}" wx:key="idx">
+          <view class="pf-st-index">{{index + 1}}</view>
+          <view class="pf-st-body">
+            <view
+              class="pf-st-addr"
+              wx:if="{{item.addr}}"
+              catchtap="onCopyText"
+              data-text="{{item.addr}}"
+            >{{item.addr}}</view>
+            <view class="pf-st-phones" wx:if="{{item.phones.length > 0}}">
+              <text
+                class="pf-st-phone"
+                wx:for="{{item.phones}}"
+                wx:for-item="p"
+                wx:key="*this"
+                catchtap="onCallOne"
+                data-phone="{{p}}"
+              >
+                <text class="pf-st-phone-label">到站电话</text>
+                <text class="pf-st-phone-num">{{p}}</text>
+              </text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 两端都没填网点时给一句说明，不留空白 -->
+      <view class="pf-card ld-nostation" wx:if="{{fromPairs.length === 0 && toPairs.length === 0}}">
+        <view class="ld-nostation-text">该专线暂未填写发站/到站地址与电话，可先通过下方按钮联系平台客服核实。</view>
+      </view>
+
+      <!-- ===== 三统计：发站地址 / 联系电话 / 到站地址 ===== -->
+      <view class="pf-card pf-stats">
+        <view class="pf-stat">
+          <view class="pf-stat-num pf-stat-a">{{fromAddrCount}}</view>
+          <view class="pf-stat-label">发站地址</view>
+        </view>
+        <view class="pf-stat">
+          <view class="pf-stat-num pf-stat-b">{{phoneList.length}}</view>
+          <view class="pf-stat-label">联系电话</view>
+        </view>
+        <view class="pf-stat">
+          <view class="pf-stat-num pf-stat-c">{{toAddrCount}}</view>
+          <view class="pf-stat-label">到站地址</view>
+        </view>
+      </view>
+
+      <!-- ===== 服务信息（覆盖区域 / 运营信息 / 服务优势）===== -->
+      <view class="pf-section-head" wx:if="{{hasSpecs || toAreas.length > 0 || (lineInfo.tags && lineInfo.tags.length > 0)}}">
+        <text class="pf-section-title">服务信息</text>
+      </view>
+
+      <!-- 覆盖区域（74% 填写率，回答"能不能到我这"） -->
+      <view class="pf-card" wx:if="{{toAreas.length > 0}}">
+        <view class="pf-intro-title">覆盖区域</view>
+        <view class="ld-chips">
+          <text class="ld-chip ld-chip-green" wx:for="{{toAreas}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 运营信息（仅展示有值的项，无值整卡隐藏） -->
+      <view class="pf-card" wx:if="{{hasSpecs}}">
+        <view class="pf-intro-title">运营信息</view>
+        <view class="ld-spec-list">
+          <view class="ld-spec-row" wx:if="{{lineInfo.aging}}">
+            <text class="ld-spec-label">运输时效</text>
+            <text class="ld-spec-val ld-spec-key">{{lineInfo.aging}}</text>
+          </view>
+          <view class="ld-spec-row" wx:if="{{lineInfo.priceDesc}}">
+            <text class="ld-spec-label">参考价格</text>
+            <text class="ld-spec-val">{{lineInfo.priceDesc}}</text>
+          </view>
+          <view class="ld-spec-row" wx:if="{{lineInfo.lineType}}">
+            <text class="ld-spec-label">运输方式</text>
+            <text class="ld-spec-val">{{lineInfo.lineType}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 服务优势标签 -->
+      <view class="pf-card" wx:if="{{lineInfo.tags && lineInfo.tags.length > 0}}">
+        <view class="pf-intro-title">服务优势</view>
+        <view class="ld-chips">
+          <text class="ld-chip" wx:for="{{lineInfo.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 纠错入口：信息由公开渠道整理，必须给出反馈通道 -->
+      <view class="pf-report-btn" bindtap="onReport">信息有误？点这里报错</view>
+
+      <view class="pf-footer-note">信息由公开渠道整理，仅供参考，请自行核实</view>
+      <view class="ld-bar-space"></view>
     </view>
 
-    <view class="main">
-      <view class="card stats-card">
-        <view class="stat"><view class="stat-v highlight">{{lineInfo.aging || '—'}}</view><view class="stat-l">运输时效</view></view>
-        <view class="stat-divider"></view>
-        <view class="stat stat-price"><view class="stat-v stat-price-v">{{lineInfo.priceDesc || '电议'}}</view><view class="stat-l">参考价格</view></view>
-        <view class="stat-divider"></view>
-        <view class="stat"><view class="stat-v">{{lineInfo.lineType || '—'}}</view><view class="stat-l">运输方式</view></view>
-      </view>
-
-      <!-- 无标签时整卡隐藏，避免出现空标题卡片 -->
-      <view class="card section-card" wx:if="{{lineInfo.tags && lineInfo.tags.length > 0}}">
-        <view class="card-title">服务优势</view>
-        <view class="tags-list">
-          <view wx:for="{{lineInfo.tags}}" wx:key="*this" class="tag-item">{{item}}</view>
+    <!-- ===== 底部操作栏（磨砂浮层）===== -->
+    <view class="ld-bar">
+      <view class="ld-bar-tools">
+        <button class="ld-tool" open-type="share" hover-class="ld-tool-hover">
+          <text class="ld-tool-icon">分享</text>
+        </button>
+        <view class="ld-tool {{isFav ? 'is-fav' : ''}}" bindtap="toggleFavorite">
+          <text class="ld-tool-icon">{{isFav ? '★ 已收藏' : '☆ 收藏'}}</text>
         </view>
       </view>
-
-      <view class="card section-card contact-card" hover-class="card-pressed" hover-stay-time="120">
-        <view class="card-title">地址与联系</view>
-
-        <!-- 始发地：地址（带距离）在上、电话横排一行、右侧一组一个拨号按钮 -->
-        <view class="station-block">
-          <view class="station-head from-head">
-            <text>🚚 始发地</text>
-            <text class="station-act" catchtap="onCopyAllAddr" data-station="from">复制全部地址</text>
-          </view>
-          <view class="pair-item" wx:for="{{fromPairs}}" wx:key="idx">
-            <view class="pair-main">
-              <view class="pair-addr" wx:if="{{item.addr}}" catchtap="onCopyText" data-text="{{item.addr}}">
-                <text class="pair-icon">📍</text>
-                <text class="pair-addr-text">{{item.addr}}</text>
-                <!-- 网点带坐标时显示距离（km 由 JS 填充，无坐标自动隐藏） -->
-                <text class="pair-km" wx:if="{{item.km}}">{{item.km}}</text>
-              </view>
-              <!-- 多个电话横排自动换行，点号码直拨 -->
-              <view class="pair-phones" wx:if="{{item.phones.length > 0}}">
-                <text class="phone-chip" wx:for="{{item.phones}}" wx:for-item="p" wx:key="*this" catchtap="onCallOne" data-phone="{{p}}">{{p}}</text>
-              </view>
-            </view>
-            <view class="pair-call" catchtap="onCallGroup" data-station="from" data-index="{{index}}">📞</view>
-          </view>
-          <view class="pair-empty" wx:if="{{fromPairs.length === 0}}">未填写</view>
-        </view>
-
-        <!-- 目的地：同样式 -->
-        <view class="station-block">
-          <view class="station-head to-head">
-            <text>🏁 目的地</text>
-            <text class="station-act" catchtap="onCopyAllAddr" data-station="to">复制全部地址</text>
-          </view>
-          <view class="pair-item" wx:for="{{toPairs}}" wx:key="idx">
-            <view class="pair-main">
-              <view class="pair-addr" wx:if="{{item.addr}}" catchtap="onCopyText" data-text="{{item.addr}}">
-                <text class="pair-icon">📍</text>
-                <text class="pair-addr-text">{{item.addr}}</text>
-                <text class="pair-km" wx:if="{{item.km}}">{{item.km}}</text>
-              </view>
-              <view class="pair-phones" wx:if="{{item.phones.length > 0}}">
-                <text class="phone-chip" wx:for="{{item.phones}}" wx:for-item="p" wx:key="*this" catchtap="onCallOne" data-phone="{{p}}">{{p}}</text>
-              </view>
-            </view>
-            <view class="pair-call" catchtap="onCallGroup" data-station="to" data-index="{{index}}">📞</view>
-          </view>
-          <view class="pair-empty" wx:if="{{toPairs.length === 0}}">未填写</view>
-        </view>
-      </view>
-
-      <view style="height:140rpx;"></view>
-    </view>
-
-    <view class="bottom-bar">
-      <button class="bar-btn btn-share" open-type="share">分享</button>
-      <view class="bar-btn btn-nav" bindtap="onOpenMap">导航</view>
-      <view class="bar-btn btn-call btn-primary-cta" bindtap="onCallPhone">📞 立即拨打</view>
+      <view class="ld-bar-btn ld-btn-nav" bindtap="onOpenMap">导航</view>
+      <view class="ld-bar-btn ld-btn-call" bindtap="onCallPhone">立即拨打</view>
     </view>
   </block>
 
-  <!-- 加载失败/未找到：错误态 + 重新加载 -->
   <block wx:elif="{{loadError}}">
-    <view class="card empty-card">
-      <view class="error-emoji">⚠️</view>
-      <view class="error-text">{{loadError}}</view>
-      <view class="error-actions">
-        <view class="error-btn" bindtap="retryLoad">重新加载</view>
-        <view class="error-btn ghost" bindtap="goBack">返回</view>
+    <view class="pf-fallback">
+      <view class="pf-empty">
+        <view class="pf-empty-title is-error">⚠️ {{loadError}}</view>
+        <view class="pf-retry" bindtap="retryLoad">重新加载</view>
+        <view class="pf-empty-desc ld-back" bindtap="goBack">返回上一页</view>
       </view>
     </view>
   </block>
 
   <block wx:else>
-    <view class="card empty-card"><text>正在加载专线信息...</text></view>
+    <view class="pf-fallback">
+      <view class="pf-empty">
+        <view class="pf-empty-title">正在加载专线信息...</view>
+      </view>
+    </view>
   </block>
 </view>

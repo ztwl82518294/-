@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "按地址查专线",
+  "usingComponents": {
+    "region-picker": "/components/region-picker/index"
+  }
+}

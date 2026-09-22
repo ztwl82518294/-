@@ -54,7 +54,11 @@ Page({
 
   // ===== 跳转专线：可搜索选择器（替代原生 picker，万股级可检索）=====
   openLinePicker() { this.setData({ showLinePicker: true, searchKeyword: '', searchResults: [] }); },
-  closeLinePicker() { this.setData({ showLinePicker: false }); },
+  closeLinePicker() {
+    // 关弹层时清掉在途检索，防止关闭后旧结果回填 data（无谓 setData）
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this.setData({ showLinePicker: false, searching: false });
+  },
 
   onSearchInput(e) {
     const kw = (e.detail.value || '').trim();
@@ -76,6 +80,12 @@ Page({
           }
         }).catch(() => this.setData({ searching: false }));
     }, 300);
+  },
+
+  // 清空搜索框：同时取消在途的防抖检索，避免旧结果回填
+  clearSearch() {
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this.setData({ searchKeyword: '', searchResults: [], searching: false });
   },
 
   selectLine(e) {

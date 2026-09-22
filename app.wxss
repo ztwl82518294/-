@@ -7,34 +7,106 @@
 /* ==================== 设计令牌（Design Tokens） ====================
  * 全项目配色的唯一来源。页面/组件一律用 var(--xxx) 引用，禁止再写死色值。
  *
- *  | 令牌              | 色值      | 语义                         |
- *  |-------------------|-----------|------------------------------|
- *  | --brand           | #2563eb  | 主色（按钮/链接/强调）        |
- *  | --brand-light     | #4f8bff  | 渐变亮端                     |
- *  | --brand-deep      | #1d4ed8  | 浅蓝底上的蓝字（保证对比度）   |
- *  | --brand-wash      | #eef4ff  | 浅蓝底（标签/胶囊）           |
- *  | --ink-title       | #0f172a  | 标题                         |
- *  | --ink-body        | #334155  | 正文                         |
- *  | --ink-muted       | #64748b  | 次要/说明文字（约 4.8:1）     |
- *  | --ink-disabled    | #c7cdd8  | 禁用态（不做正文用）          |
- *  | --bg-page         | #f5f7fb  | 页面背景                     |
+ * 【v6.2 视觉基调】Notion 的排版克制 + macOS 天气 App 的色彩氛围。
+ *   - 页面底：带天空渐变的浅色（非纯色），营造"天气"氛围
+ *   - 卡片：实心白 + 柔和投影 + 大圆角（**v6.2 起全站移除毛玻璃**）
+ *   - 文字仍用 Notion 的近黑/暖黑体系
+ *   - 色彩：每个区块可挂一套"天气色"（sky-*），点缀而不喧哗
+ *
+ * 【v6.2：为什么删掉毛玻璃】
+ *   1. 模糊半径（14rpx）在小程序真机上开销大，长列表滚动掉帧；
+ *   2. 半透明白底会把页面天空渐变透到正文下，**削弱正文可读性**——
+ *      详情页信息密度最高、阅读时间最长，收益最差；
+ *   3. 删除后必须**同时把半透明白底提纯为实心白**，否则卡片会变成
+ *      "透着背景渐变的淡灰块"，比原来更脏（这是本次迁移的关键连带改动）。
+ *
+ *  | 令牌              | 色值                    | 语义                      |
+ *  |-------------------|-------------------------|---------------------------|
+ *  | --brand           | #2383e2                 | 主色（按钮/链接/强调）      |
+ *  | --brand-light     | #529cca                 | 渐变亮端 / 次级蓝          |
+ *  | --brand-deep      | #1a6dbd                 | 浅蓝底上的蓝字             |
+ *  | --brand-wash      | #e7f1fb                 | 浅蓝底（标签/胶囊）         |
+ *  | --ink-title       | #191918                 | 标题                       |
+ *  | --ink-body        | #37352f                 | 正文                       |
+ *  | --ink-muted       | #73726e                 | 次要/说明文字               |
+ *  | --ink-disabled    | #c9c8c5                 | 禁用态                     |
+ *  | --bg-page         | 渐变（见下）             | 页面背景（天空渐变）        |
+ *  | --glass           | #ffffff   | 卡片底                     |
+ *  | --glass-strong    | #ffffff   | 高不透明卡片底（文字密集区） |
+ *  | --glass-soft      | rgba(255,255,255,.96)   | 极淡底（内嵌块）  |
+ *  | --glass-border    | #ffffff   | 卡片的"高光"边              |
+ *  | --border          | rgba(0,0,0,.06)         | 常规分隔线      |
+ *  | --shadow-card     | 柔和双层                | 卡片投影        |
+ *  | --shadow-float    | 明显浮层                | 浮层/底栏投关    |
+ *  | --glass-blur      | 14rpx                   | 【已废弃】仅为兼容保留 |
+ *  | --glass-saturate  | 150%                    | 【已废弃】仅为兼容保留 |
+ *
+ * 天气色板（--sky-* ：浅渐变，用于卡片/区块氛围）：
+ *   --sky-blue / --sky-teal / --sky-amber / --sky-violet / --sky-rose / --sky-green
  *
  * 说明：JS / app.json 里不支持 CSS 变量，仍需写字面量，
  *      改动令牌时记得同步 app.json 的 window.backgroundColor。
  */
 page {
-  --brand: #2563eb;
-  --brand-light: #4f8bff;
-  --brand-deep: #1d4ed8;
-  --brand-wash: #eef4ff;
-  --ink-title: #0f172a;
-  --ink-body: #334155;
-  --ink-muted: #64748b;
-  --ink-disabled: #c7cdd8;
-  --bg-page: #f5f7fb;
+  --brand: #2383e2;
+  --brand-light: #529cca;
+  --brand-deep: #1a6dbd;
+  --brand-wash: #e7f1fb;
+  --ink-title: #191918;
+  --ink-body: #37352f;
+  --ink-muted: #73726e;
+  --ink-disabled: #c9c8c5;
 
-  /* 页面默认背景色（背景使用浅灰色，更接近常见小程序风格） */
-  background-color: var(--bg-page);
+  /* ---- 卡片底色体系（v6.2：原"磨砂玻璃体系"，已移除 backdrop-filter） ----
+   * 【v5.2 调淡】原 .72 半透明（底下的渐变全透上来，显"糊"），提到 .88；
+   * 【v6.2 提纯】删除模糊后统一提到实心白/#ffffff 或近白，
+   *   否则卡片会透着背景渐变发灰，比有模糊时更脏。
+   */
+  --glass: #ffffff;          /* 常规卡片底 */
+  --glass-strong: #ffffff;   /* 高不透明（文字密集） */
+  --glass-soft: rgba(255,255,255,.96);     /* 极淡底（内嵌块） */
+  --glass-border: #ffffff;   /* 卡片高光边 */
+  --glass-blur: 14rpx;                        /* 【已废弃】v6.2 起不再使用，仅为兼容保留 */
+  --glass-saturate: 150%;                     /* 【已废弃】v6.2 起不再使用，仅为兼容保留 */
+
+  /* ---- 常规分隔与底 ---- */
+  --border: rgba(60, 60, 60, .08);
+  --border-strong: rgba(60, 60, 60, .14);
+  --bg-page-warm: rgba(245, 245, 244, .78);
+  --bg-inset: rgba(120, 120, 120, .07);
+  --card: #ffffff;           /* 兼容旧引用，等价 --glass */
+
+  /* ---- 阴影：卡片需要柔和投影才能"浮"起来 ---- */
+  --shadow-card: 0 2rpx 8rpx rgba(20, 30, 50, .04), 0 10rpx 28rpx rgba(20, 30, 50, .06);
+  --shadow-float: 0 6rpx 16rpx rgba(20, 30, 50, .1), 0 16rpx 44rpx rgba(20, 30, 50, .12);
+
+  /* ---- 天气色板（sky-*）：浅渐变，用于卡片/区块氛围 ---- */
+  --sky-blue: linear-gradient(135deg, #e3f0fd 0%, #d3e6fb 100%);
+  --sky-teal: linear-gradient(135deg, #e0f4f1 0%, #cfeae8 100%);
+  --sky-amber: linear-gradient(135deg, #fdf3e3 0%, #f9e9d2 100%);
+  --sky-violet: linear-gradient(135deg, #eeeafd 0%, #e2ddfa 100%);
+  --sky-rose: linear-gradient(135deg, #fdecf1 0%, #fae0e8 100%);
+  --sky-green: linear-gradient(135deg, #e9f4e6 0%, #dcecd8 100%);
+  /* 天气色板对应的强调文字色 */
+  --sky-blue-ink: #1c6bb0;
+  --sky-teal-ink: #1a7a72;
+  --sky-amber-ink: #a06a12;
+  --sky-violet-ink: #6a55c4;
+  --sky-rose-ink: #b04a6e;
+  --sky-green-ink: #3f7a3a;
+
+  /* ---- 页面背景：天空渐变（macOS 天气的底色氛围） ----
+   * 【v5.2 加深】原 rgba 透明度 .34~.42 太淡，整体发灰；
+   *   提到 .5~.62 并加深色相，让"天空"真的能被看见。
+   */
+  --bg-page: #e8f0fa;
+
+  background-color: #e8f0fa;
+  background-image:
+    radial-gradient(ellipse 120% 62% at 10% -4%, rgba(94, 158, 226, .58) 0%, transparent 64%),
+    radial-gradient(ellipse 115% 58% at 92% 0%, rgba(146, 178, 232, .62) 0%, transparent 60%),
+    radial-gradient(ellipse 140% 55% at 50% 104%, rgba(162, 194, 230, .5) 0%, transparent 62%);
+  background-attachment: fixed;
 
   /* 默认文字颜色 */
   color: var(--ink-body);
@@ -63,30 +135,61 @@ page {
 /* 常用标题样式 */
 .page-title {
   font-size: 36rpx;
-  font-weight: bold;
+  font-weight: 600;
   color: var(--ink-title);
   margin-bottom: 24rpx;
+  letter-spacing: -.2rpx;
 }
 
-/* 常用卡片样式 */
+/* 常用卡片样式（实心白 + 柔和投影 + 大圆角；v6.2 起无毛玻璃） */
 .card {
-  background-color: #ffffff;
-  border-radius: 16rpx;
+  background-color: var(--glass);
+  border-radius: 20rpx;
   padding: 24rpx;
-  margin-bottom: 24rpx;
-
-  /* 轻微阴影，让卡片更有层次感 */
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  margin-bottom: 20rpx;
+  border: 1rpx solid var(--glass-border);
+  box-shadow: var(--shadow-card);
 }
 
-/* 普通按钮样式 */
+/* ==================== 卡片工具类（全站复用） ====================
+ * .glass        常规卡片（实心白 + 高光边 + 柔和投影）
+ * .glass-strong 高不透明，文字密集处用（列表、详情正文）
+ * .glass-soft   极淡底，做内嵌区块
+ * 【v6.2】类名保留以兼容既有引用，但已不再产生任何模糊效果。
+ */
+.glass {
+  background-color: var(--glass);
+  border: 1rpx solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+}
+.glass-strong {
+  background-color: var(--glass-strong);
+  border: 1rpx solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+}
+.glass-soft {
+  background-color: var(--glass-soft);
+  border: 1rpx solid var(--glass-border);
+}
+
+/* 天气色氛围块：挂在卡片上做渐变氛围（内容保持可读） */
+.sky-blue { background-image: var(--sky-blue); }
+.sky-teal { background-image: var(--sky-teal); }
+.sky-amber { background-image: var(--sky-amber); }
+.sky-violet { background-image: var(--sky-violet); }
+.sky-rose { background-image: var(--sky-rose); }
+.sky-green { background-image: var(--sky-green); }
+
+/* 普通按钮样式（主色实心 + 柔和投影，macOS 圆润感） */
 .btn-primary {
   background-color: var(--brand);
   color: #ffffff;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   font-size: 30rpx;
   padding: 20rpx 0;
   text-align: center;
+  font-weight: 500;
+  box-shadow: 0 6rpx 18rpx rgba(35, 131, 226, .28);
 }
 
 /* 按钮点击后的样式 */
@@ -100,73 +203,242 @@ page {
   font-size: 24rpx;
 }
 
-/* ==================== 会员企业专属效果（全局） ==================== */
-/* 会员企业名称流光：金白渐变横向流动 + 文字发光 */
+/* ==================== 会员企业专属效果（全局） ====================
+ * 风格：macOS 天气 App 的"阳光金"——暖金文字 + 柔和光晕，静态不闪烁。
+ * 白底上用较深金保证可读；渐变头上用浅金（覆盖在 line-detail 内）。
+ */
 .vip-name-shine {
-  background: linear-gradient(90deg, #b8860b 0%, #ffd700 25%, #fffacd 50%, #ffd700 75%, #b8860b 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: vipNameFlow 2.5s infinite linear;
-  text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.6);
+  color: #a16207;
+  font-weight: 600;
 }
-@keyframes vipNameFlow {
-  0% { background-position: 0% 0; }
-  100% { background-position: 200% 0; }
-}
-/* 列表/卡片中的公司名流光：暗金底色保证白卡上可读，流光扫过时亮金高光明显 */
 .vip-company-shine {
-  background: linear-gradient(90deg, #b45309 0%, #d97706 30%, #fcd34d 48%, #fffbeb 52%, #fcd34d 56%, #d97706 74%, #b45309 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: vipNameFlow 2.8s infinite linear;
-  font-weight: bold;
+  color: #a06a12;
+  font-weight: 600;
 }
-/* 降频版本（详情页 5 秒后启用，减轻低端机压力） */
+/* 降频版本：已无动画，保留类名兼容旧模板 */
 .vip-name-shine.vip-slow { animation-duration: 5s; }
 .vip-company-shine.vip-slow { animation-duration: 6s; }
 
-/* 会员徽章闪耀：金边 + 外发光呼吸 + 双层流光 */
+/* 会员徽章：浅金渐变胶囊（macOS 圆润感，柔和投影） */
 .vip-badge-shine {
   display: inline-flex;
   align-items: center;
   gap: 4rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-  background: linear-gradient(135deg, #f6d365, #fda085);
-  color: #7c2d12;
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+  background: linear-gradient(135deg, rgba(253, 246, 227, .95) 0%, rgba(250, 235, 200, .95) 100%);
+  color: #9a6700;
   font-size: 20rpx;
-  font-weight: bold;
+  font-weight: 600;
+  border: 1rpx solid #ffffff;
+  box-shadow: 0 2rpx 8rpx rgba(160, 110, 20, .14);
   position: relative;
   overflow: hidden;
-  border: 2rpx solid #fde68a;
-  box-shadow: 0 0 14rpx rgba(251, 191, 36, 0.7), 0 0 28rpx rgba(251, 191, 36, 0.4);
-  animation: vipGlow 2s infinite ease-in-out;
+  animation: none;
 }
-.vip-badge-shine::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
-  animation: vipBadgeSweep 2s infinite;
-}
-@keyframes vipBadgeSweep { 0% { left: -100%; } 100% { left: 100%; } }
-@keyframes vipGlow {
-  0%, 100% { box-shadow: 0 0 14rpx rgba(251, 191, 36, 0.7), 0 0 28rpx rgba(251, 191, 36, 0.4); }
-  50% { box-shadow: 0 0 24rpx rgba(251, 191, 36, 0.95), 0 0 48rpx rgba(251, 191, 36, 0.6); }
-}
-.vip-icon-shine {
-  animation: vipIconPulse 1.5s infinite;
-  filter: drop-shadow(0 0 6rpx rgba(255, 215, 0, 0.9));
-}
-@keyframes vipIconPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
-/* 降频版本 */
+.vip-badge-shine::after { content: none; }
+.vip-icon-shine { animation: none; filter: none; }
+/* 兼容旧类名，不再产生动画 */
 .vip-badge-shine.vip-slow { animation-duration: 4s; }
 .vip-badge-shine.vip-slow::after { animation-duration: 4s; }
 .vip-badge-shine.vip-slow .vip-icon-shine { animation-duration: 3s; }
+
+/* ==================== 档案页卡片语言（pf-*）====================
+ * 来源：参考图（齐鲁快运 公司详情）确立的视觉语言，专线详情与公司详情共用。
+ * 与首页/列表的"渐变头图 + 内容上叠"不同，档案页是**白底描边头卡**打头：
+ * 顶部直接是第一张白卡，没有渐变块，整体更"资料页"而不是"天气页"。
+ *
+ * 为什么抽到全局：两个详情页各写一份必然漂移（本项目曾因多页各写一份而出现值漂移）。
+ * 类名前缀 pf- = profile，只走 var() 令牌，页面不得覆盖其色值。
+ */
+
+/* 页面容器：档案页统一内边距（无负 margin 上叠） */
+.pf-page { min-height: 100vh; background: transparent; }
+.pf-main { padding: 20rpx 28rpx 60rpx; }
+
+/* ---- 通用卡：白底 + 细描边（档案页不需要透出背景）---- */
+.pf-card {
+  background: #ffffff;
+  border: 1rpx solid var(--border);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 30, 50, .04);
+}
+
+/* ---- 头卡：公司名 + 已核实 + 元信息行 ---- */
+.pf-head-card { padding: 26rpx 24rpx 22rpx; }
+.pf-head-row { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12rpx; }
+.pf-name {
+  font-size: 36rpx; font-weight: 600; color: var(--ink-title);
+  line-height: 1.34; letter-spacing: -.3rpx; word-break: break-all;
+}
+/* 已核实：绿底描边小胶囊 */
+.pf-cert {
+  flex-shrink: 0; margin-top: 6rpx;
+  padding: 4rpx 14rpx; border-radius: 8rpx;
+  font-size: 21rpx; font-weight: 600;
+  color: var(--sky-green-ink);
+  background: rgba(233, 247, 236, .9);
+  border: 1rpx solid rgba(63, 122, 58, .22);
+}
+/* 会员胶囊：深金（白底上用深金，不是渐变头上的浅金） */
+.pf-vip {
+  flex-shrink: 0; margin-top: 6rpx;
+  padding: 4rpx 14rpx; border-radius: 8rpx;
+  font-size: 21rpx; font-weight: 600;
+  color: #9a6700;
+  background: linear-gradient(135deg, rgba(253, 246, 227, .95) 0%, rgba(250, 235, 200, .95) 100%);
+  border: 1rpx solid rgba(160, 110, 20, .2);
+}
+/* 元信息行：城市 · 规模 · 更新 · 浏览量 */
+.pf-meta {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 10rpx; margin-top: 14rpx;
+}
+.pf-meta-item { font-size: 23rpx; color: var(--ink-muted); line-height: 1.4; }
+.pf-meta-sep { font-size: 21rpx; color: var(--ink-disabled); line-height: 1; }
+
+/* ---- 站点卡：蓝（发站）/ 橙（到站），与查专线页地址卡同色系 ---- */
+.pf-station { border-width: 1rpx; }
+.pf-station-from { background: rgba(240, 247, 255, .96); border-color: rgba(35, 131, 226, .14); }
+.pf-station-to { background: rgba(255, 247, 240, .96); border-color: rgba(212, 140, 60, .16); }
+.pf-sc-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18rpx;
+}
+.pf-sc-title { font-size: 28rpx; font-weight: 600; }
+.pf-station-from .pf-sc-title { color: var(--sky-blue-ink); }
+.pf-station-to .pf-sc-title { color: var(--sky-amber-ink); }
+.pf-sc-count { font-size: 22rpx; color: var(--ink-muted); }
+
+.pf-st-item { display: flex; gap: 14rpx; margin-bottom: 16rpx; }
+.pf-st-item:last-child { margin-bottom: 0; }
+/* 编号方块：1/2/3，一眼看出"第几个网点" */
+.pf-st-index {
+  flex-shrink: 0;
+  width: 36rpx; height: 36rpx; border-radius: 9rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 21rpx; font-weight: 600; color: #fff;
+  margin-top: 2rpx;
+}
+.pf-station-from .pf-st-index { background: linear-gradient(135deg, #5fa8e8, #2f7fd0); }
+.pf-station-to .pf-st-index { background: linear-gradient(135deg, #f0a86a, #dc8449); }
+.pf-st-body { flex: 1; min-width: 0; }
+.pf-st-addr {
+  font-size: 26rpx; color: var(--ink-title);
+  line-height: 1.55; word-break: break-all;
+}
+/* 【v6.2】原 .pf-st-addr-empty（"地址未填写"灰字）已移除：
+ * 纯电话行不再独立成组，不会再有"有电话但没地址"的组，该样式无引用。 */
+/* 电话胶囊组：一个地址可挂多个号码，横向排列、放不下自动换行。
+ * 放在全局（而非各详情页）——两个详情页共用，各写一份必然漂移。 */
+.pf-st-phones { display: flex; flex-wrap: wrap; gap: 10rpx; margin-top: 12rpx; }
+.pf-st-phones .pf-st-phone { margin-top: 0; }
+/* 电话胶囊：白底，可点直拨 */
+.pf-st-phone {
+  display: inline-flex; align-items: center; gap: 10rpx;
+  margin-top: 12rpx; padding: 8rpx 16rpx;
+  border-radius: 10rpx;
+  background: #ffffff;
+  border: 1rpx solid var(--border);
+}
+.pf-st-phone:active { opacity: .7; }
+.pf-st-phone-label { font-size: 21rpx; color: var(--ink-muted); }
+.pf-st-phone-num { font-size: 24rpx; font-weight: 600; color: var(--brand-deep); }
+
+/* ---- 简介卡 ---- */
+.pf-intro-title { font-size: 26rpx; font-weight: 600; color: var(--ink-title); margin-bottom: 14rpx; }
+.pf-intro-text { font-size: 25rpx; color: var(--ink-body); line-height: 1.75; }
+
+/* ---- 三统计：大数字（macOS 天气式），中间细分隔线 ---- */
+.pf-stats { display: flex; padding: 30rpx 0; }
+.pf-stat { flex: 1; text-align: center; position: relative; }
+.pf-stat + .pf-stat::before {
+  content: ''; position: absolute; left: 0; top: 14%; height: 72%; width: 1rpx;
+  background: var(--border);
+}
+.pf-stat-num { font-size: 46rpx; font-weight: 600; line-height: 1.1; letter-spacing: -.6rpx; }
+.pf-stat-a { color: #2f7fd0; }
+.pf-stat-b { color: #7b6ad0; }
+.pf-stat-c { color: #3f9a6a; }
+.pf-stat-label { font-size: 22rpx; color: var(--ink-muted); margin-top: 8rpx; }
+
+/* ---- 分组线路：组头（城市 + N 条）+ 行（到达城市 + 标签 + ›）---- */
+.pf-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 4rpx 4rpx 16rpx;
+}
+.pf-section-title { font-size: 30rpx; font-weight: 600; color: var(--ink-title); }
+.pf-section-sub { font-size: 22rpx; color: var(--ink-muted); }
+
+.pf-group { margin-bottom: 18rpx; }
+.pf-group-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12rpx 20rpx;
+  background: var(--bg-inset);
+  border-radius: 14rpx;
+  margin-bottom: 8rpx;
+}
+.pf-group-city { font-size: 26rpx; font-weight: 600; color: var(--ink-title); }
+.pf-group-count { font-size: 22rpx; color: var(--ink-muted); }
+
+.pf-route-row {
+  display: flex; align-items: center; gap: 14rpx;
+  padding: 22rpx 20rpx;
+  background: #ffffff;
+  border: 1rpx solid var(--border);
+  border-radius: 16rpx;
+  margin-bottom: 8rpx;
+}
+.pf-route-row:active { background: rgba(0, 0, 0, .02); }
+.pf-rr-city { font-size: 28rpx; font-weight: 600; color: var(--ink-title); flex-shrink: 0; }
+.pf-rr-tags {
+  flex: 1; display: flex; align-items: center;
+  gap: 8rpx; flex-wrap: wrap; justify-content: flex-end;
+}
+.pf-rr-tag { font-size: 20rpx; font-weight: 600; padding: 4rpx 12rpx; border-radius: 8rpx; flex-shrink: 0; }
+.pf-rr-direct { color: var(--sky-green-ink); background: rgba(233, 244, 230, .95); }
+.pf-rr-transfer { color: var(--sky-amber-ink); background: rgba(253, 243, 227, .95); }
+.pf-rr-plain { color: var(--ink-muted); background: var(--bg-inset); font-weight: 500; }
+.pf-rr-daily { color: var(--sky-teal-ink); background: rgba(230, 246, 244, .95); }
+.pf-rr-arrow { font-size: 28rpx; color: var(--ink-disabled); flex-shrink: 0; line-height: 1; }
+
+/* ---- 纠错按钮：浅琥珀底，与整体冷色区分（提示性动作）---- */
+.pf-report-btn {
+  margin-top: 24rpx;
+  padding: 26rpx;
+  text-align: center;
+  border-radius: 18rpx;
+  background: rgba(255, 250, 240, .96);
+  border: 1rpx solid rgba(212, 160, 60, .2);
+  color: var(--sky-amber-ink);
+  font-size: 26rpx; font-weight: 500;
+}
+.pf-report-btn:active { opacity: .75; }
+
+/* ---- 页脚免责 ---- */
+.pf-footer-note {
+  font-size: 21rpx; color: var(--ink-muted);
+  text-align: center; margin-top: 28rpx; line-height: 1.5;
+}
+
+/* ---- 兜底态（加载中 / 失败）---- */
+.pf-fallback { min-height: 100vh; padding: 120rpx 44rpx; background: transparent; box-sizing: border-box; }
+.pf-empty {
+  background: #ffffff;
+  border: 1rpx solid var(--border);
+  border-radius: 20rpx;
+  text-align: center; padding: 60rpx 32rpx;
+}
+.pf-empty-title { font-size: 32rpx; font-weight: 600; color: var(--ink-title); margin-bottom: 14rpx; line-height: 1.4; }
+.pf-empty-title.is-error { color: #c4554d; }
+.pf-empty-desc { font-size: 25rpx; color: var(--ink-muted); line-height: 1.7; }
+.pf-retry {
+  margin: 32rpx auto 0;
+  width: 260rpx; height: 76rpx; line-height: 76rpx; border-radius: 18rpx;
+  background: linear-gradient(135deg, #3f96ea, #2383e2);
+  color: #fff; font-size: 28rpx; font-weight: 600;
+  box-shadow: 0 8rpx 22rpx rgba(35, 131, 226, .3);
+}
+.pf-retry:active { opacity: .9; }

@@ -1,0 +1,71 @@
+﻿.page{min-height:100vh;background:transparent;}
+
+/* ===== 用户头部（macOS 天气：渐变 + 磨砂头像） ===== */
+.user-hero{
+  background:linear-gradient(158deg, #3d7fd4 0%, #5b9ce4 42%, #8dbcee 78%, #a8cdf2 100%);
+  padding:56rpx 32rpx 108rpx;
+  border-radius:0 0 40rpx 40rpx;
+  display:flex;flex-direction:column;align-items:flex-start;
+  position:relative;overflow:hidden;
+}
+.user-hero::before{
+  content:'';position:absolute;top:-40%;left:-10%;
+  width:80%;height:120%;
+  background:radial-gradient(ellipse at center, rgba(255,255,255,.42) 0%, transparent 68%);
+  pointer-events:none;
+}
+/* 头像：磨砂玻璃圆角方块 */
+.avatar{
+  width:112rpx;height:112rpx;border-radius:28rpx;
+  background:rgba(255,255,255,.26);
+  -webkit-backdrop-filter:blur(16rpx) saturate(150%);
+  backdrop-filter:blur(16rpx) saturate(150%);
+  border:1rpx solid rgba(255,255,255,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:56rpx;position:relative;
+}
+.user-name{color:#fff;font-size:36rpx;font-weight:600;margin-top:20rpx;letter-spacing:-.3rpx;position:relative;text-shadow:0 2rpx 12rpx rgba(30,60,110,.18);}
+.user-sub{color:rgba(255,255,255,.92);font-size:24rpx;margin-top:6rpx;position:relative;text-shadow:0 1rpx 8rpx rgba(30,60,110,.14);}
+.user-main{padding:0 28rpx 60rpx;margin-top:-64rpx;position:relative;z-index:2;}
+
+/* 卡片：磨砂玻璃 */
+.card{
+  background:rgba(255,255,255,.88);
+  -webkit-backdrop-filter:blur(16rpx) saturate(150%);
+  backdrop-filter:blur(16rpx) saturate(150%);
+  border:1rpx solid rgba(255,255,255,.96);
+  border-radius:24rpx;
+  box-shadow:var(--shadow-card);
+}
+
+/* 管理入口卡：磨砂淡紫（天气预报里"夜间"的紫调） */
+.admin-card{
+  background:linear-gradient(135deg, rgba(238,234,253,.9) 0%, rgba(226,221,250,.9) 100%);
+  -webkit-backdrop-filter:blur(16rpx) saturate(150%);
+  backdrop-filter:blur(16rpx) saturate(150%);
+  border:1rpx solid rgba(255,255,255,.9);
+  color:var(--sky-violet-ink);
+  padding:28rpx 24rpx;margin-bottom:20rpx;border-radius:24rpx;
+  box-shadow:var(--shadow-card);
+}
+.admin-title{font-size:30rpx;font-weight:600;margin-bottom:8rpx;}
+.admin-desc{font-size:24rpx;opacity:.85;}
+
+/* 菜单 */
+.menu-card{padding:0 24rpx;margin-bottom:20rpx;}
+.menu-item{display:flex;justify-content:space-between;align-items:center;padding:28rpx 0;border-bottom:1rpx solid rgba(120,140,170,.14);font-size:28rpx;color:var(--ink-body);}
+.menu-item:last-child{border-bottom:none;}
+.arrow{font-size:32rpx;color:var(--ink-disabled);}
+
+/* 区块 */
+.section-card{padding:28rpx;margin-bottom:20rpx;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx;}
+.section-title{font-size:28rpx;font-weight:600;color:var(--ink-title);}
+.clear-btn{font-size:24rpx;color:#c4554d;}
+
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:20rpx 0;border-bottom:1rpx solid rgba(120,140,170,.14);}
+.history-item:last-child{border-bottom:none;}
+.history-route{font-size:28rpx;color:var(--ink-body);font-weight:600;}
+.history-time{font-size:22rpx;color:var(--ink-muted);}
+
+.empty-tip{text-align:center;padding:30rpx 0;color:var(--ink-muted);font-size:26rpx;}

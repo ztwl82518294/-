@@ -1,7 +1,7 @@
 /* pages/admin/stats/index.wxss */
 .page {
   min-height: 100vh;
-  background: var(--bg-page);
+  background: transparent;
   padding-bottom: 40rpx;
 }
 
@@ -13,16 +13,17 @@
   padding: 28rpx 0 8rpx;
 }
 .month-arrow {
-  width: 64rpx;
-  height: 64rpx;
-  line-height: 60rpx;
+  width: 68rpx;
+  height: 68rpx;
+  line-height: 64rpx;
   text-align: center;
-  font-size: 44rpx;
+  font-size: 40rpx;
   color: var(--brand);
-  background: #fff;
-  border-radius: 50%;
+  background: #ffffff;
+  border: 1rpx solid #ffffff;
+  border-radius: 20rpx;
   margin: 0 40rpx;
-  box-shadow: 0 4rpx 12rpx rgba(37, 99, 235, .1);
+  box-shadow: var(--shadow-card);
 }
 .month-arrow.disabled {
   color: var(--ink-disabled);
@@ -34,61 +35,74 @@
   color: var(--ink-title);
   min-width: 180rpx;
   text-align: center;
+  letter-spacing: -.3rpx;
 }
 
-/* 汇总卡片 */
+/* ===== 汇总卡片：白底 + 天气色渐变 ===== */
 .summary-row {
   display: flex;
-  gap: 18rpx;
-  padding: 24rpx 32rpx;
+  gap: 16rpx;
+  padding: 24rpx 28rpx;
 }
 .summary-card {
   flex: 1;
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   padding: 28rpx 0;
   text-align: center;
-  color: #fff;
+  border: 1rpx solid #ffffff;
+  box-shadow: var(--shadow-card);
 }
-.c-user { background: linear-gradient(135deg, var(--brand), var(--brand-light)); }
-.c-search { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-.c-view { background: linear-gradient(135deg, #10b981, #34d399); }
 .summary-num {
   font-size: 44rpx;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: -.8rpx;
 }
 .summary-label {
   font-size: 22rpx;
-  opacity: .9;
   margin-top: 6rpx;
+  opacity: .8;
 }
+/* 三张卡各挂一套天气色（蓝 / 琥珀 / 绿），文字用对应深色保证可读 */
+.c-user   { background: var(--sky-blue); }
+.c-user .summary-num   { color: var(--sky-blue-ink); }
+.c-user .summary-label { color: var(--sky-blue-ink); }
 
-/* 达到聚合上限时的口径提示 */
+.c-search { background: var(--sky-amber); }
+.c-search .summary-num   { color: var(--sky-amber-ink); }
+.c-search .summary-label { color: var(--sky-amber-ink); }
+
+.c-view   { background: var(--sky-green); }
+.c-view .summary-num   { color: var(--sky-green-ink); }
+.c-view .summary-label { color: var(--sky-green-ink); }
+
+/* 达到聚合上限时的口径提示（浅黄 callout） */
 .cap-tip {
-  margin: 0 32rpx 8rpx;
+  margin: 0 28rpx 8rpx;
   padding: 16rpx 20rpx;
-  border-radius: 12rpx;
-  background: #fff7ed;
-  border-left: 6rpx solid #f59e0b;
-  color: #92400e;
+  border-radius: 16rpx;
+  background: rgba(253, 248, 236, .9);
+  border: 1rpx solid #ffffff;
+  color: #8a6a1f;
   font-size: 24rpx;
   line-height: 1.5;
 }
 
 /* 卡片基础样式（本页自包含） */
 .card {
-  background: #fff;
-  border-radius: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(31, 45, 61, .06);
+  background: #ffffff;
+  border: 1rpx solid #ffffff;
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-card);
 }
 
 /* 排名卡片 */
 .rank-card {
-  margin: 24rpx 32rpx 0;
+  margin: 20rpx 28rpx 0;
   padding: 28rpx 24rpx;
 }
 .rank-title {
-  font-size: 30rpx;
-  font-weight: 700;
+  font-size: 28rpx;
+  font-weight: 600;
   color: var(--ink-title);
   margin-bottom: 12rpx;
 }
@@ -96,27 +110,29 @@
   display: flex;
   align-items: center;
   padding: 22rpx 8rpx;
-  border-bottom: 1rpx solid #f1f5f9;
+  border-bottom: 1rpx solid rgba(120, 140, 170, .14);
 }
 .rank-item:last-child {
   border-bottom: none;
 }
+/* 名次编号：底色方块 */
 .rank-no {
-  width: 44rpx;
-  height: 44rpx;
-  line-height: 44rpx;
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
   text-align: center;
-  border-radius: 10rpx;
+  border-radius: 14rpx;
   font-size: 24rpx;
   font-weight: 700;
   color: var(--ink-muted);
-  background: #f1f5f9;
+  background: rgba(255,255,255,.98);
+  border: 1rpx solid #ffffff;
   margin-right: 20rpx;
   flex-shrink: 0;
 }
-.rank-1 { background: #fef3c7; color: #d97706; }
-.rank-2 { background: #e2e8f0; color: #475569; }
-.rank-3 { background: #fed7aa; color: #ea580c; }
+.rank-1 { background: var(--sky-amber); color: var(--sky-amber-ink); }
+.rank-2 { background: rgba(240, 242, 246, .95); color: #5f5e5b; }
+.rank-3 { background: linear-gradient(135deg, #fdf3e3 0%, #f7e6cf 100%); color: #a06a12; }
 .rank-main {
   flex: 1;
   min-width: 0;

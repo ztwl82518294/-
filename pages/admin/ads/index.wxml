@@ -1,10 +1,70 @@
-<view class="container">
-  <view class="page-title">广告管理</view>
-  <view class="text-muted" style="margin-bottom:16rpx;">点击广告位进行编辑</view>
+<!-- 广告位管理：售位总览 + 位次列表 -->
+<view class="page">
+  <view class="hero">
+    <view class="hero-inner">
+      <view class="hero-title">广告位管理</view>
+      <view class="hero-sub">首页「优质推荐」共 10 个位次</view>
+      <view class="hero-stats">
+        <view class="hero-stat">
+          <text class="hero-stat-num">{{soldCount}}</text>
+          <text class="hero-stat-label">已售</text>
+        </view>
+        <view class="hero-stat-divider"></view>
+        <view class="hero-stat">
+          <text class="hero-stat-num">{{emptyCount}}</text>
+          <text class="hero-stat-label">空位</text>
+        </view>
+        <view class="hero-stat-divider"></view>
+        <view class="hero-stat">
+          <text class="hero-stat-num">{{linkedCount}}</text>
+          <text class="hero-stat-label">已关联专线</text>
+        </view>
+      </view>
+    </view>
+  </view>
 
-  <view class="card ad-row" wx:for="{{ads}}" wx:key="id" bindtap="edit" data-id="{{item.id}}">
-    <view class="ad-num">广告位 {{item.id}}</view>
-    <view class="ad-cur {{item.name ? '' : 'muted'}}">{{item.name || '招租中'}}</view>
-    <text class="arrow">›</text>
+  <view class="main">
+    <view wx:if="{{loadError}}" class="alert-card">
+      <text class="alert-icon">!</text>
+      <view class="alert-body">
+        <text class="alert-title">广告位加载失败</text>
+        <text class="alert-desc">网络异常，下方列表不代表真实售位情况</text>
+      </view>
+      <text class="alert-retry" bindtap="load">重试</text>
+    </view>
+
+    <view class="section-head">
+      <text class="section-title">全部位次</text>
+      <text class="section-hint">点击编辑</text>
+    </view>
+
+    <view class="slot-list">
+      <view
+        class="slot-card {{item.sold ? 'is-sold' : 'is-empty'}}"
+        wx:for="{{ads}}"
+        wx:key="id"
+        bindtap="edit"
+        data-id="{{item.id}}"
+      >
+        <view class="slot-no {{item.sold ? '' : 'slot-no-empty'}}">{{item.id}}</view>
+
+        <view class="slot-body">
+          <view class="slot-top">
+            <text class="slot-name {{item.sold ? '' : 'slot-name-empty'}}">{{item.name}}</text>
+            <view class="slot-tag {{item.sold ? 'tag-sold' : 'tag-empty'}}">{{item.sold ? '已售' : '空位'}}</view>
+          </view>
+          <view class="slot-meta">
+            <text wx:if="{{item.sold && item.region}}" class="slot-region">{{item.region}}</text>
+            <text wx:if="{{item.sold && item.number}}" class="slot-number">{{item.number}}</text>
+            <text wx:if="{{item.sold && !item.region && !item.number}}" class="slot-region slot-hint">未填区域与数字</text>
+            <text wx:if="{{item.sold && !item.lineId}}" class="slot-noline">未关联专线</text>
+          </view>
+        </view>
+
+        <text class="slot-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="foot-note">空位不会在首页渲染。首页仅展示已填写公司名的位次。</view>
   </view>
 </view>

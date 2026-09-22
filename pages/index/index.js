@@ -1,19 +1,22 @@
 // pages/index/index.js
+// 首页：只做"分流"——一句话搜索 + 两个业务入口，不做重查询。
+// 查询类需求统一走 pages/line-query（查专线）与 pages/company-list（查公司）。
 const db = wx.cloud.database();
 const storage = require('../../utils/storage.js');
 const ui = require('../../utils/ui.js');
+const stats = require('../../utils/stats.js');
 
 Page({
   data: {
-    fromText: '', toText: '',
-    fromCity: '', toCity: '',
-    ads: [], notice: ''
+    keyword: '',
+    ads: [],
+    notice: ''
   },
 
   onLoad() { this.loadAds(); this.loadNotice(); },
 
   onShareAppMessage() {
-    return { title: '物流专线查询 - 快速找到合适的物流专线', path: '/pages/index/index' };
+    return { title: '物流专线查询 - 找专线 · 找物流公司', path: '/pages/index/index' };
   },
 
   loadNotice() {
@@ -68,37 +71,41 @@ Page({
     if (ad && ad.lineId) wx.navigateTo({ url: `/pages/line-detail/index?lineId=${ad.lineId}` });
   },
 
-  onFromInput(e) { this.setData({ fromText: e.detail.value, fromCity: '' }); },
-  onToInput(e) { this.setData({ toText: e.detail.value, toCity: '' }); },
-
-  onFromChange(e) {
-    const r = e.detail.value;
-    this.setData({ fromCity: r[1], fromText: r[2] });
-  },
-  onToChange(e) {
-    const r = e.detail.value;
-    this.setData({ toCity: r[1], toText: r[2] });
+  onKeywordInput(e) {
+    this.setData({ keyword: e.detail.value });
   },
 
-  swapCity() {
-    const { fromText, toText, fromCity, toCity } = this.data;
-    this.setData({ fromText: toText, toText: fromText, fromCity: toCity, toCity: fromCity });
+  clearKeyword() {
+    this.setData({ keyword: '' });
   },
 
-  onQuery() {
-    const { fromText, toText, fromCity, toCity } = this.data;
-    if (!fromText) return wx.showToast({ title: '请填写出发地', icon: 'none' });
-    if (!toText) return wx.showToast({ title: '请填写目的地', icon: 'none' });
+  // 首页搜索框语义是"按公司名查线路"，统一进查公司页。
+  // 注意：查公司是 tabBar 页，必须用 switchTab，且 tabBar 页不能带 URL 参数，
+  // 所以关键词走全局变量交接（onShow 里消费一次后清空）。
+  onSearch() {
+    const kw = (this.data.keyword || '').trim();
+    if (!kw) return wx.showToast({ title: '请输入城市或公司名', icon: 'none' });
+    if (!ui.lock(this, 'search', false)) return;
 
-    // 连点会 navigateTo 两次、打开两个列表页；跳转类操作静默忽略（tip=false）
-    if (!ui.lock(this, 'query', false)) return;
-
-    storage.addSearchHistory({ fromCityId: 0, toCityId: 0, fromCityName: fromText, toCityName: toText });
-
-    const q = encodeURIComponent;
-    wx.navigateTo({
-      url: `/pages/line-list/index?fromCity=${q(fromCity)}&fromText=${q(fromText)}&toCity=${q(toCity)}&toText=${q(toText)}`,
-      complete: () => ui.unlock(this, 'query')
+    stats.logSearch(kw, 'company');
+    const app = getApp();
+    app.globalData.pendingCompanyKeyword = kw;
+    wx.switchTab({
+      url: '/pages/company-list/index',
+      complete: () => ui.unlock(this, 'search')
     });
+  },
+
+  goLineQuery() {
+    wx.switchTab({ url: '/pages/line-query/index' });
+  },
+
+  goCompanyList() {
+    wx.switchTab({ url: '/pages/company-list/index' });
+  },
+
+  goAgreement(e) {
+    const type = (e.currentTarget.dataset.type || 'privacy');
+    wx.navigateTo({ url: `/pages/agreement/index?type=${type}` });
   }
 });
