@@ -23,6 +23,7 @@
  */
 
 const db = require('../../utils/db');
+const admin = require('../../utils/admin');
 const common = require('../../utils/common');
 const { detectKeywordType } = require('../../utils/search');
 const { CITIES } = require('../../data/cities');
@@ -52,7 +53,14 @@ Page({
     dataUpdatedText: '',
     /** 免责声明摘要（首页直接展示一句，无需点进去） */
     disclaimerBrief: '',
-    operator: CONTACT.operator
+    operator: CONTACT.operator,
+
+    /**
+     * 当前用户是不是管理员 —— 决定底部要不要显示「管理」入口。
+     * ★ 入口是隐藏的：只有服务端（云函数 adminApi 的 openid 白名单）认了，
+     *   这里才会亮出来。普通用户看不到也进不去。
+     */
+    isAdmin: false
   },
 
   onLoad() {
@@ -60,10 +68,25 @@ Page({
       disclaimerBrief: DISCLAIMER_TEXT.paragraphs[0].desc
     });
     this.loadAll();
+    this.checkAdmin();
   },
 
   onPullDownRefresh() {
     this.loadAll().then(() => wx.stopPullDownRefresh());
+  },
+
+  /**
+   * 静默探测管理员身份
+   *
+   * ★ 不参与页面的加载态：它不是首页要展示的内容，成败都不该影响首页。
+   *   失败一律静默（可能只是云函数没部署），失败就等于「不是管理员」，入口不出现。
+   * ★ 这是**唯一**从首页进后台的入口，且只有白名单用户看得见。
+   */
+  async checkAdmin() {
+    const app = getApp();
+    if (!app || !app.globalData.cloudReady) return;
+    const r = await admin.whoami();
+    if (r.ok && r.isAdmin) this.setData({ isAdmin: true });
   },
 
   /**
@@ -260,6 +283,16 @@ Page({
 
   goPrivacy() {
     wx.navigateTo({ url: '/pages/privacy/index' });
+  },
+
+  /** 进后台（只有 isAdmin 时才渲染出来；进去了还会再校验一次身份） */
+  goAdmin() {
+    wx.navigateTo({
+      url: '/pages/admin/index/index',
+      fail: () => {
+        wx.showToast({ title: '页面打开失败，请重试', icon: 'none' });
+      }
+    });
   },
 
   /* ============================================================

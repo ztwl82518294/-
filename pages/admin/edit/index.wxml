@@ -1,0 +1,126 @@
+<!-- 后台管理 · 通用表单 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 类型不可编辑（纠错只能审核，不能改内容） -->
+    <view wx:if="{{badType}}" class="empty">
+      <view class="empty-title">这个类型不能编辑</view>
+      <view class="empty-desc">请从后台首页重新进入。</view>
+    </view>
+
+    <!-- 没权限 / 没配置 / 没部署 -->
+    <view wx:elif="{{fatalMessage}}" class="empty">
+      <view class="empty-title">无法使用后台</view>
+      <view class="empty-desc">{{fatalMessage}}</view>
+    </view>
+
+    <!-- 加载失败：可重试 -->
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">加载失败</view>
+      <view class="empty-desc">{{errMessage}}</view>
+      <view class="empty-btn" bindtap="onRetry">重新加载</view>
+    </view>
+
+    <view wx:elif="{{loading}}" class="loading">加载中…</view>
+
+    <block wx:else>
+
+      <view wx:if="{{note}}" class="note" bindtap="onNote">
+        <text class="note-text">{{note}}</text>
+        <text class="note-more">说明 ›</text>
+      </view>
+
+      <view class="card">
+        <view class="form">
+
+          <block wx:for="{{fields}}" wx:key="key">
+
+            <!-- 开关 -->
+            <view wx:if="{{item.kind === 'switch'}}" class="field">
+              <view class="field-label">{{item.label}}</view>
+              <view class="field-spacer"></view>
+              <switch
+                checked="{{item.checked}}"
+                color="#0B6E99"
+                data-index="{{index}}"
+                bindchange="onSwitch"
+              />
+            </view>
+
+            <!-- 下拉 -->
+            <view wx:elif="{{item.kind === 'picker'}}" class="field">
+              <view class="field-label">{{item.label}}<text wx:if="{{item.required}}" class="fld-star"> *</text></view>
+              <picker
+                mode="selector"
+                range="{{item.range}}"
+                value="{{item.index}}"
+                data-index="{{index}}"
+                bindchange="onPickerChange"
+              >
+                <view class="field-input {{item.value ? '' : 'field-placeholder'}}">
+                  {{item.value ? item.range[item.index] : (item.placeholder || '请选择')}}
+                </view>
+              </picker>
+            </view>
+
+            <!-- 日期 -->
+            <view wx:elif="{{item.kind === 'date'}}" class="field">
+              <view class="field-label">{{item.label}}</view>
+              <picker
+                mode="date"
+                value="{{item.value}}"
+                data-index="{{index}}"
+                bindchange="onDateChange"
+              >
+                <view class="field-input {{item.value ? '' : 'field-placeholder'}}">
+                  {{item.value ? item.value : (item.placeholder || '请选择')}}
+                </view>
+              </picker>
+            </view>
+
+            <!-- 多行文本 -->
+            <view wx:elif="{{item.kind === 'textarea'}}" class="fld-block">
+              <view class="fld-label">{{item.label}}<text wx:if="{{item.required}}" class="fld-star"> *</text></view>
+              <textarea
+                class="fld-textarea"
+                value="{{item.value}}"
+                placeholder="{{item.placeholder}}"
+                placeholder-class="field-placeholder"
+                maxlength="{{item.maxlength ? item.maxlength : 500}}"
+                auto-height
+                data-index="{{index}}"
+                bindinput="onInput"
+              />
+              <view wx:if="{{item.hint}}" class="fld-hint">{{item.hint}}</view>
+            </view>
+
+            <!-- 单行文本 / 数字 -->
+            <view wx:else class="field">
+              <view class="field-label">{{item.label}}<text wx:if="{{item.required}}" class="fld-star"> *</text></view>
+              <input
+                class="field-input"
+                type="{{item.kind === 'number' ? 'number' : 'text'}}"
+                value="{{item.value}}"
+                placeholder="{{item.placeholder}}"
+                placeholder-class="field-placeholder"
+                maxlength="{{item.maxlength ? item.maxlength : 140}}"
+                data-index="{{index}}"
+                bindinput="onInput"
+              />
+            </view>
+
+          </block>
+
+        </view>
+      </view>
+
+      <view class="foot-btn {{submitting ? 'foot-btn--disabled' : ''}}" bindtap="onSubmit">
+        {{submitting ? '保存中…' : '保存'}}
+      </view>
+
+      <view class="save-note">保存即直接写入云端，没有二次确认。</view>
+
+    </block>
+
+  </view>
+</view>

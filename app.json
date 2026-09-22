@@ -7,7 +7,12 @@
     "pages/company-detail/index",
     "pages/correction/index",
     "pages/privacy/index",
-    "pages/disclaimer/index"
+    "pages/disclaimer/index",
+    "pages/admin/index/index",
+    "pages/admin/list/index",
+    "pages/admin/edit/index",
+    "pages/admin/quality/index",
+    "pages/admin/import/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

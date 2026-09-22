@@ -1,0 +1,160 @@
+<!-- 后台管理 · 数据质量看板 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 没权限 / 没部署 -->
+    <view wx:if="{{fatalMessage}}" class="empty">
+      <view class="empty-title">无法使用后台</view>
+      <view class="empty-desc">{{fatalMessage}}</view>
+    </view>
+
+    <view wx:elif="{{loading}}" class="loading">正在统计…</view>
+
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">加载失败</view>
+      <view class="empty-desc">{{errMessage}}</view>
+      <view class="empty-btn" bindtap="onRetry">重新加载</view>
+    </view>
+
+    <block wx:else>
+
+      <!-- 上线门槛 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">上线门槛</text>
+          <text class="card-more" bindtap="onGateNote">说明 ›</text>
+        </view>
+        <view class="card-body">
+          <view class="gate-row">
+            <text class="gate-name">线路计数不符</text>
+            <text class="gate-val gate-val--{{q.blocking.countMismatch === 0 ? 'ok' : 'bad'}}">{{q.blocking.countMismatch}}</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">孤立关联</text>
+            <text class="gate-val gate-val--{{q.blocking.orphan === 0 ? 'ok' : 'bad'}}">{{q.blocking.orphan}}</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">空线路</text>
+            <text class="gate-val gate-val--{{q.blocking.emptyRoutes === 0 ? 'ok' : 'bad'}}">{{q.blocking.emptyRoutes}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 公司 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">公司</text>
+          <text class="card-more">共 {{q.companies.total}} 家</text>
+        </view>
+        <view class="card-body">
+          <view class="gate-row">
+            <text class="gate-name">缺电话</text>
+            <text class="gate-val">{{q.companies.noPhone}}（{{q.companies.noPhonePct}}%）</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">90 天未更新</text>
+            <text class="gate-val">{{q.companies.stale}}</text>
+          </view>
+
+          <view wx:if="{{noPhone.length > 0}}" class="detail">
+            <view class="detail-title">缺电话的公司（前 {{noPhone.length}} 家）</view>
+            <view wx:for="{{noPhone}}" wx:key="id" class="detail-row">{{item.name}}</view>
+          </view>
+
+          <view wx:if="{{staleCompanies.length > 0}}" class="detail">
+            <view class="detail-title">长期未更新（前 {{staleCompanies.length}} 家）</view>
+            <view wx:for="{{staleCompanies}}" wx:key="id" class="detail-row">{{item.name}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 线路 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">线路</text>
+          <text class="card-more">共 {{q.routes.total}} 条</text>
+        </view>
+        <view class="card-body">
+          <view class="gate-row">
+            <text class="gate-name">空线路（0 家公司）</text>
+            <text class="gate-val">{{q.routes.empty}}</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">计数不符</text>
+            <text class="gate-val">{{q.routes.countMismatch}}</text>
+          </view>
+
+          <view wx:if="{{countMismatch.length > 0}}" class="detail">
+            <view class="detail-title">计数不符（点开看差在哪）</view>
+            <view
+              wx:for="{{countMismatch}}"
+              wx:key="id"
+              class="detail-row detail-row--link"
+              data-index="{{index}}"
+              bindtap="onMismatchTap"
+            >{{item.routeKey}}：记 {{item.declared}} / 实 {{item.actual}} ›</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 关联 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">关联</text>
+          <text class="card-more">共 {{q.links.total}} 条</text>
+        </view>
+        <view class="card-body">
+          <view class="gate-row">
+            <text class="gate-name">缺时效</text>
+            <text class="gate-val">{{q.links.noTransit}}（{{q.links.noTransitPct}}%）</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">孤立关联</text>
+            <text class="gate-val">{{q.links.orphan}}</text>
+          </view>
+
+          <view wx:if="{{orphan.length > 0}}" class="detail">
+            <view class="detail-title">孤立关联（点开看说明）</view>
+            <view
+              wx:for="{{orphan}}"
+              wx:key="id"
+              class="detail-row detail-row--link"
+              data-index="{{index}}"
+              bindtap="onOrphanTap"
+            >{{item.routeId}} / {{item.companyId}} ›</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 纠错 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">纠错</text>
+          <text class="card-more">共 {{q.corrections.all}} 条</text>
+        </view>
+        <view class="card-body">
+          <view class="stat-grid">
+            <view class="stat">
+              <view class="stat-num">{{q.corrections.pending}}</view>
+              <view class="stat-label">待审核</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{q.corrections.accepted}}</view>
+              <view class="stat-label">已采纳</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{q.corrections.rejected}}</view>
+              <view class="stat-label">已驳回</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{q.corrections.hold}}</view>
+              <view class="stat-label">待定</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+    </block>
+
+  </view>
+</view>

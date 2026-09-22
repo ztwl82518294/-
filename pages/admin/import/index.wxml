@@ -1,0 +1,147 @@
+<!-- 后台管理 · 批量导入 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 没权限 / 没部署 -->
+    <view wx:if="{{fatalMessage}}" class="empty">
+      <view class="empty-title">无法使用后台</view>
+      <view class="empty-desc">{{fatalMessage}}</view>
+    </view>
+
+    <block wx:else>
+
+      <!-- 网络类失败 -->
+      <view wx:if="{{loadError}}" class="empty">
+        <view class="empty-title">操作失败</view>
+        <view class="empty-desc">{{errMessage}}</view>
+        <view class="empty-btn" bindtap="onRetry">重新加载</view>
+      </view>
+
+      <!-- ============ 阶段 1：粘贴 ============ -->
+      <block wx:if="{{stage === 'input'}}">
+        <view class="card">
+          <view class="card-head">
+            <text class="card-title">粘贴 CSV 内容</text>
+            <text class="card-more" bindtap="onPaste">从剪贴板粘贴</text>
+          </view>
+          <view class="card-body">
+            <textarea
+              class="csv-area"
+              value="{{text}}"
+              placeholder="在这里粘贴 CSV 文本。电脑上用 Excel 存成 CSV，把内容发到微信，复制后粘进来。"
+              placeholder-class="field-placeholder"
+              bindinput="onInputText"
+            />
+            <view class="tmpl-row">
+              <text class="tmpl-link" bindtap="onCopyTemplate">复制模板</text>
+              <text class="tmpl-sep">·</text>
+              <text class="tmpl-link" bindtap="onViewTemplate">表头说明</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="foot-btn {{submitting ? 'foot-btn--disabled' : ''}}" bindtap="onPreview">
+          {{submitting ? '解析中…' : '预览'}}
+        </view>
+        <view class="save-note">预览不会写入任何数据。</view>
+      </block>
+
+      <!-- ============ 阶段 2：预览 ============ -->
+      <block wx:elif="{{stage === 'preview'}}">
+        <view class="card">
+          <view class="card-head">
+            <text class="card-title">导入预览</text>
+          </view>
+          <view class="card-body">
+            <view class="sum-grid">
+              <view class="sum">
+                <view class="sum-num">{{summary.total}}</view>
+                <view class="sum-label">解析行数</view>
+              </view>
+              <view class="sum">
+                <view class="sum-num sum-num--ok">{{summary.validCount}}</view>
+                <view class="sum-label">可导入</view>
+              </view>
+              <view class="sum">
+                <view class="sum-num sum-num--bad">{{summary.invalidCount}}</view>
+                <view class="sum-label">有问题</view>
+              </view>
+            </view>
+
+            <view class="sum-line">其中新公司 {{summary.newCompanies}} 家、已存在 {{summary.existingCompanies}} 家、新线路 {{summary.newRoutes}} 条</view>
+          </view>
+        </view>
+
+        <view wx:if="{{invalidRows.length > 0}}" class="card">
+          <view class="card-head">
+            <text class="card-title">有问题的行（导入时会跳过）</text>
+          </view>
+          <view class="card-body">
+            <view
+              wx:for="{{invalidRows}}"
+              wx:key="lineNo"
+              class="err-row"
+            >
+              <text class="err-line">第 {{item.lineNo}} 行</text>
+              <text class="err-msg">{{item.message}}</text>
+            </view>
+            <view wx:if="{{hiddenErrorCount > 0}}" class="err-more">
+              另有 {{hiddenErrorCount}} 行未列出
+            </view>
+          </view>
+        </view>
+
+        <view class="foot-btn {{submitting ? 'foot-btn--disabled' : ''}}" bindtap="onCommit">
+          {{submitting ? '导入中…' : '确认导入'}}
+        </view>
+        <view class="foot-btn foot-btn--ghost" bindtap="onBackToInput">返回修改</view>
+      </block>
+
+      <!-- ============ 阶段 3：完成 ============ -->
+      <block wx:else>
+        <view class="card">
+          <view class="card-head">
+            <text class="card-title">导入完成</text>
+          </view>
+          <view class="card-body">
+            <view class="sum-grid">
+              <view class="sum">
+                <view class="sum-num sum-num--ok">{{result.created}}</view>
+                <view class="sum-label">新建公司</view>
+              </view>
+              <view class="sum">
+                <view class="sum-num">{{result.links}}</view>
+                <view class="sum-label">新建关联</view>
+              </view>
+              <view class="sum">
+                <view class="sum-num">{{result.updated}}</view>
+                <view class="sum-label">复用公司</view>
+              </view>
+              <view class="sum">
+                <view class="sum-num sum-num--bad">{{result.failedCount}}</view>
+                <view class="sum-label">写入失败</view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{failedRows.length > 0}}" class="card">
+          <view class="card-head">
+            <text class="card-title">写入失败的行</text>
+          </view>
+          <view class="card-body">
+            <view wx:for="{{failedRows}}" wx:key="lineNo" class="err-row">
+              <text class="err-line">第 {{item.lineNo}} 行</text>
+              <text class="err-msg">{{item.message}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="foot-btn" bindtap="onFinish">完成</view>
+        <view class="foot-btn foot-btn--ghost" bindtap="onBackToInput">再导一批</view>
+      </block>
+
+    </block>
+
+  </view>
+</view>

@@ -1,0 +1,133 @@
+<!-- 后台管理 · 总览 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="loading">正在确认身份…</view>
+
+    <!-- 加载失败：可重试（与「没有数据」分开，不把异常说成空） -->
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">无法连接后台</view>
+      <view class="empty-desc">{{errMessage}}</view>
+      <view class="empty-btn" bindtap="onRetry">重新加载</view>
+    </view>
+
+    <!-- 非管理员：把 openid 摆出来，复制填进白名单就能进 -->
+    <view wx:elif="{{!isAdmin}}" class="card">
+      <view class="card-head">
+        <text class="card-title">你不是管理员</text>
+      </view>
+      <view class="card-body">
+        <view class="note-desc">
+          <block wx:if="{{denyCode === 'NOT_CONFIGURED'}}">
+            后台还没有配置任何管理员。把下面这串 openid 填进白名单就能进。
+          </block>
+          <block wx:else>
+            你的微信号不在管理员白名单里。把下面这串 openid 发给运营方，加进白名单后即可进入。
+          </block>
+        </view>
+
+        <view class="openid-box">
+          <text class="openid">{{openid}}</text>
+        </view>
+
+        <view class="act-row">
+          <view class="btn-sm" bindtap="onCopyOpenid">复制 openid</view>
+          <view class="btn-sm btn-sm--ghost" bindtap="onHowTo">怎么配置</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 管理员：总览 + 入口 -->
+    <block wx:else>
+
+      <!-- 数据规模 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">数据规模</text>
+          <text class="card-more">{{openid}}</text>
+        </view>
+        <view class="card-body">
+          <view class="stat-grid">
+            <view class="stat">
+              <view class="stat-num">{{counts.companies}}</view>
+              <view class="stat-label">公司</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{counts.routes}}</view>
+              <view class="stat-label">线路</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{counts.links}}</view>
+              <view class="stat-label">关联</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{counts.announcements}}</view>
+              <view class="stat-label">公告</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{counts.featured}}</view>
+              <view class="stat-label">推广位</view>
+            </view>
+            <view class="stat">
+              <view class="stat-num">{{counts.pendingCorrections}}</view>
+              <view class="stat-label">待审纠错</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 上线门槛：这三项不为 0 就不该上线 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">上线门槛</text>
+          <text class="card-more" bindtap="onEntryTap" data-page="quality">详情 ›</text>
+        </view>
+        <view class="card-body">
+          <view class="gate-row">
+            <text class="gate-name">线路计数不符</text>
+            <text class="gate-val gate-val--{{blocking.countMismatch === 0 ? 'ok' : 'bad'}}">{{blocking.countMismatch}}</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">孤立关联</text>
+            <text class="gate-val gate-val--{{blocking.orphan === 0 ? 'ok' : 'bad'}}">{{blocking.orphan}}</text>
+          </view>
+          <view class="gate-row">
+            <text class="gate-name">空线路</text>
+            <text class="gate-val gate-val--{{blocking.emptyRoutes === 0 ? 'ok' : 'bad'}}">{{blocking.emptyRoutes}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 八个入口 -->
+      <view class="card">
+        <view class="card-head">
+          <text class="card-title">管理入口</text>
+        </view>
+        <view class="card-body">
+          <view class="entry-grid">
+            <view
+              wx:for="{{entries}}"
+              wx:key="label"
+              class="entry"
+              data-type="{{item.type}}"
+              data-page="{{item.page}}"
+              bindtap="onEntryTap"
+            >
+              <view class="entry-label">{{item.label}}</view>
+              <view class="entry-desc">{{item.desc}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 与桌面后台的冲突（必须常驻提醒，不能只写在文档里） -->
+      <view class="warn" bindtap="onConflictNote">
+        <view class="warn-title">注意：这里改的是云端</view>
+        <view class="warn-desc">桌面后台的本地副本会就此过期，别再拿它覆盖云端。点这里看说明。</view>
+      </view>
+
+    </block>
+
+  </view>
+</view>

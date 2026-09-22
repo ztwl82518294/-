@@ -1,0 +1,122 @@
+<!-- 后台管理 · 通用列表 -->
+<view class="page">
+  <view class="page-body">
+
+    <!-- 类型非法（参数被改坏了） -->
+    <view wx:if="{{badType}}" class="empty">
+      <view class="empty-title">未知的管理类型</view>
+      <view class="empty-desc">请从后台首页重新进入。</view>
+    </view>
+
+    <!-- 没权限 / 没配置 / 没部署：再试也没用，给指引 -->
+    <view wx:elif="{{fatalMessage}}" class="empty">
+      <view class="empty-title">无法使用后台</view>
+      <view class="empty-desc">{{fatalMessage}}</view>
+    </view>
+
+    <block wx:else>
+
+      <!-- 搜索（只有可搜索的类型才显示） -->
+      <view wx:if="{{searchable}}" class="search-bar">
+        <input
+          class="search-input"
+          value="{{kw}}"
+          placeholder="搜索{{label}}"
+          placeholder-class="field-placeholder"
+          confirm-type="search"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+        />
+        <text wx:if="{{kw}}" class="search-clear" bindtap="onClearSearch">清除</text>
+      </view>
+
+      <!-- 类型说明 -->
+      <view wx:if="{{note}}" class="note" bindtap="onNote">
+        <text class="note-text">{{note}}</text>
+        <text class="note-more">说明 ›</text>
+      </view>
+
+      <!-- 加载中 -->
+      <view wx:if="{{loading}}" class="loading">加载中…</view>
+
+      <!-- 加载失败：可重试 -->
+      <view wx:elif="{{loadError}}" class="empty">
+        <view class="empty-title">加载失败</view>
+        <view class="empty-desc">{{errMessage}}</view>
+        <view class="empty-btn" bindtap="onRetry">重新加载</view>
+      </view>
+
+      <!-- 空态 -->
+      <view wx:elif="{{rows.length === 0}}" class="empty">
+        <view class="empty-title">{{kw ? '没有匹配的结果' : '还没有数据'}}</view>
+        <view class="empty-desc">
+          {{kw ? '换个关键词再试试，或清除搜索看全部。' : '可以在下面点“新建”添加第一条。'}}
+        </view>
+      </view>
+
+      <block wx:else>
+
+        <!-- 计数 -->
+        <view class="count">共 {{total}} 条</view>
+
+        <!-- 列表 -->
+        <view
+          wx:for="{{rows}}"
+          wx:key="id"
+          class="card row"
+          data-index="{{index}}"
+          bindtap="onRowTap"
+        >
+          <view class="row-main">
+            <view class="row-title">{{item.title}}</view>
+            <view wx:if="{{item.sub}}" class="row-sub">{{item.sub}}</view>
+            <view wx:if="{{item.chips.length > 0}}" class="row-chips">
+              <text
+                wx:for="{{item.chips}}"
+                wx:for-item="chip"
+                wx:key="text"
+                class="chip chip--{{chip.tone}}"
+              >{{chip.text}}</text>
+            </view>
+          </view>
+
+          <!-- 纠错：不进编辑页，直接给三个审核按钮 -->
+          <view wx:if="{{isCorrections}}" class="row-acts">
+            <text
+              class="act act--green"
+              data-id="{{item.id}}"
+              data-status="accepted"
+              catchtap="onReview"
+            >采纳</text>
+            <text
+              class="act act--amber"
+              data-id="{{item.id}}"
+              data-status="hold"
+              catchtap="onReview"
+            >待定</text>
+            <text
+              class="act act--gray"
+              data-id="{{item.id}}"
+              data-status="rejected"
+              catchtap="onReview"
+            >驳回</text>
+          </view>
+
+          <view wx:elif="{{deletable}}" class="row-acts">
+            <text class="act act--danger" data-index="{{index}}" catchtap="onDelete">删除</text>
+          </view>
+        </view>
+
+        <!-- 触底加载更多 -->
+        <view wx:if="{{loadingMore}}" class="loading">加载更多…</view>
+        <view wx:elif="{{!hasMore}}" class="list-end">已经到底了</view>
+
+      </block>
+
+      <!-- 新建（纠错不能新建） -->
+      <view wx:if="{{editable}}" class="foot-btn" bindtap="onCreate">新建{{label}}</view>
+
+    </block>
+
+  </view>
+</view>

@@ -1,0 +1,152 @@
+/* 后台管理 · 通用列表
+ * 沿用全局 .card / .search-bar / .empty / .loading，这里只补列表行与行内操作。
+ */
+
+.search-clear {
+  flex-shrink: 0;
+  font-size: 25rpx;
+  color: var(--color-primary);
+  padding-left: var(--gap-sm);
+}
+
+/* 类型说明条 */
+.note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-sm);
+  margin-top: var(--gap-md);
+  padding: var(--gap-sm) var(--gap-md);
+  background-color: var(--tint-blue);
+  border: 1rpx solid var(--edge-blue);
+  border-radius: var(--radius-md);
+}
+
+.note-text {
+  flex: 1;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--ink-blue);
+}
+
+.note-more {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--ink-blue);
+}
+
+.count {
+  padding: var(--gap-sm) 0;
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* ============================================================
+ * 列表行
+ * ============================================================ */
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-sm);
+  padding: var(--gap-md);
+}
+
+.row:active {
+  background-color: var(--color-bg-hover);
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+
+.row-sub {
+  margin-top: 4rpx;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.row-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-xs);
+  margin-top: var(--gap-sm);
+}
+
+/* ============================================================
+ * 徽章（全实色，遵守铁律 3）
+ * ============================================================ */
+
+.chip {
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  line-height: 1.5;
+  border: 1rpx solid transparent;
+}
+
+.chip--blue { background-color: var(--tint-blue); color: var(--ink-blue); border-color: var(--edge-blue); }
+.chip--teal { background-color: var(--tint-teal); color: var(--ink-teal); border-color: var(--edge-teal); }
+.chip--peach { background-color: var(--tint-peach); color: var(--ink-peach); border-color: var(--edge-peach); }
+.chip--violet { background-color: var(--tint-violet); color: var(--ink-violet); border-color: var(--edge-violet); }
+.chip--amber { background-color: var(--tint-amber); color: var(--ink-amber); border-color: var(--edge-amber); }
+.chip--green { background-color: var(--tint-green); color: var(--ink-green); border-color: var(--edge-green); }
+.chip--gray { background-color: var(--color-tag-bg); color: var(--color-tag-text); border-color: var(--color-border); }
+
+/* ============================================================
+ * 行内操作
+ * ============================================================ */
+
+.row-acts {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--gap-sm);
+}
+
+.act {
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-sm);
+  font-size: 24rpx;
+  border: 1rpx solid transparent;
+}
+
+/* 危险操作用最浅的红底 + 同色描边；描边允许半透明，禁的是**文字**半透明 */
+.act--danger { background-color: var(--color-danger-bg); color: var(--color-danger); border-color: rgba(212, 76, 71, 0.35); }
+.act--green { background-color: var(--tint-green); color: var(--ink-green); border-color: var(--edge-green); }
+.act--amber { background-color: var(--tint-amber); color: var(--ink-amber); border-color: var(--edge-amber); }
+.act--gray { background-color: var(--color-tag-bg); color: var(--color-tag-text); border-color: var(--color-border); }
+
+.list-end {
+  padding: var(--gap-md) 0;
+  text-align: center;
+  font-size: 23rpx;
+  color: var(--color-text-tertiary);
+}
+
+/* 底部新建按钮（不吸底，跟在列表后面，避免遮挡最后一行） */
+.foot-btn {
+  margin-top: var(--gap-md);
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.foot-btn:active {
+  background-color: var(--color-primary-dark);
+}

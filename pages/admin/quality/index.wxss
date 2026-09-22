@@ -1,0 +1,81 @@
+/* 后台管理 · 数据质量看板 */
+
+.gate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-sm) 0;
+}
+
+.gate-row + .gate-row {
+  border-top: 1rpx solid var(--color-border);
+}
+
+.gate-name {
+  font-size: 27rpx;
+  color: var(--color-text-secondary);
+}
+
+.gate-val {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* 铁律 3 / 5：全实色 */
+.gate-val--ok { color: var(--ink-green); }
+.gate-val--bad { color: var(--color-danger); }
+
+/* 明细块 */
+.detail {
+  margin-top: var(--gap-md);
+  padding-top: var(--gap-sm);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.detail-title {
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--gap-xs);
+}
+
+.detail-row {
+  padding: 6rpx 0;
+  font-size: 25rpx;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.detail-row--link {
+  color: var(--color-primary);
+}
+
+.detail-row--link:active {
+  color: var(--color-primary-dark);
+}
+
+/* 纠错状态 */
+.stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.stat {
+  width: 25%;
+  padding: var(--gap-sm) 0;
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 38rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink-blue);
+}
+
+.stat-label {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: var(--color-text-tertiary);
+}

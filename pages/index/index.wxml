@@ -113,6 +113,11 @@
         <text class="foot-link" bindtap="goDisclaimer">免责声明</text>
         <text class="foot-sep">·</text>
         <text class="foot-link" bindtap="goPrivacy">用户信息处理规则</text>
+        <!-- 后台入口：只有服务端认了的管理员才渲染（普通用户看到的是没有这一项的） -->
+        <block wx:if="{{isAdmin}}">
+          <text class="foot-sep">·</text>
+          <text class="foot-link" bindtap="goAdmin">管理</text>
+        </block>
       </view>
       <view class="foot-operator">运营方：{{operator}}（个人开发者）</view>
     </view>

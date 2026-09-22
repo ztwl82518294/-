@@ -23,11 +23,21 @@
 
 | 端 | 内容 |
 |---|---|
-| 小程序 8 页 | index / search-by-address / search-by-company / route-detail / company-detail / correction / privacy / disclaimer |
+| 小程序 13 页 | index / search-by-address / search-by-company / route-detail / company-detail / correction / privacy / disclaimer + **`pages/admin/*` 五页**（index / list / edit / quality / import） |
 | 组件 | city-picker / privacy-modal |
-| utils | common / search / db / params / privacy / correction（**无 contact.js**） |
-| 云函数 | `submitCorrection` / `trackCompanyView` |
-| 后台 | `admin/` —— 唯一 Web 端 / 唯一写入口 / 唯一需登录 |
+| utils | common / search / db / params / privacy / correction / **admin**（**无 contact.js**） |
+| 云函数 | `submitCorrection` / `trackCompanyView` / **`adminApi`** |
+| 后台 | `admin/` —— Web 端 / 唯一需登录；**小程序端后台直写云端**（见第二节末） |
+
+### ★ 小程序端后台（pages/admin/*，2026-09-22 新增）
+- **必须走云函数 `adminApi`**：页面里不允许 `.collection(`；身份在服务端按 openid 白名单比对，前端绕过不了
+- **白名单为空一律拒绝**（不放行）。非管理员打开后台页 → 页面直接显示自己的 openid，复制填进
+  `cloudfunctions/adminApi/index.js` 的 `ADMIN_OPENIDS` → 重新上传部署即可
+- **入口隐藏**：首页底部「管理」两个字只在 whoami 判定为管理员时才渲染，普通用户看不见
+- **通用列表 + 通用表单**：`pages/admin/list` 与 `pages/admin/edit` 由 `type` 驱动，
+  字段/列表展示全部定义在 `utils/admin.js` 的 `TYPES` 元信息里 —— 加字段改元信息，不用改页面
+- **入口 8 个**：公司 / 线路 / 关联 / 公告 / 推广位 / 纠错审核 / 批量导入 / 数据质量（与桌面后台一一对应）
+- 导入在手机上是**粘贴 CSV 文本**（不能传文件），仍走「预览 → 确认」两阶段，预览零写入
 
 ### 首页（2026-09-22 改版）
 删掉：热门专线 / 最近更新线路 / 我知道公司名。现为 `.sky` 天气式头部 + **公告栏**（swiper）+ **优质线路推广**（横向卡片）+ 两个查询入口。
@@ -73,6 +83,15 @@ lib/api.js JSON接口  lib/views.js 服务端渲染HTML
 - 导入模板 `/api/import/template` 是**公开资源**，路由**必须在鉴权之前**，别挪回去
 - 导入**先预览后确认**，预览阶段绝不写数据；错误行带 Excel 行号
 - 不做注册入口
+
+### ★★ 两套后台的冲突（写死，别忘）
+| | 桌面后台 `admin/` | 小程序后台 `pages/admin/` |
+|---|---|---|
+| 写到哪 | **本地副本** `admin/data/`（再导出导入云端） | **直接写云端** |
+| 后果 | 只要小程序端改过数据，本地副本即**过期** | —— |
+
+⇒ **用小程序后台改过数据后，绝不能拿 `admin/data/` 去覆盖云端**（会把改动整批抹掉）。
+这条已写进 `pages/admin/index` 的常驻提醒卡，不只写在文档里。
 - 运营位校验：公告**正文非空**、level 在枚举、**link 必须以 `/` 开头**、时间窗不倒挂；推广位 **routeKey 必须真实存在**、**同一线路只一个推广位**、角标必填 ≤8 字
 - `parseTimeInput()`：把 `2026-10-01` 转时间戳（直接 `Number()` 得 NaN 会静默变 0）
 - store 的 `T` **键名必须等于集合名**，否则 flush 取不到行
@@ -93,13 +112,13 @@ lib/api.js JSON接口  lib/views.js 服务端渲染HTML
 
 | 层 | 命令 | 规模 |
 |---|---|---|
-| 单元 | `node test/run-all.js` | **7 套件 374 断言** |
+| 单元 | `node test/run-all.js` | **10 套件 492 断言** |
 | 体检 | `node scripts/check-project.js` | **12 类**静态检查 |
-| 模块基础能力 | `node .workbuddy/scripts/check-module-basics.js` | **8 个页面**（改页面必跑） |
-| 部署前 | `node scripts/check-deploy.js` | **19 项** |
+| 模块基础能力 | `node .workbuddy/scripts/check-module-basics.js` | **13 个页面**（改页面必跑） |
+| 部署前 | `node scripts/check-deploy.js` | **25 项** |
 | 验收 | `node scripts/check-acceptance.js` | **61 断言** + 12 项人工 |
 | 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP **108 断言**（临时端口 8791） |
-| BOM | `node .workbuddy/scripts/check-bom.js` | **141 文件，提审前必跑** |
+| BOM | `node .workbuddy/scripts/check-bom.js` | **175 文件，提审前必跑** |
 
 > **自检报错先分清「代码错」还是「检查逻辑错」**（同「修测试而不是修功能」）。
 > 已多次遇到「检查器关键词落后于实现」—— 一律改检查器并注释，**绝不为过检查给页面加无用代码**。
@@ -198,6 +217,8 @@ Component is not found in path "wx://not-found".            ← 结果不是原�
 | 能力 | 唯一来源 |
 |---|---|
 | 集合名与字段定义 | `shared/schema.js` |
+| 批量导入（CSV 解析 / 字段映射 / 行校验） | `shared/import.js`（后台、云函数、小程序共用） |
+| 小程序后台的类型元信息（字段/列表展示） | `utils/admin.js` 的 `TYPES` |
 | **字段级校验（公司/线路/关联/公告/推广）** | `shared/validate.js`（后台与云函数共用） |
 | `routeKey` 派生 | `utils/common.js` 的 `buildRouteKey`（两侧都过 `normCity`） |
 | 城市归一 `normCity` | `utils/common.js`（去「市/区/县/省」后缀） |
@@ -259,6 +280,8 @@ v4.3（含 `F-xx`/`R-xx` 编号、护栏 R-10~R-15）**已丢失**，从未进�
 1. ✅ **远程备份** —— `https://github.com/ztwl82518294/-`
    ⚠️ **仍需用户确认该仓库是 Private**（含客服电话与公司信息）
 2. ⬜ **云函数上传部署**（阻断项）—— 手动：右键云函数 → **上传并部署：云端安装依赖**（本地无 node_modules，不能选「所有文件」）
+   含新增的 **`adminApi`**；上传前后各跑一次 `node scripts/sync-cloud-shared.js --check`（副本漂移检查）
+2b. ⬜ **填管理员 openid**：用微信进小程序 → 后台页会显示 openid → 填进 `ADMIN_OPENIDS` → 重新上传部署
 3. ⬜ 云控制台建 **8** 集合 + 导入 `.data/*.jsonl`：companies 40 / routes 55 / route_companies 72 / cities 344 / announcements 4 / featured_routes 6
 4. ⬜ `corrections` 加索引 `openid+day`、`openid+targetId+day`
 5. ⬜ **12 项人工验证**（清单在 `docs/验收自检报告.md`）

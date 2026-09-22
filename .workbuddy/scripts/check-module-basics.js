@@ -54,7 +54,38 @@ const SPEC = {
     note: '纠错表单：防重复提交 + 必填校验'
   },
   'disclaimer': { kind: 'static', need: [], note: '免责声明：纯文本' },
-  'privacy': { kind: 'static', need: [], note: '隐私规则：纯文本' }
+  'privacy': { kind: 'static', need: [], note: '隐私规则：纯文本' },
+  /*
+   * 后台管理五页（PRD 模块 06 的小程序形态）
+   * ★ admin/index 与 admin/quality 的 need 里**故意没有 empty**：
+   *   总览和质量看板展示的都是「数字」，0 也是有效结果（0 家公司 = 真的没有），
+   *   弹一个「暂无数据」是把正常状态说成异常。缺的是 empty 不是 bug。
+   */
+  'admin/index': {
+    kind: 'list',
+    need: ['pullDown', 'loading', 'error'],
+    note: '后台总览：身份确认 + 数据规模 + 八个入口（数字恒有，无空态）'
+  },
+  'admin/list': {
+    kind: 'list',
+    need: ['pullDown', 'reachBottom', 'loading', 'empty', 'error'],
+    note: '后台通用列表：搜索 + 分页 + 删除 + 纠错审核'
+  },
+  'admin/edit': {
+    kind: 'form',
+    need: ['submitting', 'validate'],
+    note: '后台通用表单：必填校验 + 防重复提交'
+  },
+  'admin/quality': {
+    kind: 'list',
+    need: ['pullDown', 'loading', 'error'],
+    note: '数据质量看板：数字恒有，无空态'
+  },
+  'admin/import': {
+    kind: 'form',
+    need: ['submitting', 'validate'],
+    note: '批量导入：两阶段（预览 → 确认），预览不写数据'
+  }
 };
 
 const CAP_LABEL = {
