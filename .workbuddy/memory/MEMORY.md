@@ -229,14 +229,24 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
 
 ## 十、待办
 
-1. ⬜ **远程备份（进行中）** —— 代码已全部提交（4 个提交到 `main`），
-   **仓库级 7897 代理已验证可连通 GitHub**，自检脚本就绪。
-   只差用户建好 GitHub 私有仓库后跑：
-   `node .workbuddy/scripts/push-backup.js https://github.com/ztwl82518294/<仓库名>.git`
-   **在此之前本机仍是唯一副本。**
+1. ✅ **远程备份（已完成 2026-09-22）** —— `https://github.com/ztwl82518294/-`（私有）
+   远程 `main` = 本地 = `615a68d`（139 文件，已对服务端核验，零数据泄漏）。
+   **以后推送**：沙箱内跑 `node .workbuddy/scripts/push-backup.js <仓库地址>`
+   （脚本自动写 `http.proxy=127.0.0.1:7897` 并跑三项敏感数据自检）；
+   正常 shell 直连即可。
+   ⚠️ **仍需用户确认该仓库是 Private** —— 里面含客服电话与公司信息。
 2. ⬜ 云函数上传部署 `submitCorrection` / `trackCompanyView`（阻断项）
 3. ⬜ 云控制台建 6 集合 + 导入 `.data/*.jsonl`
 4. ⬜ `corrections` 集合加索引 `openid+day`、`openid+targetId+day`
 5. ⬜ **12 项人工验证**（清单在 `docs/验收自检报告.md`）
 6. ⬜ `admin/data/` 与云数据库的衔接：`/api/correction/merge` 已预留「拉线上纠错回本地」，
    但还缺「从云数据库导出纠错」的脚本
+
+### 本机 git 的怪毛病：远程跟踪引用存不住
+`git update-ref refs/remotes/origin/main <SHA>` **返回 0 却什么也不写**，
+`.git/refs/remotes` 始终为空 ⇒ `git status` 显示 `[origin/main: gone]`、
+`git log origin/main` 报 `Not a valid object name`。**是沙箱对 `.git` 写入的限制，不是仓库坏了。**
+- **判断「有没有推上去」只看 `git ls-remote origin`**（问服务端），别信本地 `[gone]`。
+- 要比对远程内容：`git fetch --no-tags origin <SHA>` 后对 `FETCH_HEAD` 操作。
+- 推送被 `! [rejected] (fetch first)` 拒（远程已有 README）：合并要加
+  `--allow-unrelated-histories`；README 冲突取 ours（远程通常是占位文件）。
