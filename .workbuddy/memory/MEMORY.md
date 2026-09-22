@@ -299,11 +299,12 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
 
 ## 十、待办
 
-1. ✅ **远程备份（已完成 2026-09-22）** —— `https://github.com/ztwl82518294/-`（私有）
-   远程 `main` = 本地 = `615a68d`（139 文件，已对服务端核验，零数据泄漏）。
-   **以后推送**：沙箱内跑 `node .workbuddy/scripts/push-backup.js <仓库地址>`
-   （脚本自动写 `http.proxy=127.0.0.1:7897` 并跑三项敏感数据自检）；
-   正常 shell 直连即可。
+1. ✅ **远程备份（已完成 2026-09-22，最新 `9a42c94`）** —— `https://github.com/ztwl82518294/-`（私有）
+   远程 `main` = 本地 = `9a42c94`（144 文件，已对服务端核验，零数据泄漏）。
+   **以后推送**：先试 `git -C <项目> push origin main` **直连** ——
+   2026-09-22 下午实测**直连即通**（代理 7897 当时没开）。
+   直连不通再跑 `node .workbuddy/scripts/push-backup.js <仓库地址>`
+   （脚本自动写 `http.proxy=127.0.0.1:7897` 并跑三项敏感数据自检）。
    ⚠️ **仍需用户确认该仓库是 Private** —— 里面含客服电话与公司信息。
 2. ⬜ **云函数上传部署**（阻断项）—— 本地检查已全绿（`node scripts/check-deploy.js` 17/17），
    只剩手动上传：右键 `submitCorrection` / `trackCompanyView` → **上传并部署：云端安装依赖**
@@ -314,6 +315,11 @@ lib/views.js       服务端渲染 HTML（零依赖模板）
 5. ⬜ **12 项人工验证**（清单在 `docs/验收自检报告.md`）
 6. ⬜ `admin/data/` 与云数据库的衔接：`/api/correction/merge` 已预留「拉线上纠错回本地」，
    但还缺「从云数据库导出纠错」的脚本
+7. ⬜ **PRD v4.3 已丢失** —— 现 `PRD.md` 是 v1.0 基线副本。若你手上有 v4.3
+   （含 `F-xx`/`R-xx` 编号与护栏 R-10~R-15），请放回来，否则需求编号无从定位。
+8. ⬜ 确认 `G:\workbuddy\wuliuzhaunxianchaxun` 是否可以**整个删除** ——
+   那是废弃的早期尝试（云环境从未配置），留着容易改错目录。
+9. ⬜ 日志 `2026-09-22.md` 已 15.8KB，超过自定的 ~10KB 拆分线，下次该归档精简。
 
 ### 本机 git 的怪毛病：远程跟踪引用存不住
 `git update-ref refs/remotes/origin/main <SHA>` **返回 0 却什么也不写**，
