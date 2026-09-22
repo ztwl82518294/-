@@ -47,8 +47,15 @@ Page({
     /** 结果 */
     loading: false,
     searched: false,
+    /** 加载失败（可重试） */
+    loadError: false,
     rows: [],
     total: 0,
+
+    /** 分页：是否还有下一页 */
+    hasMore: false,
+    /** 是否正在加载下一页（触底时用） */
+    loadingMore: false,
 
     /** 空结果引导 */
     emptyHint: '',
@@ -64,6 +71,53 @@ Page({
     const to = params.safeDecode(q.to);
     if (from) this.setData({ fromCity: from });
     if (to) this.setData({ toCity: to });
+  },
+
+  /** 下拉刷新：有查询条件就重查，没有就只是收掉刷新动画 */
+  onPullDownRefresh() {
+    const done = () => wx.stopPullDownRefresh();
+    if (this.data.searched && this.data.fromCity && this.data.toCity) {
+      // 清掉展开项，回到「这条线的全量结果」——这才是刷新该有的语义
+      this.setData({ expandId: '' }, () => {
+        this.doSearch().then(done).catch(done);
+      });
+    } else {
+      done();
+    }
+  },
+
+  /**
+   * 触底加载下一页
+   *
+   * ★ 不能简单地「拉一页就显示」：筛选项（直达/天天发车/时效）是**客户端**过滤，
+   *   若当前页全被筛掉，用户会看到「列表到底了但其实还有数据」。
+   *   因此这里循环补页，直到「攒够足够展示的条数」或「后端真的没有下一页」。
+   */
+  async onReachBottom() {
+    if (this.data.loadingMore || !this.data.hasMore) return;
+    if (!this._route) return;
+
+    this.setData({ loadingMore: true });
+    try {
+      await this.loadMoreUntilEnough();
+    } catch (err) {
+      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' });
+    }
+    this.setData({ loadingMore: false });
+  },
+
+  /** 每次补到「已过滤结果 >= 本页下限」为止；最多补 5 页防止死循环 */
+  async loadMoreUntilEnough() {
+    const MIN_VISIBLE = 8;
+    for (let i = 0; i < 5; i++) {
+      if (!this.data.hasMore) break;
+      const res = await db.pageRouteCompanies(this._route._id, this._page, db.PAGE_SIZE);
+      this._page += 1;
+      this._allRows = (this._allRows || []).concat((res.rows || []).map((x) => this.decorate(x)));
+      this.setData({ hasMore: res.hasMore === true });
+      this.applyFilter();
+      if (this.data.rows.length >= MIN_VISIBLE || !res.rows.length) break;
+    }
   },
 
   /**
@@ -186,28 +240,58 @@ Page({
       return;
     }
 
-    this.setData({ loading: true, searched: true, expandId: '' });
+    this.setData({ loading: true, searched: true, loadError: false, expandId: '' });
 
-    const route = await db.findRoute(fromCity, toCity);
+    let route = null;
+    let page = null;
+    try {
+      route = await db.findRoute(fromCity, toCity);
+      if (route) page = await db.pageRouteCompanies(route._id, 0, db.PAGE_SIZE);
+    } catch (err) {
+      // 网络/云函数异常：跟「查无此线」是两回事，必须分开提示
+      this._allRows = [];
+      this._route = null;
+      this.setData({
+        loading: false,
+        loadError: true,
+        rows: [],
+        total: 0,
+        hasMore: false,
+        emptyHint: ''
+      });
+      return;
+    }
 
     if (!route) {
       this._allRows = [];
+      this._route = null;
       this.setData({
         loading: false,
+        loadError: false,
         rows: [],
         total: 0,
+        hasMore: false,
         emptyHint: this.buildEmptyHint(fromCity, toCity)
       });
       return;
     }
 
-    const raw = await db.listRouteCompanies(route._id);
     // 归一：每条关联自带公司档案，预处理出展示字段
-    this._allRows = raw.map((x) => this.decorate(x));
+    this._allRows = (page.rows || []).map((x) => this.decorate(x));
     this._route = route;
+    this._page = 1;
 
-    this.setData({ loading: false });
+    this.setData({
+      loading: false,
+      loadError: false,
+      hasMore: page.hasMore === true
+    });
     this.applyFilter();
+
+    // 首页若被筛空，但后端还有数据，主动再补几页，避免误判「没有直达/没有天天发车」
+    if (this.data.rows.length === 0 && this.data.hasMore) {
+      await this.loadMoreUntilEnough();
+    }
   },
 
   /** 关联行 → 展示用的行数据 */
@@ -310,6 +394,24 @@ Page({
       url: '/pages/correction/index?targetType=route_company&targetId=' +
         encodeURIComponent(common.buildRouteKey(fromCity, toCity)) +
         '&summary=' + encodeURIComponent(summary)
+    });
+  },
+
+  /** 加载失败重试 */
+  onRetry() {
+    this.doSearch();
+  },
+
+  /** 失败态里换个条件 */
+  onResetQuery() {
+    this.setData({
+      fromCity: '',
+      toCity: '',
+      rows: [],
+      total: 0,
+      searched: false,
+      loadError: false,
+      expandId: ''
     });
   }
 });

@@ -18,10 +18,18 @@
     <!-- 加载中 -->
     <view wx:if="{{loading}}" class="loading">加载中…</view>
 
+    <!-- 加载失败：可重试 -->
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">加载失败</view>
+      <view class="empty-desc">网络或服务异常，请检查网络后重试</view>
+      <view class="empty-btn" bindtap="onRetry">重新加载</view>
+    </view>
+
     <!-- 线路不存在 -->
     <view wx:elif="{{notFound}}" class="empty">
       <view class="empty-title">没有找到这条线路</view>
       <view class="empty-desc">该线路可能尚未收录，或链接已失效</view>
+      <view class="empty-btn" bindtap="goAddressSearch">去查其它线路</view>
     </view>
 
     <block wx:else>
@@ -109,7 +117,7 @@
       <view wx:else class="empty">
         <view class="empty-title">没有符合条件的公司</view>
         <view class="empty-desc">试试取消筛选条件，或查看该线路的全部公司</view>
-        <view class="empty-action" bindtap="onResetFilter">显示全部</view>
+        <view class="empty-btn" bindtap="onResetFilter">显示全部</view>
       </view>
     </block>
 

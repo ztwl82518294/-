@@ -359,6 +359,22 @@ page {
   line-height: 1.7;
 }
 
+/* 空态/失败态里的行动按钮（重新加载、去别处看看）。
+ * ★ 各页面的「加载失败可重试」统一用它，不要再各写一套。 */
+.empty-btn {
+  display: inline-block;
+  margin-top: var(--gap-lg);
+  padding: 16rpx 44rpx;
+  font-size: 27rpx;
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.empty-btn:active {
+  background-color: var(--color-primary-dark);
+}
+
 .loading {
   padding: 80rpx;
   text-align: center;

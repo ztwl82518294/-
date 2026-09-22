@@ -13,7 +13,6 @@
  *   8. require —— 所有相对 require 路径必须真实存在（跳过注释）
  *   9. 测试    —— 测试套件与统一入口存在
  *  10. 脚本    —— 工程脚本存在
- *
  * 用法：node scripts/check-project.js
  */
 
@@ -354,7 +353,7 @@ function checkTests() {
     fail('[测试] test/suites 下没有任何套件');
     return;
   }
-  const must = ['common.test.js', 'search.test.js', 'seed-data.test.js'];
+  const must = ['common.test.js', 'search.test.js', 'seed-data.test.js', 'company-detail-merge.test.js'];
   for (const m of must) {
     if (suites.indexOf(m) < 0) warn('[测试] 缺少核心套件 ' + m);
   }
@@ -375,7 +374,8 @@ function checkScripts() {
     'scripts/export-seed.js': '数据导出 / 后台副本重建',
     'scripts/check-acceptance.js': 'PRD 验收自检（A1~A12）',
     'scripts/smoke-admin.js': '管理后台冒烟测试',
-    'scripts/check-deploy.js': '云函数部署前检查'
+    'scripts/check-deploy.js': '云函数部署前检查',
+    '.workbuddy/scripts/check-module-basics.js': '各页面「符合自身场景的基础能力」自检'
   };
   const missing = Object.keys(must).filter((f) => !fs.existsSync(path.join(ROOT, f)));
   if (missing.length) {

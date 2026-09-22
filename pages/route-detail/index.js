@@ -33,6 +33,8 @@ Page({
     routeTitle: '',
     loading: true,
     notFound: false,
+    /** 加载失败（可重试），与 notFound 区分 */
+    loadError: false,
     /** 公司总数（未过滤前，头部展示用） */
     totalCount: 0,
 
@@ -62,18 +64,26 @@ Page({
   },
 
   async load(key) {
-    this.setData({ loading: true });
+    this.setData({ loading: true, loadError: false });
 
-    // 按 routeKey 查线路
-    const r = await db.list('routes', { where: { routeKey: key }, limit: 1 });
-    const route = (r.data || [])[0] || null;
+    let route = null;
+    let raw = [];
+    try {
+      // 按 routeKey 查线路
+      const r = await db.list('routes', { where: { routeKey: key }, limit: 1 });
+      route = (r.data || [])[0] || null;
 
-    if (!route) {
-      this.setData({ loading: false, notFound: true });
+      if (!route) {
+        this.setData({ loading: false, notFound: true, loadError: false });
+        return;
+      }
+
+      raw = await db.listRouteCompanies(route._id);
+    } catch (err) {
+      this.setData({ loading: false, notFound: false, loadError: true });
       return;
     }
 
-    const raw = await db.listRouteCompanies(route._id);
     this._allRows = raw.map((x) => this.decorate(x));
     this._route = route;
 
@@ -81,12 +91,23 @@ Page({
     this.setData({
       loading: false,
       notFound: false,
+      loadError: false,
       routeTitle: title,
       totalCount: Number(route.companyCount) || this._allRows.length
     });
 
     wx.setNavigationBarTitle({ title: title || '线路详情' });
     this.applyFilter();
+  },
+
+  /** 加载失败重试 */
+  onRetry() {
+    if (this.data.routeKey) this.load(this.data.routeKey);
+  },
+
+  /** 没找到时的出口：去按地址查 */
+  goAddressSearch() {
+    wx.switchTab({ url: '/pages/search-by-address/index' });
   },
 
   /** 关联行 → 展示数据 */

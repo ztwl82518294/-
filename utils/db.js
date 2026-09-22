@@ -159,6 +159,66 @@ async function listRouteCompanies(routeId) {
     .filter((x) => x.company);
 }
 
+/**
+ * 某线路的关联总数（用于判断是否需要分页）
+ * 计数失败返回 0，调用方据此退回「一次取满」的保守行为。
+ */
+async function countRouteCompanies(routeId) {
+  if (!routeId) return 0;
+  try {
+    const res = await coll(COLLECTIONS.ROUTE_COMPANIES).where({ routeId: String(routeId) }).count();
+    return Number((res && res.total) || 0);
+  } catch (err) {
+    return 0;
+  }
+}
+
+/**
+ * 某线路的关联，**分页**返回
+ *
+ * 为什么要这个：热门线路（如 济南→广州）可能挂着上百家公司，
+ * 一次全取回来既慢又浪费。列表页改为「先取首页 + 触底再取下一页」。
+ *
+ * ★ 展开成扁平行需要公司档案，故按 `routeId` 查公司 id 后批量回填，
+ *   口径与 listRouteCompanies 完全一致，只是多了一层 skip/limit。
+ *
+ * @param {string} routeId
+ * @param {number} page  从 0 开始
+ * @param {number} size  每页条数（上限 MAX_PAGE_SIZE）
+ * @returns {{ rows: Array, hasMore: boolean }}
+ */
+async function pageRouteCompanies(routeId, page, size) {
+  if (!routeId) return { rows: [], hasMore: false };
+
+  const n = Math.max(1, Math.min(Number(size) || PAGE_SIZE, MAX_PAGE_SIZE));
+  const skip = Math.max(0, Number(page) || 0) * n;
+
+  const r = await listData(
+    coll(COLLECTIONS.ROUTE_COMPANIES)
+      .where({ routeId: String(routeId) })
+      .skip(skip)
+      .limit(n)
+  );
+  if (!r.ok || !r.data.length) return { rows: [], hasMore: false };
+
+  const links = r.data;
+  const ids = links.map((x) => x.companyId).filter(Boolean);
+  if (!ids.length) return { rows: [], hasMore: false };
+
+  const cRes = await listData(
+    coll(COLLECTIONS.COMPANIES).where({ _id: db().command.in(ids) }).limit(MAX_PAGE_SIZE)
+  );
+  const byId = {};
+  (cRes.data || []).forEach((c) => { byId[c._id] = c; });
+
+  const rows = links
+    .map((link) => ({ link, company: byId[link.companyId] || null }))
+    .filter((x) => x.company);
+
+  // 页面没取满 ⇒ 到底了（比再发一次 count 便宜）
+  return { rows: rows, hasMore: links.length >= n };
+}
+
 /** 取某公司的全部线路关联 */
 async function listCompanyRoutes(companyId) {
   if (!companyId) return [];
@@ -221,6 +281,8 @@ module.exports = {
   count,
   findRoute,
   listRouteCompanies,
+  countRouteCompanies,
+  pageRouteCompanies,
   listCompanyRoutes,
   listHotCities,
   listHotRoutes,

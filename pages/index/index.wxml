@@ -45,6 +45,11 @@
       </view>
       <view class="card-body">
         <view wx:if="{{loading}}" class="loading">加载中…</view>
+        <!-- 加载失败：可重试（与「暂无数据」区分开，避免把异常说成没数据） -->
+        <view wx:elif="{{loadError}}" class="empty-inline">
+          <text class="empty-inline-text">加载失败，请检查网络</text>
+          <text class="empty-inline-btn" bindtap="onRetryLoad">重新加载</text>
+        </view>
         <block wx:elif="{{hotRoutes.length > 0}}">
           <view
             wx:for="{{hotRoutes}}"
@@ -72,6 +77,10 @@
       </view>
       <view class="card-body">
         <view wx:if="{{loading}}" class="loading">加载中…</view>
+        <view wx:elif="{{loadError}}" class="empty-inline">
+          <text class="empty-inline-text">加载失败，请检查网络</text>
+          <text class="empty-inline-btn" bindtap="onRetryLoad">重新加载</text>
+        </view>
         <block wx:elif="{{recentCompanies.length > 0}}">
           <view
             wx:for="{{recentCompanies}}"

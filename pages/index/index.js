@@ -27,6 +27,8 @@ const RECENT_LIMIT = 5;
 Page({
   data: {
     loading: true,
+    /** 首页数据加载失败（可重试）。三个区块互相独立，全失败才展示整页失败态 */
+    loadError: false,
     keyword: '',
 
     /** 热门线路：[{ _id, routeKey, fromCity, toCity, companyCount, updatedText }] */
@@ -52,14 +54,25 @@ Page({
     this.loadAll().then(() => wx.stopPullDownRefresh());
   },
 
-  /** 一次性拉齐首页三个数据块；任一失败不影响其它块 */
+  /** 一次性拉齐首页两个数据块；两块都失败才算整页失败，避免一半网络抖动就白屏 */
   async loadAll() {
-    this.setData({ loading: true });
+    this.setData({ loading: true, loadError: false });
 
-    const [routes, companies] = await Promise.all([
-      db.listHotRoutes(HOT_LIMIT),
-      db.listRecentCompanies(RECENT_LIMIT)
+    let routes = [];
+    let companies = [];
+    let okCount = 0;
+
+    const [r1, r2] = await Promise.all([
+      db.listHotRoutes(HOT_LIMIT).then((x) => { okCount++; return x; }).catch(() => null),
+      db.listRecentCompanies(RECENT_LIMIT).then((x) => { okCount++; return x; }).catch(() => null)
     ]);
+    routes = r1 || [];
+    companies = r2 || [];
+
+    if (okCount === 0) {
+      this.setData({ loading: false, loadError: true });
+      return;
+    }
 
     // 用最新的一个 updatedAt 作为「数据更新时间」展示依据
     let latest = 0;
@@ -70,12 +83,18 @@ Page({
 
     this.setData({
       loading: false,
+      loadError: false,
       hotRoutes: routes.map((r) => this.decorateRoute(r)),
       recentCompanies: companies.map((c) => this.decorateCompany(c)),
       dataUpdatedText: latest
         ? '数据最近更新于 ' + common.formatDate(latest)
         : '数据持续更新中'
     });
+  },
+
+  /** 首页加载失败重试 */
+  onRetryLoad() {
+    this.loadAll();
   },
 
   /** 线路展示装饰：标题、相对时间 */

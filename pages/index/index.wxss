@@ -153,6 +153,28 @@
   color: var(--color-text-tertiary);
 }
 
+/* 区块内联的失败重试（加载失败时替代空文案，避免把异常说成「没数据」） */
+.empty-inline-text {
+  display: block;
+  font-size: 25rpx;
+  color: var(--color-text-tertiary);
+}
+
+.empty-inline-btn {
+  display: inline-block;
+  margin-top: var(--gap-sm);
+  padding: 10rpx 32rpx;
+  font-size: 25rpx;
+  color: var(--color-primary);
+  background-color: var(--color-bg-card);
+  border: 1rpx solid var(--edge-blue);
+  border-radius: var(--radius-sm);
+}
+
+.empty-inline-btn:active {
+  background-color: var(--color-bg-hover);
+}
+
 /* 底部公示 */
 .foot {
   margin-top: var(--gap-xl);

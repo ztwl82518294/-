@@ -46,9 +46,15 @@
     <view wx:if="{{searched && total > 0}}" class="result-count">
       共 {{total}} 家公司
     </view>
-
     <!-- 加载中 -->
     <view wx:if="{{loading}}" class="loading">查询中…</view>
+
+    <!-- 查询失败：可重试（与「没有这条线」区分开） -->
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">查询失败</view>
+      <view class="empty-desc">网络或服务异常，请检查网络后重试</view>
+      <view class="empty-btn" bindtap="onRetry">重新查询</view>
+    </view>
 
     <!-- 结果列表 -->
     <block wx:elif="{{rows.length > 0}}">
@@ -128,13 +134,24 @@
           >信息有误</view>
         </view>
       </view>
+
+      <!-- 触底加载态 -->
+      <view wx:if="{{loadingMore}}" class="addr-more">正在加载更多…</view>
+      <view wx:elif="{{!hasMore && total > 3}}" class="addr-more">已经到底了</view>
     </block>
+
+    <!-- 有条件但被筛空：跟「这条线没收录」区分开 -->
+    <view wx:elif="{{searched && !loading && total === 0 && (directOnly || dailyOnly || maxDays)}}" class="empty">
+      <view class="empty-title">没有符合筛选条件的公司</view>
+      <view class="empty-desc">这条线路是收录的，但你勾选的条件太严格了</view>
+      <view class="empty-btn" bindtap="onResetFilter">清空筛选条件</view>
+    </view>
 
     <!-- 空结果引导 -->
     <view wx:elif="{{searched && !loading}}" class="empty">
       <view class="empty-title">没有找到这条线路</view>
       <view class="empty-desc">{{emptyHint}}</view>
-      <view class="empty-action" bindtap="onEmptyReport">反馈这条线路</view>
+      <view class="empty-btn" bindtap="onEmptyReport">反馈这条线路</view>
     </view>
 
     <!-- 未查询时的引导 -->

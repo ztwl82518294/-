@@ -20,9 +20,16 @@
     <!-- 加载中 -->
     <view wx:if="{{loading}}" class="loading">搜索中…</view>
 
+    <!-- 搜索失败：可重试 -->
+    <view wx:elif="{{loadError}}" class="empty">
+      <view class="empty-title">搜索失败</view>
+      <view class="empty-desc">网络或服务异常，请检查网络后重试</view>
+      <view class="empty-btn" bindtap="onRetry">重新搜索</view>
+    </view>
+
     <!-- 搜索结果 -->
     <block wx:elif="{{searched}}">
-      <view wx:if="{{results.length > 0}}" class="result-count">找到 {{results.length}} 家公司</view>
+      <view wx:if="{{total > 0}}" class="result-count">找到 {{total}} 家公司</view>
 
       <view
         wx:for="{{results}}"
@@ -62,19 +69,27 @@
         </view>
       </view>
 
-      <view wx:if="{{truncated}}" class="sc-tip">结果较多，请输入更具体的公司名</view>
+      <view wx:if="{{hasMore}}" class="sc-tip">上滑加载更多</view>
 
       <!-- 无结果 -->
       <view wx:if="{{results.length === 0}}" class="empty">
         <view class="empty-title">没有找到「{{keyword}}」</view>
         <view class="empty-desc">试试用公司简称搜索，例如「鲁通」而不是「济南鲁通物流有限公司」</view>
-        <view class="empty-action" bindtap="onReportMissing">这家公司还没收录？告诉我们</view>
+        <view class="empty-btn" bindtap="onReportMissing">这家公司还没收录？告诉我们</view>
       </view>
     </block>
 
     <!-- 未搜索：推荐公司 -->
     <block wx:else>
       <view class="sec-title">常用公司</view>
+
+      <!-- 推荐加载失败：可重试 -->
+      <view wx:if="{{recommendError}}" class="empty">
+        <view class="empty-title">加载失败</view>
+        <view class="empty-desc">网络或服务异常，请检查网络后重试</view>
+        <view class="empty-btn" bindtap="onRetryRecommend">重新加载</view>
+      </view>
+
       <view
         wx:for="{{recommend}}"
         wx:key="_id"
@@ -96,7 +111,7 @@
         </view>
       </view>
 
-      <view wx:if="{{recommend.length === 0}}" class="empty">
+      <view wx:if="{{recommend.length === 0 && !recommendError}}" class="empty">
         <view class="empty-title">暂无公司数据</view>
         <view class="empty-desc">数据正在整理中，请稍后再来看看</view>
       </view>

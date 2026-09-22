@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "查专线",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light",
   "usingComponents": {
     "city-picker": "/components/city-picker/index"
   }

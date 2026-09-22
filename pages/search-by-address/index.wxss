@@ -329,3 +329,11 @@
   border: 1rpx solid var(--edge-blue);
   border-radius: var(--radius-md);
 }
+
+/* 触底加载提示（列表底部） */
+.addr-more {
+  padding: var(--gap-lg) 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+}
