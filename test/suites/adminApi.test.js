@@ -20,10 +20,13 @@ const Module = require('module');
 const STORE = {};
 /** 让某集合的下一次操作抛错（测 INTERNAL 兜底） */
 let FAIL_ON = null;
+/** 让某集合的下一次操作抛「集合不存在」（测 NOT_SEEDED 翻译） */
+let MISSING_ON = null;
 
 function resetStore() {
   Object.keys(STORE).forEach((k) => delete STORE[k]);
   FAIL_ON = null;
+  MISSING_ON = null;
 }
 
 function docs(name) {
@@ -36,6 +39,12 @@ function matchDoc(doc, where) {
 }
 
 function maybeFail(name) {
+  // 集合不存在：模拟云开发的真错误形状（errCode -502005 + errMsg 带 collection not exists）
+  if (MISSING_ON && MISSING_ON.indexOf(name) >= 0) {
+    const e = new Error('mock collection not exists: ' + name);
+    e.errCode = -502005;
+    throw e;
+  }
   if (FAIL_ON && FAIL_ON.indexOf(name) >= 0) throw new Error('mock db failure: ' + name);
 }
 
@@ -586,6 +595,40 @@ describe('兜底', () => {
     eq(r.ok, false);
     eq(r.code, 'INTERNAL');
     ok(String(r.message).indexOf('mock db failure') < 0, '不能泄漏内部错误详情');
+    FAIL_ON = null;
+  });
+
+  test('★ 集合不存在翻译成 NOT_SEEDED（不是故障，是云端库还没初始化）', async () => {
+    /*
+     * 2026-09-23 真机首跑的真实症状：管理员身份通过了（whoami 不查集合），
+     * 总览却只报「操作失败，请重试」—— 用户反复点重新加载，其实云端一个集合都没建。
+     * 修复后必须翻译成人话并指向控制台，而不是让 TA 重试。
+     */
+    resetStore();
+    MISSING_ON = ['companies'];
+    const r = await call({ action: 'overview' });
+    eq(r.ok, false);
+    eq(r.code, 'NOT_SEEDED');
+    ok(String(r.message).indexOf('控制台') >= 0, '要指路：去云开发控制台建集合');
+    ok(String(r.message).indexOf('mock') < 0, '不能泄漏内部错误详情');
+    MISSING_ON = null;
+  });
+
+  test('其他 action 遇到集合缺失同样报 NOT_SEEDED（list / quality 都会碰集合）', async () => {
+    resetStore();
+    MISSING_ON = ['companies'];
+    const a = await call({ action: 'list', type: 'companies' });
+    eq(a.code, 'NOT_SEEDED');
+    const b = await call({ action: 'quality' });
+    eq(b.code, 'NOT_SEEDED');
+    MISSING_ON = null;
+  });
+
+  test('★ 判定要窄：普通错误（无 errCode、不带 collection 字样）仍是 INTERNAL', async () => {
+    resetStore();
+    FAIL_ON = ['companies'];
+    const r = await call({ action: 'overview' });
+    eq(r.code, 'INTERNAL', '误把普通故障翻成「去初始化」比笼统更糟');
     FAIL_ON = null;
   });
 });

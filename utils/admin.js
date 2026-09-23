@@ -208,9 +208,13 @@ async function call(data) {
   }
 }
 
-/** 是否是「再试也没用」的错误（没权限 / 没配置 / 没部署），页面应给指引而不是重试按钮 */
+/**
+ * 是否是「再试也没用」的错误（没权限 / 没配置 / 没部署 / 库没初始化），页面应给指引而不是重试按钮
+ * NOT_SEEDED：云端集合还没建 —— 云函数抛这个码时，重试一万次也通不了，
+ * 必须去云开发控制台建集合导数据（2026-09-23 手机后台首跑就栽在这）。
+ */
 function isFatal(code) {
-  return code === 'NOT_ADMIN' || code === 'NOT_CONFIGURED' || code === 'NO_FUNC' || code === 'NO_OPENID';
+  return code === 'NOT_ADMIN' || code === 'NOT_CONFIGURED' || code === 'NO_FUNC' || code === 'NO_OPENID' || code === 'NOT_SEEDED';
 }
 
 /* ============================================================

@@ -941,6 +941,22 @@ function adminCheck(openid) {
   return null;
 }
 
+/**
+ * 是否「集合不存在」类错误（云开发 errCode -502005）。
+ *
+ * ★ 匹配必须足够窄：只有确凿指向「collection 不存在」才算，
+ *   别把「记录不存在」等其他错误也翻成「去初始化数据库」—— 误导比笼统更糟。
+ *   （2026-09-23 真机首跑：管理员身份通过了，总览却只报「操作失败，请重试」，
+ *   其实是云端一个集合都还没建 —— 这种「待初始化」必须和真故障分开说。）
+ */
+function isCollectionMissing(err) {
+  if (!err) return false;
+  if (Number(err.errCode) === -502005 || Number(err.code) === -502005) return true;
+  const s = String(err.errMsg || err.message || '');
+  if (/DATABASE_COLLECTION_NOT_EXIST/i.test(s)) return true;
+  return /collection/i.test(s) && /not exist|不存在/i.test(s);
+}
+
 exports.main = async (event) => {
   const e = event || {};
   const openid = (cloud.getWXContext() || {}).OPENID || '';
@@ -968,6 +984,11 @@ exports.main = async (event) => {
     return res || ok({});
   } catch (err) {
     // ★ 不抛穿：把堆栈返回给前端等于暴露数据库结构
+    //   「集合不存在」单独翻译 —— 它不是故障，是云端库还没初始化，重试一万次也没用，
+    //   必须告诉人去控制台建集合，而不是让 TA 反复点「重新加载」。
+    if (isCollectionMissing(err)) {
+      return fail('NOT_SEEDED', '云端数据库还没初始化：请先在云开发控制台创建集合并导入数据（步骤见 docs/验收自检报告.md 的部署前检查清单）');
+    }
     return fail('INTERNAL', '操作失败，请重试');
   }
 };

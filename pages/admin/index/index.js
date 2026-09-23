@@ -36,6 +36,8 @@ Page({
     loading: true,
     /** 加载失败（可重试） */
     loadError: false,
+    /** 失败标题：默认「无法连接后台」，但「库没初始化」不是连不上 —— 标题要如实说 */
+    errTitle: '',
     errMessage: '',
 
     /** 是否管理员 */
@@ -76,11 +78,16 @@ Page({
    *   并行只会多一个必然失败的请求，还让页面出现「先显示数字再消失」的抖动。
    */
   async loadAll() {
-    this.setData({ loading: true, loadError: false, errMessage: '' });
+    this.setData({ loading: true, loadError: false, errTitle: '', errMessage: '' });
 
     const who = await admin.whoami();
     if (!who.ok) {
-      this.setData({ loading: false, loadError: true, errMessage: who.message || '连接后台失败' });
+      this.setData({
+        loading: false,
+        loadError: true,
+        errTitle: who.code === 'NOT_SEEDED' ? '云端数据还没初始化' : '无法连接后台',
+        errMessage: who.message || '连接后台失败'
+      });
       return;
     }
 
@@ -99,7 +106,12 @@ Page({
 
     const ov = await admin.overview();
     if (!ov.ok) {
-      this.setData({ loading: false, loadError: true, errMessage: ov.message || '总览加载失败' });
+      this.setData({
+        loading: false,
+        loadError: true,
+        errTitle: ov.code === 'NOT_SEEDED' ? '云端数据还没初始化' : '总览加载失败',
+        errMessage: ov.message || '总览加载失败'
+      });
       return;
     }
 

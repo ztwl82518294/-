@@ -5,9 +5,10 @@
     <!-- 加载中 -->
     <view wx:if="{{loading}}" class="loading">正在确认身份…</view>
 
-    <!-- 加载失败：可重试（与「没有数据」分开，不把异常说成空） -->
+    <!-- 加载失败：可重试（与「没有数据」分开，不把异常说成空）；
+         标题随错误语义变化 —— 「连不上」和「云端还没初始化」是两回事 -->
     <view wx:elif="{{loadError}}" class="empty">
-      <view class="empty-title">无法连接后台</view>
+      <view class="empty-title">{{errTitle || '无法连接后台'}}</view>
       <view class="empty-desc">{{errMessage}}</view>
       <view class="empty-btn" bindtap="onRetry">重新加载</view>
     </view>

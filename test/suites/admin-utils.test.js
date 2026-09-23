@@ -286,11 +286,12 @@ describe('列表行展示', () => {
  * ============================================================ */
 
 describe('错误码归类', () => {
-  test('没权限 / 没配置 / 没部署 是「再试也没用」的错', () => {
+  test('没权限 / 没配置 / 没部署 / 库没初始化 是「再试也没用」的错', () => {
     eq(admin.isFatal('NOT_ADMIN'), true);
     eq(admin.isFatal('NOT_CONFIGURED'), true);
     eq(admin.isFatal('NO_FUNC'), true);
     eq(admin.isFatal('NO_OPENID'), true);
+    eq(admin.isFatal('NOT_SEEDED'), true);
   });
 
   test('网络 / 校验失败 是可以重试或修正的', () => {
