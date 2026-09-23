@@ -40,7 +40,11 @@
 - 导入模板 /api/import/template 公开、路由在鉴权之前；导入先预览后确认；静态资源一律 no-store
 
 ### ★★ 两套后台冲突
-桌面后台写**本地副本**，小程序后台**直写云端** ⇒ 小程序改过数据后**绝不能拿 admin/data/ 覆盖云端**（已写进 pages/admin/index 常驻提醒卡）。
+桌面后台写**本地副本**，小程序后台**直写云端** ⇒ 小程序改过数据后**绝不能拿 admin/data/ 覆盖云端**。
+这条防线分散在三处，**互为备份、都不能删**（2026-09-23 落成，`two-backends.test.js` 16 断言守着）：
+① `pages/admin/index` 常驻提醒卡 ② `export-seed.js` 产出 jsonl 前打印的覆盖云端警告
+③ `docs/小程序后台使用说明.md` 第六节（桌面后台文档第四节也指向它）。
+> **例外：`export-seed --admin-only` 是安全的** —— 只重建本地副本，不产出要导入云端的 jsonl。
 运营位校验：公告正文非空/level 枚举/link 以 / 开头/时间窗不倒挂；推广 routeKey 必须存在/同线路仅一个/角标≤8 字。parseTimeInput 别直接 Number()（NaN 静默变 0）。store 的 T 键名=集合名。
 
 ## 三、★★ 覆盖写护栏（最严重的坑）
@@ -52,19 +56,24 @@
 
 | 层 | 命令 | 规模 |
 |---|---|---|
-| 单元 | `node test/run-all.js` | 10 套件 492 断言 |
+| 单元 | `node test/run-all.js` | 11 套件 508 断言 |
 | 体检 | `node scripts/check-project.js` | 12 类 |
 | 模块基础 | `node .workbuddy/scripts/check-module-basics.js` | 13 页（改页面必跑） |
-| 部署前 | `node scripts/check-deploy.js` | 25 项 |
+| 部署前 | `node scripts/check-deploy.js` | 26 项 + 待办提醒 |
 | 验收 | `node scripts/check-acceptance.js` | 61 断言+12 人工 |
 | 冒烟 | `node scripts/smoke-admin.js` | 108 断言（端口 8791） |
-| BOM | `node .workbuddy/scripts/check-bom.js` | 175 文件，提审前必跑 |
+| BOM | `node .workbuddy/scripts/check-bom.js` | 179 文件，提审前必跑 |
+
+> **`two-backends.test.js` 测的是「护栏还在不在」**（文档/脚本警告/页面提醒卡三处的存在），
+>  不是功能逻辑 —— 分散的防线最容易被当冗余删掉，这块值得自动化。
 
 - 报错先分清代码错/检查逻辑错；「检查器关键词落后」改检查器，绝不为过检加无用代码
 - run-all.js 子进程逐跑（套件会 exit + Module._load 污染），别改同进程
 - admin.test 测逻辑 / smoke 测 HTTP 层；冒烟备份→跑→还原，先体检数据目录，新集合同步 FILES
 - /logout 清空型 Cookie 别覆盖 token（否则静默 401）；集合清单用 `Object.values(COLLECTIONS)` 别手抄
 - 写扫描工具：剥注释（等长空白保行号）+ 保留字符串；CSS 属性匹配用后行否定 `(?<![-\w])color`
+- **剥注释已有现成实现：`scripts/lib/src-scan.js` 的 `stripComments()`**（check-deploy 与测试共用）。
+  典型假警报：`utils/admin.js` 的注释写着「页面里不允许出现 .collection(」，不剥注释就被当成违规代码
 - `.workbuddy/scripts/` 只放通用工具（现 6 个）；失效脚本在 memory/archive/dead-scripts/ 别引用
 
 ## 五、编辑护栏 & 环境限制
