@@ -47,8 +47,12 @@ const C = schema.COLLECTIONS;
  * ★ openid 在同一个小程序里是固定的，换手机、重装微信都不变。
  */
 const ADMIN_OPENIDS = [
-  // 'oxWBc15BpD7x2BR7O5u1O7TjBnGo',   ← 管理员 A
-  // 'oxWBc15BpD7x2BR7O5u1O7TjBnGo'    ← 管理员 B
+  /*
+   * ★★ 注意：行首带 // 的不算数（注释会被忽略）。往这里追加时**别留着 //** ——
+   *    曾经就是因为「把示例行改了内容、却没删注释符」，看起来填好了、白名单其实还是空的。
+   *    判据：`node scripts/check-deploy.js` 会报告「已配置 N 个管理员」。
+   */
+  'oxWBc15BpD7x2BR7O5u1O7TjBnGo'
 ];
 
 /* ============================================================
