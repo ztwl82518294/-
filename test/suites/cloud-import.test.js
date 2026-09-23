@@ -39,14 +39,13 @@ function generate() {
   return execFileSync(NODE, [SCRIPT], { cwd: ROOT, encoding: 'utf8' });
 }
 
-/** 读产物，顺手校验无 BOM */
+/** 读产物（JSON Lines：每行一条），顺手校验无 BOM */
 function readJson(table) {
   const buf = fs.readFileSync(path.join(OUT_DIR, table + '.json'));
-  return {
-    buf: buf,
-    text: buf.toString('utf8'),
-    json: JSON.parse(buf.toString('utf8'))
-  };
+  const text = buf.toString('utf8');
+  const rows = text.split('\n').filter(function (l) { return l.trim(); })
+    .map(function (l) { return JSON.parse(l); });
+  return { buf: buf, text: text, json: rows };
 }
 
 let genOut = '';
@@ -71,11 +70,26 @@ describe('产物格式能被控制台接受', () => {
     });
   });
 
-  test('内容是 JSON 数组（最稳的形态，不是靠碰运气被识别的 JSON Lines）', () => {
+  test('★ 内容是 JSON Lines：每行一个紧凑 JSON 对象', () => {
+    /*
+     * 实测反过来的两次失败：改成 JSON 数组会报「请检查是否为 JSON Lines 格式」，
+     * 保持每行一条、扩展名却是 .jsonl 会报「only support .json or .csv」——
+     * 只有「JSON Lines 内容 + .json 扩展名」这一条组合走得通。
+     */
     EXPECT.forEach(function (e) {
-      const text = readJson(e.table).text;
-      eq(text.trim().charAt(0), '[', e.table + ' 不是 JSON 数组');
-      ok(Array.isArray(readJson(e.table).json), e.table + ' 解析后不是数组');
+      const text = readJson(e.table).text.trim();
+      eq(text.charAt(0), '{', e.table + ' 不是 JSON Lines（首字符应为 { ）');
+      const lines = text.split('\n');
+      eq(lines.length, e.count, e.table + ' 行数与条数不符（对象内不能有换行）');
+      lines.forEach(function (line, i) {
+        let obj = null;
+        try {
+          obj = JSON.parse(line);
+        } catch (err) {
+          obj = null;
+        }
+        ok(obj, e.table + ' 第 ' + (i + 1) + ' 行不是合法 JSON');
+      });
     });
   });
 

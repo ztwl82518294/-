@@ -2,15 +2,14 @@
 /**
  * 生成「云开发控制台可直接导入」的 .json 文件
  *
- * ★★ 为什么非得有这个脚本 —— 2026-09-23 踩的坑：
- *   `.data/*.jsonl` 内容完全正确，但云控制台的导入接口只认两种扩展名，
- *   传 .jsonl 会被直接拒掉：
- *     Database Import Fail: invalid import filename(only support .json or .csv)
- *   所以部署清单里说的「导入 .data/*.jsonl」是走不通的 —— 必须先转成 .json。
- *
- * ★ 为什么内容是 JSON 数组而不是「原样换个后缀」：
- *   JSON Lines（每行一个对象）虽然和 .jsonl 内容一致，控制台对它的兼容不明确；
- *   而 JSON 数组是官方文档示例里明确支持的形态，最稳。
+ * ★★ 为什么非得有这个脚本 —— 2026-09-23 连撞两次墙，实测结论：
+ *   ① 内容是每行一条（JSON Lines），扩展名 .jsonl
+ *       → Database Import Fail: invalid import filename(only support .json or .csv)
+ *   ② 内容是 JSON 数组 [...]，扩展名 .json
+ *       → 导入数据格式不正确，请检查是否为 JSON Lines 格式
+ *   两个条件**缺一不可**：内容必须是 JSON Lines（每行一条紧凑 JSON），扩展名必须是 .json。
+ *   所以它的活儿就是：保留 .jsonl 的原始内容，只换个扩展名，顺带校验。
+ *   （别自作聪明改成 JSON 数组 —— 第二次报错就是这么来的。）
  *
  * ★★ 为什么必须保留 _id：
  *   route_companies 通过 routeId / companyId 引用 routes / companies 的主键
@@ -84,8 +83,13 @@ function main() {
     }
 
     const outFile = path.join(OUT, item.table + '.json');
+    /*
+     * ★ 写 JSON Lines：每行一个**紧凑** JSON 对象（不能带换行美化，否则一行变多行）。
+     *   控制台明确要求这个格式；JSON.stringify(row) 单行输出正好符合。
+     */
+    const linesOut = rows.map(function (r) { return JSON.stringify(r); });
     // ★ 必须 utf8 明文写：repeat: 无 BOM（Node 默认就不带，别改成 utf8sig）
-    fs.writeFileSync(outFile, JSON.stringify(rows, null, 2), 'utf8');
+    fs.writeFileSync(outFile, linesOut.join('\n') + '\n', 'utf8');
 
     console.log('  ✓ ' + pad(item.table, 20) + pad(String(rows.length), 7) + (missingId ? '缺 ' + missingId : '齐全'));
   });
