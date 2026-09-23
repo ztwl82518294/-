@@ -47,8 +47,8 @@ const C = schema.COLLECTIONS;
  * ★ openid 在同一个小程序里是固定的，换手机、重装微信都不变。
  */
 const ADMIN_OPENIDS = [
-  // 'oXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',   ← 管理员 A
-  // 'oYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'    ← 管理员 B
+  // 'oxWBc15BpD7x2BR7O5u1O7TjBnGo',   ← 管理员 A
+  // 'oxWBc15BpD7x2BR7O5u1O7TjBnGo'    ← 管理员 B
 ];
 
 /* ============================================================

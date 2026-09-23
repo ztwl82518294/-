@@ -79,14 +79,40 @@ Page({
    * 静默探测管理员身份
    *
    * ★ 不参与页面的加载态：它不是首页要展示的内容，成败都不该影响首页。
-   *   失败一律静默（可能只是云函数没部署），失败就等于「不是管理员」，入口不出现。
+   *   失败一律界面静默 —— 入口不出现而已，普通用户毫无察觉。
    * ★ 这是**唯一**从首页进后台的入口，且只有白名单用户看得见。
+   *
+   * ★★ 但为什么失败时要往 Console 打一行（2026-09-23 加）：
+   *   「入口没出来」这件事有四种完全不同的成因 ——
+   *     云函数没部署 / ADMIN_OPENIDS 是空的 / 填的是别人的 openid / 换了微信号，
+   *   界面上的表现却一模一样：**什么都没有**。连开发者自己都被卡住过一次，
+   *   只能靠猜。这条日志只在开发者工具的 Console 里出现，
+   *   对真实用户不可见、也不改变界面，是把成本最低的定位手段。
    */
   async checkAdmin() {
     const app = getApp();
-    if (!app || !app.globalData.cloudReady) return;
+    if (!app || !app.globalData.cloudReady) {
+      console.info('[admin] 云环境未就绪，跳过身份探测（首页「管理」入口不会显示）');
+      return;
+    }
     const r = await admin.whoami();
-    if (r.ok && r.isAdmin) this.setData({ isAdmin: true });
+    if (r.ok && r.isAdmin) {
+      this.setData({ isAdmin: true });
+      return;
+    }
+    const WHY = {
+      NO_FUNC: '云函数 adminApi 还没上传部署',
+      NOT_CONFIGURED: 'ADMIN_OPENIDS 是空的，还没填任何管理员 openid',
+      NOT_ADMIN: '白名单里没有当前这个微信号的 openid（填错或换过号）',
+      NO_OPENID: '服务端取不到 openid',
+      NETWORK: '云函数调用失败（网络或超时）',
+      BAD_RESULT: '云函数返回异常'
+    };
+    console.info(
+      '[admin] 首页「管理」入口未显示：' +
+        (WHY[r.code] || ('未知原因（code=' + (r.code || '无') + '）')) +
+        '。排查步骤见 docs/小程序后台使用说明.md 第二节'
+    );
   },
 
   /**
