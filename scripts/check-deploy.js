@@ -21,6 +21,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
+const { stripComments } = require('./lib/src-scan');
 
 let pass = 0;
 let fail = 0;
@@ -34,6 +35,18 @@ function bad(msg, detail) {
   fail++;
   problems.push(msg + (detail ? ' —— ' + detail : ''));
   console.log('  ✗ ' + msg + (detail ? ' —— ' + detail : ''));
+}
+/**
+ * 提醒（不计入失败）
+ *
+ * ★ 为什么不直接算失败：这类项不是「代码错了」，而是「部署后某个功能还用不了」。
+ *   空态不等于失败态 —— 白名单还没填是等待人工，把它算成红灯，只会让人习惯性忽略红灯。
+ *   但也不能不吭声（那是另一种失职），所以汇总时单独列出来。
+ */
+const notices = [];
+function warn(msg, detail) {
+  notices.push(msg + (detail ? ' —— ' + detail : ''));
+  console.log('  ! ' + msg + (detail ? ' —— ' + detail : ''));
 }
 function section(t) {
   console.log('\n【' + t + '】');
@@ -354,9 +367,87 @@ if (fs.existsSync(path.join(ROOT, 'cloudfunctions', 'submitCorrection', 'node_mo
   console.log('    · 注：本地无 node_modules，上传时请选「上传并部署：云端安装依赖」');
 }
 
+/* ---------- 10. 小程序端后台（pages/admin）完备性 ---------- */
+section('10. 小程序端后台（pages/admin）');
+/*
+ * ★ 为什么要单独查这一节：
+ *   小程序后台是第二个写入口，而且它**直接写云端**。它的五页里任何一页缺文件、
+ *   没注册、或绕过 utils/admin 直连数据库，表现出来都不是「报错」——
+ *   而是「页面打不开」或「权限校验被架空」，属于上线后才发现的那类问题。
+ */
+const ADMIN_PAGES = ['index', 'list', 'edit', 'quality', 'import'];
+const appJsonSrc = fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8');
+const appJson = JSON.parse(appJsonSrc);
+const registered = appJson.pages || [];
+let adminBad = 0;
+
+for (const p of ADMIN_PAGES) {
+  const rel = 'pages/admin/' + p + '/index';
+  const missing = ['.js', '.json', '.wxml', '.wxss'].filter((ext) => !fs.existsSync(path.join(ROOT, rel + ext)));
+  if (missing.length) {
+    bad(rel + ' 缺文件', missing.join(' '));
+    adminBad++;
+    continue;
+  }
+  if (registered.indexOf(rel) < 0) {
+    bad(rel + ' 未在 app.json 注册');
+    adminBad++;
+    continue;
+  }
+  /*
+   * ★ 必须先剥注释再扫：
+   *   utils/admin.js 的注释里写着「页面里不允许出现 .collection(」—— 不剥注释的话，
+   *   这句解释禁令的注释会被当成违反禁令的代码，产生假警报（check-requires.js 同坑）。
+   */
+  const src = stripComments(fs.readFileSync(path.join(ROOT, rel + '.js'), 'utf8'));
+  if (/require\(['"][^'"]*utils\/admin['"]\)/.test(src)) {
+    // 走通道，无话可说
+  } else {
+    bad(rel + ' 没有走 utils/admin 通道（云端鉴权会被绕开）');
+    adminBad++;
+  }
+  if (/\.collection\(/.test(src)) {
+    bad(rel + ' 直接操作了数据库（必须走云函数 adminApi）');
+    adminBad++;
+  }
+}
+/*
+ * ★ 整勾条件打印：上面具体的 bad 已经一条条报过了，这里不能再无条件打 ✓，
+ *   否则出现「一行红一行绿」的自相矛盾输出，反而掩盖问题。
+ */
+if (adminBad === 0) {
+  ok('后台 ' + ADMIN_PAGES.length + ' 页文件齐全、已注册、且统一走 utils/admin 通道');
+}
+
+/* ADMIN_OPENIDS：空 ⇒ 后台谁也进不去（含管理员自己），属于待办不是错误 */
+const adminApiSrc = funcSrc['adminApi'] || fs.readFileSync(path.join(ROOT, 'cloudfunctions', 'adminApi', 'index.js'), 'utf8');
+const idsM = adminApiSrc.match(/const\s+ADMIN_OPENIDS\s*=\s*\[([\s\S]*?)\]/);
+if (!idsM) {
+  bad('adminApi 里找不到 ADMIN_OPENIDS 定义');
+} else {
+  const raw = idsM[1];
+  /*
+   * ★ 先剥注释再数字面量 —— 否则会把注释占位那一行也计入：
+   *   原文件的数组体里全是 `// 'oXXX...' ← 管理员 A`，
+   *   按逗号切一切、去首尾空格，第二段的开头其实是「← 管理员 A」而不是 '//'，
+   *   于是被当成真配了一个管理员 —— 典型的**假绿**（比报错更危险）。
+   */
+  const body = raw.replace(/\/\/[^\n]*/g, '');
+  const ids = (body.match(/['"][^'"]+['"]/g) || []);
+  if (ids.length === 0) {
+    warn('ADMIN_OPENIDS 为空：部署后小程序后台对所有人不可用', '先用微信打开后台页抄 openid 再重传');
+  } else {
+    ok('ADMIN_OPENIDS 已配置 ' + ids.length + ' 个管理员');
+  }
+}
+
 /* ---------- 汇总 ---------- */
 console.log('\n' + '='.repeat(52));
 console.log('检查项 ' + (pass + fail) + ' 个：通过 ' + pass + '，失败 ' + fail);
+if (notices.length) {
+  console.log('待办提醒 ' + notices.length + ' 项：');
+  notices.forEach((n, i) => console.log('  ' + (i + 1) + '. ' + n));
+}
 
 if (fail) {
   console.log('\n需要处理：');

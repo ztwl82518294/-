@@ -78,6 +78,44 @@ function rebuildAdminData(tables) {
   };
 }
 
+/*
+ * ★★ 覆盖云端警告（2026-09-23 加）
+ *
+ * 本脚本默认路径生成的 .data/*.jsonl，导入控制台后是**整表替换**——
+ * 不是增量合并。而现在又多了「小程序后台」这个写入口：它**直接写云端**，
+ * 手机上的每一次改动都不会回到 admin/data/ 里。
+ *
+ * ⇒ 用过小程序后台之后再跑这里导入云端，等于把手机上的改动整批抹掉。
+ * 脚本读不到云端有没有变更，判断不了安不安全，所以把话说在前面：
+ * 明确提示 + 给出安全替代（--admin-only），而不是替用户做决定。
+ *
+ * ★ 为什么不做成「必须加 --force 才导出」：
+ *   首次部署时这条命令是文档里的标准流程，加门槛会让新手卡住；
+ *   真加了门槛，人也会条件反射地敲 --force，等于没有护栏。
+ *   护栏的价值在于**每次都把风险说到明面上**，而不是拦一下。
+ *
+ * ★ 这段文案有 test/suites/two-backends.test.js 守着，删了会红。
+ */
+function warnCloudOverwrite() {
+  const line = (s) => console.log(s);
+  console.log('');
+  console.log('*'.repeat(64));
+  line('⚠ 接下来生成的 .data/*.jsonl 是「整表覆盖」用的');
+  console.log('');
+  line('  把 jsonl 导入云开发控制台后，云端对应集合会被这批数据替换，');
+  line('  不是追加、也不是合并。');
+  console.log('');
+  line('  ⇒ 如果你已经用「小程序后台」（手机端）改过云端数据，');
+  line('    这一步会把手机上的改动全部抹掉，且无法找回。');
+  console.log('');
+  line('  只想重建桌面后台的本地副本（安全）：');
+  line('      node scripts/export-seed.js --admin-only');
+  console.log('');
+  line('  说明：docs/小程序后台使用说明.md 第六节');
+  console.log('*'.repeat(64));
+  console.log('');
+}
+
 function main() {
   const stdoutOnly = process.argv.indexOf('--stdout') >= 0;
   const adminOnly = process.argv.indexOf('--admin-only') >= 0;
@@ -123,6 +161,9 @@ function main() {
   files.forEach(([name, rows]) => console.log('  ' + name.padEnd(16) + rows.length + ' 条'));
   console.log('  热门城市 ' + HOT_CITIES.length + ' 个（isHot=true）');
   console.log('');
+
+  // 只要这一轮会产出云端的导入数据（写文件或打印到终端），就必须先把风险说清楚
+  warnCloudOverwrite();
 
   if (stdoutOnly) {
     files.forEach(([name, rows]) => {

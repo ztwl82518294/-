@@ -1,291 +1,134 @@
 # 物流专线查询 · 项目长期备忘
 
-> **唯一有效的项目规范。** 日常日志 `YYYY-MM-DD.md` 只是流水，冲突时以本文为准。
-> 历史原文归档在 `archive/*.full.md`（旧 v4~v6.4 架构，代码已删，**仅供追溯，不要照它开发**）
-
-## 目录
-1.[架构](#一架构) 2.[后台](#二管理后台-admin) 3.[覆盖写护栏](#三-覆盖写事故护栏最严重的坑)
-4.[测试](#四测试体系) 5.[编辑与环境](#五编辑护栏--环境限制) 5b.[组件页面硬约定](#五之二组件与页面的硬约定)
-6.[跨端口径](#六跨端口径必须一致) 7.[搜索护栏](#七搜索匹配护栏) 8.[部署上线](#八部署与上线)
-9.[偏好](#九用户偏好) 10.[待办](#十待办)
-
----
+> **唯一有效的项目规范。** 日志 `YYYY-MM-DD.md` 是流水，冲突以本文为准。旧架构归档 `archive/*.full.md`（代码已删，仅供追溯）。
 
 ## 一、架构
 
-> 2026-09-21 按用户要求**从零重写**，旧 v6.x 已整体删除。
-
-**8 表**：`companies` / `routes` / `route_companies` / `cities` / `corrections` / `admins` / `announcements` / `featured_routes`
-- 集合名与字段定义**唯一来源** `shared/schema.js`（小程序 / 云函数 / 后台 / 导出脚本都引它）
-- ★ 核心取舍：**`transitDays` / `isDirect` / `frequency` 挂 `route_companies`**，不挂 `routes`
-  （同一家公司济南→广州 2 天、济南→乌鲁木齐 5 天，塞 `companies` 或 `routes` 都错）
-- 数据源：`data/seed-data.js`（40 公司/55 线路/72 关联）+ `cities.js`（344 城）+ `districts.js`（2980 区县）+ `announcements.js`
+2026-09-21 从零重写（用户要求旧 v6.x 全删）。
+**8 表**：companies / routes / route_companies / cities / corrections / admins / announcements / featured_routes。字段定义唯一来源 `shared/schema.js`。
+★ 时效/直达/频率挂 **route_companies**（不挂 routes）——同公司不同线路时效不同。
+数据源：`data/seed-data.js`(40公司/55线路/72关联) + cities.js(344城) + districts.js(2980区县) + announcements.js。
 
 | 端 | 内容 |
 |---|---|
-| 小程序 13 页 | index / search-by-address / search-by-company / route-detail / company-detail / correction / privacy / disclaimer + **`pages/admin/*` 五页**（index / list / edit / quality / import） |
+| 小程序 13 页 | 8 业务页 + pages/admin/* 五页（index/list/edit/quality/import） |
 | 组件 | city-picker / privacy-modal |
-| utils | common / search / db / params / privacy / correction / **admin**（**无 contact.js**） |
-| 云函数 | `submitCorrection` / `trackCompanyView` / **`adminApi`** |
-| 后台 | `admin/` —— Web 端 / 唯一需登录；**小程序端后台直写云端**（见第二节末） |
+| utils | common/search/db/params/privacy/correction/admin |
+| 云函数 | submitCorrection / trackCompanyView / **adminApi** |
+| 后台 | admin/（Web，唯一登录入口）+ 小程序后台（直写云端） |
 
-### ★ 小程序端后台（pages/admin/*，2026-09-22 新增）
-- **必须走云函数 `adminApi`**：页面里不允许 `.collection(`；身份在服务端按 openid 白名单比对，前端绕过不了
-- **白名单为空一律拒绝**（不放行）。非管理员打开后台页 → 页面直接显示自己的 openid，复制填进
-  `cloudfunctions/adminApi/index.js` 的 `ADMIN_OPENIDS` → 重新上传部署即可
-- **入口隐藏**：首页底部「管理」两个字只在 whoami 判定为管理员时才渲染，普通用户看不见
-- **通用列表 + 通用表单**：`pages/admin/list` 与 `pages/admin/edit` 由 `type` 驱动，
-  字段/列表展示全部定义在 `utils/admin.js` 的 `TYPES` 元信息里 —— 加字段改元信息，不用改页面
-- **入口 8 个**：公司 / 线路 / 关联 / 公告 / 推广位 / 纠错审核 / 批量导入 / 数据质量（与桌面后台一一对应）
-- 导入在手机上是**粘贴 CSV 文本**（不能传文件），仍走「预览 → 确认」两阶段，预览零写入
+### ★ 小程序端后台
+- 必须走云函数 adminApi：页面禁 `.collection(`；openid 白名单**服务端**校验，白名单为空一律拒绝
+- 入口隐藏：首页「管理」仅 whoami 通过才渲染；通用列表/表单由 type 驱动，元信息在 `utils/admin.js` 的 TYPES（加字段改元信息，不动页面）
+- 手机端导入=粘贴 CSV，预览→确认，预览零写入
 
-### 首页（2026-09-22 改版）
-删掉：热门专线 / 最近更新线路 / 我知道公司名。现为 `.sky` 天气式头部 + **公告栏**（swiper）+ **优质线路推广**（横向卡片）+ 两个查询入口。
-- 公告/推广由**后台维护**，云库取不到时退回 `data/announcements.js`（不开天窗）
-- **公告 `link` 只允许本小程序页面路径或空串** —— 外链要配业务域名、个人主体受限，写了就是死按钮
-- **推广位不复制线路数据**，只存 `routeKey` + 包装文案，公司数现场查（防「写 8 家点进去 3 家」）
+### 首页
+.sky 头部 + 公告 swiper + 推广位横卡 + 双入口。公告/推广后台维护，取不到退回 `data/announcements.js`。公告 link 只许本小程序路径或空（个人主体不能配外链业务域名）。推广位只存 routeKey+文案，公司数现场查。
 
-### ★ 区县只影响展示，不影响查询
-专线按城市收录（`routeKey='济南-广州'`），不存在「济南-朝阳区」线路 ⇒ **选区县后仍按所属城市查**，`routes` 一条不改。区县有重名 ⇒ 反查是「区县→城市数组」，由 `cityHint` 消歧。
+### ★ 区县只影响展示不影响查询：选区县仍按所属城市查。
 
 ### 视觉五条铁律
-1. 无渐变（**唯一例外** 首页 `.sky`）2. 无光斑（禁 `radial-gradient`）3. `--tint-*` 全实色
-4. 无高光内阴影（禁 `inset 0 0 0 1rpx`）5. **字体无毛玻璃**（禁 `backdrop-filter`/`blur()`/半透明文字色）
+无渐变（唯一例外 .sky）/ 无光斑 / --tint-* 全实色 / 无高光内阴影 / 字体无毛玻璃（禁 blur、半透明**文字**色；描边可用半透明）。
+主色 #0B6E99，页底 #F7F6F3，文字 #37352F/#6B6B6B/#9B9A97。渐变白名单制（check-project.js 的 GRADIENT_ALLOW）。改主色须同步 app.json navigationBar/tabBar。
 
-主色 `#0B6E99`，页底 `#F7F6F3`，卡片纯白，文字 `#37352F`/`#6B6B6B`/`#9B9A97`，边框 `rgba(55,53,47,0.09)`。
-**渐变白名单制**：`check-project.js` 的 `GRADIENT_ALLOW` 精确到「文件+选择器」，当前只放行 `pages/index/index.wxss` 的 `.sky`。
-**JS/app.json 不支持 CSS 变量**：改主色须同步 `app.json` 的 navigationBar / tabBar 配色。
+## 二、桌面后台 admin/
 
----
+零依赖（仅 Node 内置），只绑 127.0.0.1:8787，默认 admin/admin12345，双击 `start-admin.bat` 启动，改密码页 /password。
+- ★★ bootstrap 曾把集合名当文件名 ⇒ **每次启动用 seed 覆盖全部表**。文件存在性一律 `db.fileOf()`，只补缺失表；护栏在 smoke-admin.js
+- xlsx=zip 用中央目录 + inflateRawSync；multipart 用 latin1 保真
+- `admin/data/` 是工作副本不入库；改乱用 `node scripts/export-seed.js --admin-only` 重建
+- 导入模板 /api/import/template 公开、路由在鉴权之前；导入先预览后确认；静态资源一律 no-store
 
-## 二、管理后台（admin/）
+### ★★ 两套后台冲突
+桌面后台写**本地副本**，小程序后台**直写云端** ⇒ 小程序改过数据后**绝不能拿 admin/data/ 覆盖云端**（已写进 pages/admin/index 常驻提醒卡）。
+运营位校验：公告正文非空/level 枚举/link 以 / 开头/时间窗不倒挂；推广 routeKey 必须存在/同线路仅一个/角标≤8 字。parseTimeInput 别直接 Number()（NaN 静默变 0）。store 的 T 键名=集合名。
 
-```
-server.js HTTP层  lib/store.js 纯内存业务  lib/db.js 只读写JSON
-lib/repository.js 写穿透  lib/auth.js 登录  lib/importer.js xlsx/csv
-lib/api.js JSON接口  lib/views.js 服务端渲染HTML
-```
-- **零依赖**（只 Node 内置 http/fs/crypto/zlib）—— 刻意如此，为了「换台电脑就能跑」
-- **只绑 127.0.0.1:8787**；默认 `admin / admin12345`
-- **进入方式：双击根目录 `start-admin.bat`**（起服务→TCP 探活→开浏览器）。关掉黑窗口 = 关后台。
-  等价 `node scripts/start-admin.js`（`--no-open` 只起服务）。说明见 `docs/管理后台使用说明.md`
-- **改密码页 `/password`**（右上角入口）—— 此前 `auth.changePassword` 有实现无调用方
+## 三、★★ 覆盖写护栏（最严重的坑）
 
-> ★★ **bootstrap P0 事故（2026-09-22 修复）**：曾用集合名 `companies` 去 `fs.existsSync`，
-> 而真实文件是 `companies.json`（`db.fileOf()` 加后缀）⇒ 永远判定「缺失」⇒ **每次启动用 seed
-> 覆盖全部表，运营数据重启即丢**。现在一律走 `db.fileOf()`，且**只补缺失的表**。
-> 护栏在 `smoke-admin.js`：起来后逐字节比对磁盘与备份。
-> **教训：判断文件存在性永远用负责命名的那个模块的 API，别自己拼文件名。**
+`repository.flush()` 全量覆盖写；未 `loadAll()` 就写 ⇒ 文件被抹成 [] 且不报错（2026-09-21 真发生过）。
+护栏：loaded 标志未装载抛错；loadAll() 不吞错。**新脚本碰写操作必须先 loadAll()**。固化在 admin.test.js + smoke-admin.js，别简化掉。
 
-- xlsx 是 zip：用**中央目录**定位 + `zlib.inflateRawSync`（不用本地头，data descriptor 长度可能为 0）
-- multipart 二进制保真：`readBody` 同时给 `raw`(utf8) 与 `rawBinary`(latin1)，文件走 latin1
-- **`admin/data/` 是工作副本，不入版本库**；改乱了 `node scripts/export-seed.js --admin-only` 重建（`admins.json` 不动）
-- 导入模板 `/api/import/template` 是**公开资源**，路由**必须在鉴权之前**，别挪回去
-- 导入**先预览后确认**，预览阶段绝不写数据；错误行带 Excel 行号
-- 不做注册入口
-
-### ★★ 两套后台的冲突（写死，别忘）
-| | 桌面后台 `admin/` | 小程序后台 `pages/admin/` |
-|---|---|---|
-| 写到哪 | **本地副本** `admin/data/`（再导出导入云端） | **直接写云端** |
-| 后果 | 只要小程序端改过数据，本地副本即**过期** | —— |
-
-⇒ **用小程序后台改过数据后，绝不能拿 `admin/data/` 去覆盖云端**（会把改动整批抹掉）。
-这条已写进 `pages/admin/index` 的常驻提醒卡，不只写在文档里。
-- 运营位校验：公告**正文非空**、level 在枚举、**link 必须以 `/` 开头**、时间窗不倒挂；推广位 **routeKey 必须真实存在**、**同一线路只一个推广位**、角标必填 ≤8 字
-- `parseTimeInput()`：把 `2026-10-01` 转时间戳（直接 `Number()` 得 NaN 会静默变 0）
-- store 的 `T` **键名必须等于集合名**，否则 flush 取不到行
-- **静态资源一律 `Cache-Control: no-store`** —— 否则改完 JS 刷新还是旧的
-
----
-
-## 三、★★ 覆盖写事故护栏（最严重的坑）
-
-- `repository.flush()` 是**全量覆盖写**。内存未装载（未调 `loadAll()`）就写 ⇒ 空表把整个文件抹成 `[]`，**且不报错**。2026-09-21 真发生过。
-- **护栏**：`loaded` 标志，未装载调 `flush()` 直接抛错；`server.js` 的 `loadAll()` 不吞错。
-- **任何新脚本只要碰写操作，必须先 `repo.loadAll()`。**
-- 固化在 `admin.test.js` 的「覆盖写事故护栏」+ `smoke-admin.js`，**不要简化掉**。
-
----
-
-## 四、测试体系（改代码后按顺序跑）
+## 四、测试体系（改代码按序跑）
 
 | 层 | 命令 | 规模 |
 |---|---|---|
-| 单元 | `node test/run-all.js` | **10 套件 492 断言** |
-| 体检 | `node scripts/check-project.js` | **12 类**静态检查 |
-| 模块基础能力 | `node .workbuddy/scripts/check-module-basics.js` | **13 个页面**（改页面必跑） |
-| 部署前 | `node scripts/check-deploy.js` | **25 项** |
-| 验收 | `node scripts/check-acceptance.js` | **61 断言** + 12 项人工 |
-| 冒烟 | `node scripts/smoke-admin.js` | 后台 HTTP **108 断言**（临时端口 8791） |
-| BOM | `node .workbuddy/scripts/check-bom.js` | **175 文件，提审前必跑** |
+| 单元 | `node test/run-all.js` | 10 套件 492 断言 |
+| 体检 | `node scripts/check-project.js` | 12 类 |
+| 模块基础 | `node .workbuddy/scripts/check-module-basics.js` | 13 页（改页面必跑） |
+| 部署前 | `node scripts/check-deploy.js` | 25 项 |
+| 验收 | `node scripts/check-acceptance.js` | 61 断言+12 人工 |
+| 冒烟 | `node scripts/smoke-admin.js` | 108 断言（端口 8791） |
+| BOM | `node .workbuddy/scripts/check-bom.js` | 175 文件，提审前必跑 |
 
-> **自检报错先分清「代码错」还是「检查逻辑错」**（同「修测试而不是修功能」）。
-> 已多次遇到「检查器关键词落后于实现」—— 一律改检查器并注释，**绝不为过检查给页面加无用代码**。
-
-- `run-all.js` 用**子进程逐个跑**（套件内会 `process.exit()`，`submitCorrection` 会替换 `Module._load`，同进程会污染）。别改同进程串跑。
-- `admin.test.js` 测逻辑；`smoke-admin.js` 测 HTTP 层（Cookie、状态码、目录穿越）——「逻辑对」≠「线上能用」。
-- 冒烟把 `admin/data` 当临时工作区（备份→跑→还原），**开跑前先体检数据目录**，坏数据直接拒跑。**新增集合必须同步进 `FILES`**。
-- 测试自身坑：`/logout` 下发**清空型 Cookie**，别无脑 `split(';')[0]` 覆盖 token，否则后续全静默 401。
-- **集合清单要同源**：`check-acceptance.js` 的 A2 用 `Object.values(COLLECTIONS)` 取，别手抄（防漂移）。
-
-### 写静态扫描工具的铁律（check-requires.js 踩坑）
-正则扫源码：① **必须剥注释**（注释里的示例变假警报，假失败比不检查更糟）；② **必须保留字符串**（`require('./x')` 路径就在字符串里，抹掉会变成 0 处、检查形同虚设）；③ **剥注释用等长空白替换**，保行号才能定位；④ 状态机逐字符扫描，字符串内不判注释；⑤ 匹配 CSS 属性用**后行否定** `(?<![-\w])color`（否则 `background-color` 误判）。
-
-`.workbuddy/scripts/` **只放跨项目通用工具**（现 6 个：check-bom / check-requires / scan-toast-length / apply-design-tokens / audit-company-phones / fix-import-json）。失效脚本已归档到 `.workbuddy/memory/archive/dead-scripts/`（**别当代码引用**）。新脚本写 `scripts/`。
-
----
+- 报错先分清代码错/检查逻辑错；「检查器关键词落后」改检查器，绝不为过检加无用代码
+- run-all.js 子进程逐跑（套件会 exit + Module._load 污染），别改同进程
+- admin.test 测逻辑 / smoke 测 HTTP 层；冒烟备份→跑→还原，先体检数据目录，新集合同步 FILES
+- /logout 清空型 Cookie 别覆盖 token（否则静默 401）；集合清单用 `Object.values(COLLECTIONS)` 别手抄
+- 写扫描工具：剥注释（等长空白保行号）+ 保留字符串；CSS 属性匹配用后行否定 `(?<![-\w])color`
+- `.workbuddy/scripts/` 只放通用工具（现 6 个）；失效脚本在 memory/archive/dead-scripts/ 别引用
 
 ## 五、编辑护栏 & 环境限制
 
-### Windows 写文件禁止带 BOM
-微信 WXSS/WXML 编译器**不跳过 BOM**，报 `unexpected '\uFEFF' at pos 1`。
-**改 `.wxss`/`.wxml`/`.js`/`.json` 一律用 Write/Edit**；禁用 PowerShell `Out-File`/`Set-Content`/`>`。
-必须走 PS 时用 `[System.IO.File]::WriteAllText($p,$t,(New-Object System.Text.UTF8Encoding($false)))`。
+### 禁 BOM
+改 wxss/wxml/js/json 一律 Write/Edit；禁 PowerShell `Out-File`/`Set-Content`/`>`（5.1 默认 BOM）。必须走 PS 用 `[System.IO.File]::WriteAllText($p,$t,(New-Object System.Text.UTF8Encoding($false)))`。
 
-### ★★ 小程序端禁用「需要 @swc/runtime 的语法」（白屏事故）
-`project.config.json` 开了增强编译 `enhance:true` ⇒ 用 **SWC**；下列语法生成 `require('@swc/runtime/_xxx.js')`，项目**零依赖** ⇒ **整页白屏**。
+### ★★ 禁 @swc/runtime 语法（白屏事故）
+enhance:true 走 SWC ⇒ **数组解构/对象展开/数组展开/for...of** 生成 require('@swc/runtime/...')，零依赖 ⇒ 整页白屏。改写：`x[0]`、`Object.assign`、`concat`/`apply`、下标 for。admin/ 与 test/ 不受限。护栏 check-project.js 第 11 类。栈行号是产物行号，跑静态体检更快。
 
-```
-module '@swc/runtime/_array_with_holes.js' is not defined  ← 根因
-Component is not found in path "wx://not-found".            ← 结果不是原因
-```
-栈里**行号是编译产物行号**，别按源码行号找 —— 跑静态体检更快。
+### 本机环境
+- Bash PATH 损坏：dirname/ls/grep/tail/head/cat/rm/wc 全不可用 ⇒ 用 Read/Write/Edit/Glob/Grep 或 Node 绝对路径 `C:/Users/怀瑾/.workbuddy/binaries/node/versions/22.22.2-3/node.exe`；Node 参数用 `G:/` 风格
+- Node execSync 走 cmd.exe：POSIX 兜底（`2>/dev/null||true`）会崩，探测用 try/catch
+- git：直连 push 即通；不通跑 `.workbuddy/scripts/push-backup.js`（自动 7897 代理+敏感自检）；**推送与否只看 `git ls-remote origin`**（本地跟踪引用存不住）；rejected 加 `--allow-unrelated-histories`
 
-| 不要写 | 改写成 |
-|---|---|
-| `const [a,b] = x`（数组解构） | `x[0]` / `x[1]` |
-| `{ ...x }`（对象展开） | `Object.assign({}, x)` |
-| `[...a, ...b]` / `f(...args)` | `concat` / `apply` / 循环 `push` |
-| `for (const x of arr)` | 下标 `for` |
+### ★★ WXSS「样式全丢」排查（2026-09-22 实战）
+症状：内容数据在、导航栏/tabBar 正常、全项目样式丢失。
+1. 先跑**官方 wcsc 真编译**：开发者工具装在 `D:\微信web开发者工具`，编译器
+   `D:\微信web开发者工具\resources\app.asar.unpacked\node_modules\wcc-exec\wcsc.exe`
+   用法 `wcsc.exe -o OUT -js -pc N app.wxss 其余全部.wxss`（-lc 开 lint）。实测本项目 16 个 wxss 全过，`calc(50% - var(--gap-sm) / 2)` 也接受 ⇒ **calc 除法不是问题**
+2. 编译若过 ⇒ 优先怀疑**热重载缓存错乱**：`project.private.config.json` 里 `compileHotReLoad:true`，新增页面后增量补丁脱节正是此症状。
+   处理顺序：点「编译」全量重编译 → 本地设置关热重载 → 清缓存重启 → 仍不行查 Console 红色报错
+3. 静态排查用「新旧写法集合差」：老文件（确定能编译）的属性/伪类/函数/组合符集合减新文件集合，独有写法才是嫌疑
 
-**`admin/` 与 `test/` 跑在 Node，不受此限。** 护栏：check-project.js 第 11 类检查。
+## 五之二、组件与页面硬约定
 
-### 本机 Bash 环境残缺
-- PATH 损坏：`dirname`/`ls`/`grep`/`tail`/`head`/`cat`/`rm`/`wc` 均 `command not found`。
-  改用 Read/Write/Edit/Glob/Grep，或 Node 绝对路径 `C:/Users/怀瑾/.workbuddy/binaries/node/versions/22.22.2-3/node.exe`
-- 脚本参数用 Windows 风格路径（`G:/...`）；`/g/...` 会被解析成 `g:\g\...`
-- **Node `execSync` 在 Windows 走 `cmd.exe`**：`cmd 2>/dev/null || true` 会整脚本崩掉。探测一律 `try/catch`
-- PATH 坏 ⇒ 没法 `export https_proxy`；给单条命令设代理用工具自身配置（如 `git config http.proxy`）
-- `rm` 不可用 ⇒ 用 Node `fs.unlinkSync()`
+### ★★ 弹层三条铁律
+1. **样式自备**（isolated 组件吃不到 app.wxss 的 .mask；零尺寸遮罩照吃点击 ⇒「按钮全没反应」）
+2. **z-index 写死**（遮罩 0 面板 1）；居中用父级 flex，别 top:50%+translateY（层叠上下文错位）
+3. **不用 inset 简写**（低版本内核塌 0），四边写开
 
-### 网络 / git
-- **先试直连 `git push origin main`**（实测直连即通）；不通再跑 `.workbuddy/scripts/push-backup.js`（自动写 `http.proxy=127.0.0.1:7897` + 敏感数据自检）
-- **本机 git 怪毛病**：远程跟踪引用存不住，`update-ref` 返回 0 却不写 ⇒ `git status` 显示 `[origin/main: gone]`。**判断有没有推上去只看 `git ls-remote origin`**
-- 推送被 `! [rejected] (fetch first)`：合并加 `--allow-unrelated-histories`，README 取 ours
+关闭路径全覆盖：同意/拒绝/遮罩/× 都 `setData({visible:false})`；副作用在 setData 之后。护栏 check-project.js 第 12 类。
+「按钮没反应」排查：透明遮罩残留→z-index/transform→bindtap→页面未注册/switchTab 非 tab→覆盖/零尺寸→catchtap 截断。另：文案承诺交互但页面没做。
 
-### 工作方式
-- **坚持「修测试而不是修功能」**：断言失败先查清是代码错还是断言错，注释里写明原因防复发
-- 长任务收尾必跑全套测试，不信「应该没问题」
+### 页面基础能力（check-module-basics，改页面必跑）
+列表页：下拉刷新/触底加载/加载态/空态/**失败态必须可重试**；表单页：防重/必填校验/成功反馈。
+空态≠失败态。多区块页独立降级（首页 featLoading/featError）。统一 `.empty-btn`。
+筛选+分页：触底循环补页攒够可展示条数，否则整页被筛掉误判无结果。
 
----
+## 六、跨端口径（唯一来源，别各写一套）
 
-## 五之二、组件与页面的硬约定
+schema=`shared/schema.js`；导入=`shared/import.js`；小程序后台元信息=`utils/admin.js` TYPES；字段校验=`shared/validate.js`；routeKey/normCity=`utils/common.js`；区县反查=`utils/search.js` resolvePlace；公司打分=searchCompanies；电话=isPhoneLike；客服=`utils/privacy.js` CONTACT。
+- 后台 normalizeRoute 一律重派生 routeKey；改线路城市同步所有关联；companyCount 重算不增减；删公司/线路级联删关联
+- 云函数只上传自己目录 ⇒ shared/utils 要放云函数目录内**副本**；`sync-cloud-shared.js --check` 查漂移
+- 小程序页面禁 `.collection(`（静态断言守着）
 
-### ★★ 遮罩 / 弹层三条铁律（同一天连踩两次）
-1. **样式自备**：组件是 `styleIsolation:"isolated"` ⇒ `app.wxss` 全局 `.mask` 进不来。漏写 `.mask` ⇒ 遮罩零尺寸看不见，但 `position:fixed` 父容器**仍是整屏块，照吃点击** ⇒ 「所有按钮点了没反应」。
-2. **z-index 写死**：遮罩 `z-index:0`、面板 `z-index:1`。居中用**父级 flex**，别用 `top:50%+translateY(-50%)`（transform 会创建独立层叠上下文，命中区与肉眼不一致）。
-3. **不用 `inset: 0` 简写**：低版本内核不认，整块塌成 0 尺寸。四边写开 `top/right/bottom/left`。
+## 七、搜索护栏
 
-**护栏**：check-project.js 第 12 类「弹层层叠检查」，三个分支均已反向验证。
-**关闭路径必须全覆盖**：同意/拒绝/点遮罩/右上 ×，每条都要 `setData({visible:false})`。遮罩建议直接绑「不同意」。
-**副作用顺序**：`setData` 先跑，落存储等副作用后跑 —— 副作用挂了也不会关不掉窗。
+单字关键词只前缀不包含；打分 100/95/90/85/80/75/70/65/60；detectKeywordType 命中城市优先 'both'；混合搜城市排前。
 
-### 「按钮点了没反应」排查顺序
-1. **透明遮罩层残留**（已两次命中，最易忽略）2. 层叠 z-index/transform 3. `bindtap` 拼写或方法未实现
-4. 跳转目标未注册 / `switchTab` 去了非 tab 页 5. 元素被覆盖或尺寸为 0 6. 事件被 `catchtap` 截断
-> 另一种形态：**提示文案承诺了交互，页面却没给交互**（如「一行一个网点」却没有加行按钮；公告外链点了没反应）。
+## 八、部署上线
 
-### 页面必须「符合自身场景的基础功能」
-`.workbuddy/scripts/check-module-basics.js` 量化检查（**改页面后必跑**）：
-
-| 场景 | 必需能力 |
-|---|---|
-| 列表/检索页 | 下拉刷新、触底加载、加载态、空态、**失败态（可重试）** |
-| 表单页 | 提交防重、必填校验、成功反馈 |
-| 静态文本页 | 无额外要求 |
-
-- ★★ **空态 ≠ 失败态**：空态重试无用（引导换条件/反馈）；失败态**必须给「重新加载」按钮**。
-- 多区块页面（首页）要**独立降级**：一块失败只显示那一块重试，不整页白屏（首页用区块级 `featLoading`/`featError`）。
-- 统一用 `app.wxss` 的 `.empty-btn`；旧 `.empty-action` 只在两个页面有局部定义，**别复用**。
-- **客户端筛选 + 分页的坑**：查专线页触底要**循环补页**直到攒够可展示条数，否则「这一页全被筛掉」会误判为没直达公司。
-
----
-
-## 六、跨端口径（必须一致，别各写一套）
-
-| 能力 | 唯一来源 |
-|---|---|
-| 集合名与字段定义 | `shared/schema.js` |
-| 批量导入（CSV 解析 / 字段映射 / 行校验） | `shared/import.js`（后台、云函数、小程序共用） |
-| 小程序后台的类型元信息（字段/列表展示） | `utils/admin.js` 的 `TYPES` |
-| **字段级校验（公司/线路/关联/公告/推广）** | `shared/validate.js`（后台与云函数共用） |
-| `routeKey` 派生 | `utils/common.js` 的 `buildRouteKey`（两侧都过 `normCity`） |
-| 城市归一 `normCity` | `utils/common.js`（去「市/区/县/省」后缀） |
-| 区县字典与反查 | `data/districts.js` + `utils/search.js` 的 `resolvePlace`/`searchPlaces` |
-| 公司搜索打分 | `utils/search.js` 的 `searchCompanies` |
-| 电话校验 | `utils/common.js` 的 `isPhoneLike` |
-| 客服联系方式 | `utils/privacy.js` 的 `CONTACT` |
-
-- 后台 `normalizeRoute` **一律重新派生 routeKey**，不采信传入值；`_id = 'route_' + routeKey.replace(/-/g,'_')`
-- 改线路城市必须**同步所有关联 routeId/routeKey**，否则悬空外键、页面死链
-- `companyCount` 是冗余计数，增删关联后**重算**（`recountRoutes()`），不要 `+=1/-=1`
-- 删公司/删线路必须**级联删关联**，删完重算
-- **云函数部署只上传自己的目录** ⇒ 用到的 `shared/`、`utils/` 文件要在云函数目录内放**副本**（`schema.js`/`common.js` 已验证自包含）
-- **小程序端页面不能出现 `.collection(`**（必须走 `utils/db.js`，有静态断言守着）
-
----
-
-## 七、搜索匹配护栏
-- **单字关键词只做「前缀」，一律不做「包含」**（否则「南」命中几百家）
-- 打分：全称相等 100 / 简称相等 95 / 全称前缀 90 / 简称前缀 85 / 全称包含 80 / 简称包含 75 / 拼音前缀 70 / 拼音包含 65 / 首字母 60
-- `detectKeywordType` 命中城市即优先返回 `'both'`
-- 混合搜（城市+区县）：城市结果排前，区县命中时 `resolvePlace` 返回的 `city` **必是已知城市**
-
----
-
-## 八、部署与上线
-
-### ⚠️ 两个工作区，别改错目录
-| 目录 | 状态 |
-|---|---|
-| **`G:\workbuddy\logistics-line-query`** | **活跃项目**（已上线，GitHub remote，云环境 `cloud1-d0ge42roj61603242`，主体陈镇） |
-| `G:\workbuddy\wuliuzhaunxianchaxun` | **废弃的早期尝试**（云环境从未配置，无 remote） |
-
-两边 `pages/` **同名但代码不同**。改代码/查文档前先确认在哪个目录。
-
-### PRD 当前状态
-v4.3（含 `F-xx`/`R-xx` 编号、护栏 R-10~R-15）**已丢失**，从未进本仓库。
-现 `PRD.md` 是从废弃目录找回的 **v1.0 基线副本**，文件头标注「与代码冲突时以代码为准」。
-⇒ **定位需求编号时 PRD 可能没有，以代码为准并回头补 PRD**。
-
-### 上线纪律
-- 主体**个人**（陈镇），类目「工具 → 信息查询」。**个人主体不能选需企业资质的类目**
-- 客服 `15165018553` / `A15165018553`
-- **上线后任何代码改动都需重新提审**；不得在生产配置上「顺手优化」（`libVersion` 保持 `trial`）
-- 云函数改动后**必须重新上传部署**（阻断项）
-- 部署清单见 `docs/验收自检报告.md`：建 **8 集合** → 导入 `.data/*.jsonl` → `corrections` 加索引 `openid+day`、`openid+targetId+day` → 上传云函数 → 12 项人工 → 提审
-
----
+⚠️ 活跃项目 `G:\workbuddy\logistics-line-query`；`G:\workbuddy\wuliuzhaunxianchaxun` 是废弃尝试，别改错目录。
+PRD 现存 v1.0 基线（v4.3 丢失），冲突以代码为准。个人主体陈镇，类目工具→信息查询；客服 15165018553。
+上线后改动需重新提审；`libVersion` 保持 trial；云函数改动必须重新上传部署。
+部署清单（docs/验收自检报告.md）：建 8 集合→导 .data/*.jsonl→corrections 索引 openid+day、openid+targetId+day→上传云函数→12 项人工→提审。
 
 ## 九、用户偏好
-- 简洁中文；文件级变更摘要 + 按优先级行动清单；**UI 问题用截图沟通**
-- 批次推进（P0/P1/P2），完成一项自动衔接下一项
-- 上线前检查类任务：**一次只问一个问题**，用普通人语言复述需求
 
----
+简洁中文；文件级变更摘要+优先级行动清单；UI 问题用截图；批次推进（P0/P1）完成即衔接下一项；检查类任务一次只问一个问题。
 
 ## 十、待办
 
-1. ✅ **远程备份** —— `https://github.com/ztwl82518294/-`
-   ⚠️ **仍需用户确认该仓库是 Private**（含客服电话与公司信息）
-2. ⬜ **云函数上传部署**（阻断项）—— 手动：右键云函数 → **上传并部署：云端安装依赖**（本地无 node_modules，不能选「所有文件」）
-   含新增的 **`adminApi`**；上传前后各跑一次 `node scripts/sync-cloud-shared.js --check`（副本漂移检查）
-2b. ⬜ **填管理员 openid**：用微信进小程序 → 后台页会显示 openid → 填进 `ADMIN_OPENIDS` → 重新上传部署
-3. ⬜ 云控制台建 **8** 集合 + 导入 `.data/*.jsonl`：companies 40 / routes 55 / route_companies 72 / cities 344 / announcements 4 / featured_routes 6
-4. ⬜ `corrections` 加索引 `openid+day`、`openid+targetId+day`
-5. ⬜ **12 项人工验证**（清单在 `docs/验收自检报告.md`）
-6. ⬜ `admin/data/` 与云数据库衔接：缺「从云数据库导出纠错」脚本
-7. ⬜ **PRD v4.3 已丢失** —— 若手上有请放回
-8. ⬜ 确认 `G:\workbuddy\wuliuzhaunxianchaxun` 可否整个删除
-9. ⬜ （可选）关掉 `enhance` 改 Babel，从根上避免 SWC 问题 —— 属生产配置改动，需用户确认
+1. ✅ 远程 https://github.com/ztwl82518294/- （⚠️ 用户确认 Private）
+2. ⬜ 云函数上传部署（含 adminApi；上传前后跑 `sync-cloud-shared.js --check`）；2b. 填 ADMIN_OPENIDS 后重传
+3. ⬜ 云控制台建 8 集合+导入 jsonl：companies40/routes55/route_companies72/cities344/announcements4/featured6
+4. ⬜ corrections 索引；5. ⬜ 12 项人工验证；6. ⬜ 缺「云库导出纠错」脚本；7. ⬜ PRD v4.3 找回；8. ⬜ 废弃目录可否删；9. ⬜（可选）关 enhance 换 Babel
